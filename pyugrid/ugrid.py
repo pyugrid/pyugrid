@@ -81,7 +81,7 @@ class data_set_indexed(data_set):
         raise NotImplimentedError
 
 
-class ugrid(object):
+class UGrid(object):
     """
     a basic class to hold an unstructred grid (triangular mesh)
     
@@ -232,10 +232,13 @@ class ugrid(object):
             
             
     
-    def save_as_netcdf(self, filename):
+    def save_as_netcdf(self, filepath):
         """
         save the ugrid object as a netcdf file
         
+        :param filepath: path to file you want o save to.
+                         An existing one will be clobbered if it already exists.
+
         follows the convernsion established by the netcdf UGRID working group:
         
         http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model
@@ -245,44 +248,83 @@ class ugrid(object):
         from netCDF4 import Dataset as ncDataset
         from netCDF4 import num2date, date2num
         # create a new netcdf file
-        nclocal = ncDataset(nclocalpath, mode="w", clobber=True)
+        nclocal = ncDataset(filepath, mode="w", clobber=True)
 
         # dimensions:
         # nMesh2_node = 4 ; // nNodes
         # nMesh2_edge = 5 ; // nEdges
         # nMesh2_face = 2 ; // nFaces
         # nMesh2_face_links = 1 ; // nFacePairs
- 
-        # Two = 2 ;
-        # Three = 3 ;
- 
+  
 
-        n_nodes = nclocal.createDimension('num_nodes', len(self.nodes) )
-        n_nodes = nclocal.createDimension('num_edges', len(self.edges) )
-        n_nodes = nclocal.createDimension('num_faces', len(self.edges) )
+        nclocal.createDimension('num_nodes', len(self.nodes) )
+        nclocal.createDimension('num_edges', len(self.edges) )
+        nclocal.createDimension('num_faces', len(self.faces) )
+        nclocal.createDimension('num_vertices', self.faces.shape[1] )
+        nclocal.createDimension('two', 2)
 
+        #mesh topology
+        mesh = nclocal.createVariable('mesh', np.int32, (), )
+        mesh.cf_role = "mesh_topology" 
+        mesh.long_name = "Topology data of 2D unstructured mesh" 
+        mesh.topology_dimension = 2 
+        mesh.node_coordinates = "node_lon node_lat" 
+        mesh.face_node_connectivity = "mesh_face_nodes" 
+        mesh.edge_node_connectivity = "mesh_edge_nodes"  ## attribute required if variables will be defined on edges
+        mesh.edge_coordinates = "mesh_edge_lon mesh_edge_lat"  ## optional attribute (requires edge_node_connectivity)
+        mesh.face_coordinates = "mesh_face_lon mesh_face_lat" ##  optional attribute
+        mesh.face_edge_connectivity = "mesh_face_edges"  ## optional attribute (requires edge_node_connectivity)
+        mesh.face_face_connectivity = "mesh_face_links"  ## optional attribute
 
+        face_nodes = nclocal.createVariable("mesh_face_nodes",
+                                            np.int32,
+                                            ('num_faces', 'num_vertices'),
+                                            )
+        face_nodes[:] = self.faces
+
+        face_nodes.cf_role = "face_node_connectivity"
+        face_nodes.long_name = "Maps every triangular face to its three corner nodes."
+        face_nodes.start_index = 0 ;
+
+        edge_nodes = nclocal.createVariable("mesh_edge_nodes",
+                                            np.int32,
+                                            ('num_edges', 'two'),
+                                            )
+        edge_nodes[:] = self.edges
+
+        edge_nodes.cf_role = "edge_node_connectivity"
+        edge_nodes.long_name = "Maps every edge to the two nodes that it connects."
+        edge_nodes.start_index = 0 ;
+        
         node_lon = nclocal.createVariable('node_lon',
-                                     self._nodes.dytpe, 
+                                     self._nodes.dtype, 
                                      ('num_nodes',),
-                                     chunksizes=len(self.nodes),
+                                     chunksizes=(len(self.nodes), ),
                                      #zlib=False,
                                      #complevel=0,
                                      )
-        node_lon = self.nodes[0]
+        node_lon[:] = self.nodes[:,0]
+        node_lon.standard_name = "longitude"
+        node_lon.long_name = "Longitude of 2D mesh nodes."
+        node_lon.units = "degrees_east"
         node_lat = nclocal.createVariable('node_lat',
-                                     self._nodes.dytpe, 
+                                     self._nodes.dtype, 
                                      ('num_nodes',),
-                                     chunksizes=len(self.nodes),
+                                     chunksizes=(len(self.nodes), ),
                                      #zlib=False,
                                      #complevel=0,
                                      )
-        node_lat = self.nodes[1]
+        node_lat[:] = self.nodes[:,1]
+        node_lat.standard_name = "latitude"
+        node_lat.long_name = "Latitude of 2D mesh nodes."
+        node_lat.units = "degrees_north"
+
         # // Mesh node coordinates
         # double Mesh2_node_x(nMesh2_node) ;
         #         Mesh2_node_x:standard_name = "longitude" ;
         #         Mesh2_node_x:long_name = "Longitude of 2D mesh nodes." ;
         #         Mesh2_node_x:units = "degrees_east" ;
+        nclocal.sync()
 
 
 
