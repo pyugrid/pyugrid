@@ -23,6 +23,6 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
         ],
-    packages = ["pyugrid", "tests"],
+    packages = ["pyugrid", "test"],
     scripts = [],
     )
