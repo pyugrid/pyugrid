@@ -18,8 +18,7 @@ NOTE: only full support for triangular mesh grids at the moment
 import numpy as np
 
 # used for simple locate_face test
-from .geometry.cy_point_in_polygon import point_in_poly as point_in_tri
-
+from py_geometry.cy_point_in_polygon import point_in_poly as point_in_tri
 
 class data_set(object):
     """
@@ -134,11 +133,7 @@ class ugrid(object):
         self._nodes = np.zeros((0,2), dtype=np.float64)
         self._edges = np.zeros((0,2), dtype=np.int32)
         self._faces = np.zeros((0,3), dtype=np.int32)
-        
-    @property
-    def num_nodes(self):
-        return self._nodes.shape[0]
-        
+                
     @property
     def faces(self):
         return self._faces
@@ -150,9 +145,6 @@ class ugrid(object):
     @faces.deleter
     def faces(self):
         self._faces = np.zeros((0,3), dtype=np.int32)
-    @property
-    def num_faces(self):
-        return self._faces.shape[0]
         
     @property
     def edges(self):
@@ -165,9 +157,6 @@ class ugrid(object):
     @edges.deleter
     def edges(self):
         self._edges = np.zeros((0,2), dtype=np.int32)
-    @property
-    def num_edges(self):
-        return self._edges.shape[0]
             
 ##fixme: repeated code here -- should these methods be combined?
     def set_node_data(self, name, data, indexes=None):
@@ -253,6 +242,51 @@ class ugrid(object):
                 
         """
         
-        import netCDF4
-        
+        from netCDF4 import Dataset as ncDataset
+        from netCDF4 import num2date, date2num
+        # create a new netcdf file
+        nclocal = ncDataset(nclocalpath, mode="w", clobber=True)
+
+        # dimensions:
+        # nMesh2_node = 4 ; // nNodes
+        # nMesh2_edge = 5 ; // nEdges
+        # nMesh2_face = 2 ; // nFaces
+        # nMesh2_face_links = 1 ; // nFacePairs
+ 
+        # Two = 2 ;
+        # Three = 3 ;
+ 
+
+        n_nodes = nclocal.createDimension('num_nodes', len(self.nodes) )
+        n_nodes = nclocal.createDimension('num_edges', len(self.edges) )
+        n_nodes = nclocal.createDimension('num_faces', len(self.edges) )
+
+
+        node_lon = nclocal.createVariable('node_lon',
+                                     self._nodes.dytpe, 
+                                     ('num_nodes',),
+                                     chunksizes=len(self.nodes),
+                                     #zlib=False,
+                                     #complevel=0,
+                                     )
+        node_lon = self.nodes[0]
+        node_lat = nclocal.createVariable('node_lat',
+                                     self._nodes.dytpe, 
+                                     ('num_nodes',),
+                                     chunksizes=len(self.nodes),
+                                     #zlib=False,
+                                     #complevel=0,
+                                     )
+        node_lat = self.nodes[1]
+        # // Mesh node coordinates
+        # double Mesh2_node_x(nMesh2_node) ;
+        #         Mesh2_node_x:standard_name = "longitude" ;
+        #         Mesh2_node_x:long_name = "Longitude of 2D mesh nodes." ;
+        #         Mesh2_node_x:units = "degrees_east" ;
+
+
+
+
+
+
 
