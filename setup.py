@@ -18,11 +18,18 @@ setup(
     keywords = "unstructured numpy models",
     url = "https://github.com/pyugrid/pyugrid",
 #    long_description=read('README'),
+    install_requires=[
+        'numpy',
+        ],
+    tests_require=[
+        'pytest>=2.3.2',
+        ],
+    cmdclass={'test': PyTest},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
         ],
-    packages = ["pyugrid", "tests"],
+    packages = ["pyugrid", "test"],
     scripts = [],
     )
