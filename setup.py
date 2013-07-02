@@ -4,9 +4,19 @@
 from setuptools import setup # to support "develop" mode
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+from setuptools.command.test import test as TestCommand
 
 import numpy # for the includes for the Cython code
 
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)class PyTest(TestCommand)
 
 setup(
     name = "pyugrid",
