@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 ugrid classes
 
@@ -22,6 +23,8 @@ import numpy as np
 from .util import point_in_tri
 
 IND_DT = np.int32 ## datatype used for indexes -- might want to change for 64 bit some day.
+NODE_DT = np.float64 ## datatype used for node coordinates
+
 
 class data_set(object):
     """
@@ -91,7 +94,11 @@ class UGrid(object):
     the internal structure mirrors the netcdf data standard.
     """
 
-    def __init__(self, nodes=None, faces=[], edges=[], ):
+    def __init__(self,
+                 nodes=None,
+                 faces=None,
+                 edges=None,
+                 face_face_connectivity=None):
         """
         ugrid class -- holds, saves, etc an unstructured grid
 
@@ -99,17 +106,30 @@ class UGrid(object):
         :param faces=[] : the faces of the grid -- (NX3) integer array of indexes into the nodes array
         :param edges=[] : the edges of the grid -- (NX2) integer array of indexes into the nodes array
 
-        often this is too much data to pass in in a literal -- so usually
+        often this is too much data to pass in a literal -- so usually
         specialized constructors will be used instead (load from file, etc.)
         """
 
         if nodes is None:
-            self._nodes = np.zeros((0,2), dtype=np.float64)
+            self._nodes = np.zeros((0,2), dtype=NODE_DT)
         else:
-            self._nodes = np.asarray(nodes, dtype=np.float64).reshape((-1, 2))
+            self._nodes = np.asarray(nodes, dtype=NODE_DT).reshape((-1, 2))
 
-        self._faces = np.asarray(faces, dtype=IND_DT).reshape((-1, 3))
-        self._edges = np.asarray(edges, dtype=IND_DT).reshape((-1, 2))
+        if faces is None:
+            self._faces = None
+        else:
+            self._faces = np.asarray(faces, dtype=IND_DT).reshape((-1, 3))
+
+        if edges is None:
+            self._edges = None
+        else:
+            self._edges = np.asarray(edges, dtype=IND_DT).reshape((-1, 2))
+
+        if face_face_connectivity is None:
+            self._face_face_connectivity = None
+        else:
+            self._face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT).reshape((-1, self.num_vertices))
+
 
         self._node_data = {}
         self._edge_data = {}
@@ -121,6 +141,16 @@ class UGrid(object):
         existing nodes, etc.
         """
         raise NotImplimentedError
+    
+    @property
+    def num_vertices(self):
+        """
+        number of vertices in a face
+        """
+        if self._faces is None:
+            return None
+        else:
+            return self._faces.shape[1]
 
     @property
     def nodes(self):
@@ -129,13 +159,13 @@ class UGrid(object):
     def nodes(self, nodes_coords):
         # room here to do consistency checking, etc.
         # for now -- simply make sure it's a numpy array
-        self._nodes = np.asarray(nodes_coords, dtype=np.float64).reshape((-1, 2))
+        self._nodes = np.asarray(nodes_coords, dtype=NODE_DT).reshape((-1, 2))
     @nodes.deleter
     def nodes(self):
         ## if there are no nodes, there can't be any faces or edges
-        self._nodes = np.zeros((0,2), dtype=np.float64)
-        self._edges = np.zeros((0,2), dtype=INT_DT)
-        self._faces = np.zeros((0,3), dtype=INT_DT)
+        self._nodes = np.zeros((0,2), dtype=NODE_DT)
+        self._edges = None
+        self._faces = None
 
     @property
     def faces(self):
@@ -147,7 +177,7 @@ class UGrid(object):
         self._faces = np.asarray(faces_indexes, dtype=IND_DT).reshape((-1, 3))
     @faces.deleter
     def faces(self):
-        self._faces = np.zeros((0,3), dtype=IND_DT)
+        self._faces = None
 
     @property
     def edges(self):
@@ -159,7 +189,20 @@ class UGrid(object):
         self._edges = np.asarray(edges_indexes, dtype=IND_DT).reshape((-1, 2))
     @edges.deleter
     def edges(self):
-        self._edges = np.zeros((0,2), dtype=IND_DT)
+        self._edges = None
+
+    @property
+    def face_face_connectivity(self):
+        return self._face_face_connectivity
+    @face_face_connectivity.setter
+    def face_face_connectivity(self, face_face_connectivity):
+        ## admore checking?
+        face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT).reshape((-1, self.num_vertices))
+    @face_face_connectivity.deleter
+    def face_face_connectivity(self):
+        self._face_face_connectivity = None
+
+
 
 ##fixme: repeated code here -- should these methods be combined?
     def set_node_data(self, name, data, indexes=None):
@@ -227,9 +270,7 @@ class UGrid(object):
         """
         for i, face in enumerate(self._faces):
             f = self._nodes[face]
-            #print "checking:", point, "in", f
-            if point_in_tri(f, point):
-                #print "got a hit:", i
+            if point_in_poly(f, point):
                 return i
         return None
 
@@ -237,10 +278,8 @@ class UGrid(object):
         """
         builds the face_face_connectivity array:
         essentially giving the neighbors of each triangle
-
-        This is a very naive approach -- probably slow on large grids
         """        
-        num_vertices = self.faces.shape[1]
+        num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
         face_face = np.zeros( (num_faces, num_vertices), dtype=IND_DT )
         face_face += -1 # fill with -1
@@ -251,18 +290,40 @@ class UGrid(object):
             # loop through edges:
             for j in range(num_vertices):
                 edge = (face[j-1], face[j])
-                if edge[0] > edge[1]: # flip them
+                if edge[0] > edge[1]: # sort the node numbers
                     edge = (edge[1], edge[0]) 
-                print edge
                 # see if it is already in there
-                old_edge = edges.pop(edge, None)
-                if old_edge is not None:
-                    face_num, edge_num = old_edge
+                prev_edge = edges.pop(edge, None)
+                if prev_edge is not None:
+                    face_num, edge_num = prev_edge
                     face_face[i,j] = face_num
                     face_face[face_num, edge_num] = i
                 else:
                     edges[edge] = (i, j)
-        self.face_face_connectivity = face_face
+        self._face_face_connectivity = face_face
+
+    def build_edges(self):
+        """
+        builds the edges array: all the edges defined by the triangles
+
+        NOTE: arbitrary order -- should the order be preserved?
+        """        
+        num_vertices = self.num_vertices
+        num_faces = self.faces.shape[0]
+        face_face = np.zeros( (num_faces, num_vertices), dtype=IND_DT )
+        face_face += -1 # fill with -1
+
+        # loop through all the faces to find all the edges:
+        edges = set() # use a set so no duplicates
+        for i, face in enumerate(self.faces):
+            # loop through edges:
+            for j in range(num_vertices):
+                edge = (face[j-1], face[j])
+                if edge[0] > edge[1]: # flip them
+                    edge = (edge[1], edge[0]) 
+                edges.add(edge)
+        self._edges = np.array(list(edges), dtype=IND_DT)
+
 
     def save_as_netcdf(self, filepath):
         """
