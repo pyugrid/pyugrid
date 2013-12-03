@@ -1,6 +1,8 @@
+### This code moved to ugrid.py: circular import issues...
+
 import netCDF4
 import numpy as np
-from ugrid import ugrid as ug
+#from ugrid import ugrid as ug
 
 def open_cf_todict( filename ):
     nc = netCDF4.Dataset(filename, 'r')

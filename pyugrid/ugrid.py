@@ -135,6 +135,26 @@ class UGrid(object):
         self._edge_data = {}
         self._face_data = {}
 
+    @classmethod
+    def from_ncfile(klass, nc_url, mesh_name=None):
+        """
+        create a UGrid object from a netcdf file (or opendap url)
+
+        :param nc_url: the filename or OpenDap url you want to load
+
+        :param mesh_name=None: the name of the mesh you want. If None, then
+                               you'll get an arbitrary mesh (which is good if
+                               there is only one in the file)
+        """
+        ## fixme: this really should only load the mesh that is looked for.
+        ##        requires changes to open_cf_todict
+        data = open_cf_todict(nc_url)
+        if mesh_name is None:
+            ug = data[data.keys()[0]]
+        else:
+            ug = data[mesh_name]
+        return ug
+
     def check_consistent(self):
         """
         check if the various data is consisent: the edges and faces reference
@@ -420,6 +440,70 @@ class UGrid(object):
         #         Mesh2_node_x:units = "degrees_east" ;
         nclocal.sync()
 
+## this code moved here to fix circular import issues:
+##  reading code needs the UGrid object, and UGRid object needs the reading code...
+def open_cf_todict( filename ):
+    """
+    read a netcdf or opendap url, and load it into a dict of ugrid objects.
+    """
+    import netCDF4
+    nc = netCDF4.Dataset(filename, 'r')
+    ncvars = nc.variables
+    meshes = {}
+    for varname in ncvars.iterkeys():
+        try:
+            meshname = ncvars[varname].getncattr('mesh')
+        except AttributeError:
+            meshname = None
+        if (meshname != None) and (meshname not in set(meshes.viewkeys())):
+            meshatt_names = ncvars[meshname].ncattrs()
+            
+            ## Make sure that this mesh style is supported in this codebase
+            meshatts = {}
+            for attname in meshatt_names:
+                meshatts[attname] = ncvars[meshname].getncattr(attname)
+            assert meshatts['cf_role'] == 'mesh_topology'
+            #if meshatts['topology_dimension'] != '2':
+            #    raise ValueError("Unfortuntely, only meshes that are unstructured in 2 dimensions are supported")
+            
+            ## Grab node coordinates from mesh meta-variable, and pull out the coord values
+            node_coordinates = meshatts.get('node_coordinates', None)
+            if node_coordinates == None:
+                raise AttributeError("Unstructured meshes must include node coordinates, specified with the 'node_coordinates' attribute")
+            node_coordinates = node_coordinates.split(" ")
+            nodes = [None, None]
+            for coord in node_coordinates:
+                units = ncvars[coord].units
+                if 'north' in units:
+                    nodes[0] = ncvars[coord][:]
+                elif ('east' in units) or ('west' in units):
+                    nodes[1] = ncvars[coord][:]
+                else:
+                    raise AttributeError("Node coordinates don't contain 'units' attribute!")  
+            
+            ## Grab Face and Edge node connectivity arrays
+            face_node_conn_name = meshatts.get('face_node_connectivity', None)
+            edge_node_conn_name = meshatts.get('edge_node_connectivity', None)
+            faces = []
+            edges = []
+            if face_node_conn_name != None:
+                faces = ncvars[face_node_conn_name][:,:]
+            index_base = np.min(np.min(faces))
+            if index_base  >= 1:
+                faces = faces - index_base
+            try:
+                if edge_node_conn_name != None:
+                    edges = ncvars[edge_node_conn_name][:,:]
+                    index_base = np.min(np.min(edges))
+                    if index_base >= 1:
+                        edges = edges - index_base
+            except:
+                pass #TODO: Generate edge node topology if none exists, perhaps optional
+  
+            ## Add to dictionary of meshes
+            meshes[meshname] = UGrid(nodes, faces, edges)
+    return meshes # Return dictionary of ugrid objects
+    
 
 
 
