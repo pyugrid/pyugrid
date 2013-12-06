@@ -474,13 +474,13 @@ def open_cf_todict( filename ):
             nodes = [None, None]
             for coord in node_coordinates:
                 units = ncvars[coord].units
-                if 'north' in units:
-                    nodes[0] = ncvars[coord][:]
-                elif ('east' in units) or ('west' in units):
+                if ('north' in units) or ('north' in units):
                     nodes[1] = ncvars[coord][:]
+                elif ('east' in units) or ('west' in units):
+                    nodes[0] = ncvars[coord][:]
                 else:
-                    raise AttributeError("Node coordinates don't contain 'units' attribute!")  
-            
+                    raise AttributeError("Node coordinates don't contain 'units' attribute!")              
+            nodes = np.array(nodes).T
             ## Grab Face and Edge node connectivity arrays
             face_node_conn_name = meshatts.get('face_node_connectivity', None)
             edge_node_conn_name = meshatts.get('edge_node_connectivity', None)
