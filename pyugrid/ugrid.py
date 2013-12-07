@@ -369,7 +369,6 @@ class UGrid(object):
         # nMesh2_face = 2 ; // nFaces
         # nMesh2_face_links = 1 ; // nFacePairs
 
-
         nclocal.createDimension('num_nodes', len(self.nodes) )
         nclocal.createDimension('num_edges', len(self.edges) )
         nclocal.createDimension('num_faces', len(self.faces) )
@@ -468,19 +467,20 @@ def open_cf_todict( filename ):
             
             ## Grab node coordinates from mesh meta-variable, and pull out the coord values
             node_coordinates = meshatts.get('node_coordinates', None)
+            num_nodes = len(nc.dimensions['n'+meshname+'_node'])
             if node_coordinates == None:
                 raise AttributeError("Unstructured meshes must include node coordinates, specified with the 'node_coordinates' attribute")
             node_coordinates = node_coordinates.split(" ")
-            nodes = [None, None]
+            nodes = np.empty((num_nodes, 2), dtype=np.float64)
             for coord in node_coordinates:
                 units = ncvars[coord].units
                 if 'north' in units:
-                    nodes[0] = ncvars[coord][:]
+                    nodes[:,1] = ncvars[coord][:]
                 elif ('east' in units) or ('west' in units):
-                    nodes[1] = ncvars[coord][:]
+                    nodes[:,0] = ncvars[coord][:]
                 else:
-                    raise AttributeError("Node coordinates don't contain 'units' attribute!")  
-            
+                    raise AttributeError("Node coordinates don't contain 'units' attribute!") 
+
             ## Grab Face and Edge node connectivity arrays
             face_node_conn_name = meshatts.get('face_node_connectivity', None)
             edge_node_conn_name = meshatts.get('edge_node_connectivity', None)
