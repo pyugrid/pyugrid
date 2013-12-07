@@ -489,8 +489,8 @@ def open_cf_todict( filename ):
             if face_node_conn_name != None:
                 faces = ncvars[face_node_conn_name][:,:]
                 # if [3,nodes] instead of [nodes,3], transpose the array
-                # logic below will fail for 1,2, or 3 element grids
-                if faces.shape[0]<faces.shape[1]:
+                # logic below will fail for 3 element grids
+                if faces.shape[0] == 3:
                     faces = faces.T
             index_base = np.min(np.min(faces))
             if index_base  >= 1:

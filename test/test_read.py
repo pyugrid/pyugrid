@@ -3,7 +3,7 @@
 """
 tests for testing a ugrid file read.
 
-we really need some more sample data files....
+we really need some  more sample data files....
 
 """
 import numpy as np
@@ -36,15 +36,16 @@ def test_read_nodes():
 
 # 	assert False
 
-def test_read_face_connectivity():
+def test_read_face_node_connectivity():
 	""" Do we get the right connectivity array? """
 	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
 
 	assert ug.faces.shape == (13, 3)
 
 	# # not ideal to pull specific values out, but how else to test?
-	assert np.array_equal( ug.faces[0,:],	 (2, 7, 9) )
-	assert np.array_equal( ug.faces[-1,:],	 (8, 5, 6) )
+	## note: file is 1-indexed, so these values are adjusted
+	assert np.array_equal( ug.faces[0,:],	 (2, 3, 10) )
+	assert np.array_equal( ug.faces[-1,:],	 (10, 5, 6) )
 
 # def test_simple_read():
 # 	ug = UGrid.from_ncfile('files/two_triangles.nc')
