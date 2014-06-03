@@ -15,7 +15,6 @@ reading it on demand
 NOTE: only full support for triangular mesh grids at the moment
 
 """
-
 import numpy as np
 
 # used for simple locate_face test
@@ -25,6 +24,8 @@ from .util import point_in_tri
 IND_DT = np.int32 ## datatype used for indexes -- might want to change for 64 bit some day.
 NODE_DT = np.float64 ## datatype used for node coordinates
 
+import logging
+logger = logging.getLogger(__name__)
 
 class data_set(object):
     """
@@ -98,6 +99,8 @@ class UGrid(object):
                  nodes=None,
                  faces=None,
                  edges=None,
+                 depths=None,
+                 depth_unit="unknown",
                  face_face_connectivity=None):
         """
         ugrid class -- holds, saves, etc an unstructured grid
@@ -125,6 +128,16 @@ class UGrid(object):
         else:
             self._edges = np.asarray(edges, dtype=IND_DT).reshape((-1, 2))
 
+        if depths is None:
+            self._depths = np.zeros((len(self._nodes),), dtype=NODE_DT)
+        else:
+            self._depths = np.asarray(depths, dtype=NODE_DT)
+        
+        if depth_unit is None:
+            self.depth_unit = "unknown"
+        else:
+            self.depth_unit = depth_unit
+
         if face_face_connectivity is None:
             self._face_face_connectivity = None
         else:
@@ -149,6 +162,7 @@ class UGrid(object):
         ## fixme: this really should only load the mesh that is looked for.
         ##        requires changes to open_cf_todict
         data = open_cf_todict(nc_url)
+        logger.debug("open_cf_todict = %s" % data)
         if mesh_name is None:
             ug = data[data.keys()[0]]
         else:
@@ -186,6 +200,19 @@ class UGrid(object):
         self._nodes = np.zeros((0,2), dtype=NODE_DT)
         self._edges = None
         self._faces = None
+        self._depths = np.zeros((0,), dtype=NODE_DT)
+
+    @property
+    def depths(self):
+        return self._depths
+    @depths.setter
+    def depths(self, depths):
+        # room here to do consistency checking, etc.
+        # for now -- simply make sure it's a numpy array
+        self._depths = np.asarray(depths, dtype=NODE_DT).reshape((-1, 1))
+    @depths.deleter
+    def depths(self):
+        self._depths = np.zeros((0,), dtype=NODE_DT)
 
     @property
     def faces(self):
@@ -369,10 +396,12 @@ class UGrid(object):
         # nMesh2_face = 2 ; // nFaces
         # nMesh2_face_links = 1 ; // nFacePairs
 
-        nclocal.createDimension('num_nodes', len(self.nodes) )
+        # name 'nmesh_node' is hardcoded in open_cf_to_dict
+        nclocal.createDimension('nmesh_node', len(self.nodes) )
         nclocal.createDimension('num_edges', len(self.edges) )
         nclocal.createDimension('num_faces', len(self.faces) )
         nclocal.createDimension('num_vertices', self.faces.shape[1] )
+        nclocal.createDimension('num_depths', len(self.depths) )
         nclocal.createDimension('two', 2)
 
         #mesh topology
@@ -411,7 +440,7 @@ class UGrid(object):
 
         node_lon = nclocal.createVariable('node_lon',
                                      self._nodes.dtype,
-                                     ('num_nodes',),
+                                     ('nmesh_node',),
                                      chunksizes=(len(self.nodes), ),
                                      #zlib=False,
                                      #complevel=0,
@@ -422,7 +451,7 @@ class UGrid(object):
         node_lon.units = "degrees_east"
         node_lat = nclocal.createVariable('node_lat',
                                      self._nodes.dtype,
-                                     ('num_nodes',),
+                                     ('nmesh_node',),
                                      chunksizes=(len(self.nodes), ),
                                      #zlib=False,
                                      #complevel=0,
@@ -437,6 +466,22 @@ class UGrid(object):
         #         Mesh2_node_x:standard_name = "longitude" ;
         #         Mesh2_node_x:long_name = "Longitude of 2D mesh nodes." ;
         #         Mesh2_node_x:units = "degrees_east" ;
+        
+        depths = nclocal.createVariable('node_depth',
+                                     self._depths.dtype,
+                                     ('num_depths',),
+                                     chunksizes=(len(self.depths), ),
+                                     #zlib=False,
+                                     #complevel=0,
+                                     )
+        depths[:] = self.depths[:]
+        depths.standard_name = "sea_floor_depth_below_geoid"
+        depths.units = self.depth_unit
+        depths.positive = "down"
+        depths.mesh = "mesh"
+        depths.location = "node"
+        depths.node_coordinates = "node_lon node_lat" 
+
         nclocal.sync()
 
 ## this code moved here to fix circular import issues:
@@ -448,13 +493,17 @@ def open_cf_todict( filename ):
     import netCDF4
     nc = netCDF4.Dataset(filename, 'r')
     ncvars = nc.variables
+    logger.debug("ncvars: %s" % str(ncvars))
     meshes = {}
     for varname in ncvars.iterkeys():
         try:
             meshname = ncvars[varname].getncattr('mesh')
         except AttributeError:
             meshname = None
+        logger.debug("trying %s: %s" % (varname, meshname))
+        logger.debug(ncvars[varname])
         if (meshname != None) and (meshname not in set(meshes.viewkeys())):
+            logger.debug("found mesh '%s'!" % meshname)
             meshatt_names = ncvars[meshname].ncattrs()
             
             ## Make sure that this mesh style is supported in this codebase
@@ -481,6 +530,14 @@ def open_cf_todict( filename ):
                 else:
                     raise AttributeError("Node coordinates don't contain 'units' attribute!") 
 
+            ## Grab depth array
+            depths = ncvars.get('node_depth', None)
+            if depths is not None:
+                depths = ncvars['node_depth'][:]
+                depth_unit = ncvars['node_depth'].units
+            else:
+                depth_unit = None
+
             ## Grab Face and Edge node connectivity arrays
             face_node_conn_name = meshatts.get('face_node_connectivity', None)
             edge_node_conn_name = meshatts.get('edge_node_connectivity', None)
@@ -505,7 +562,7 @@ def open_cf_todict( filename ):
                 pass #TODO: Generate edge node topology if none exists, perhaps optional
   
             ## Add to dictionary of meshes
-            meshes[meshname] = UGrid(nodes, faces, edges)
+            meshes[meshname] = UGrid(nodes, faces, edges, depths, depth_unit)
     return meshes # Return dictionary of ugrid objects
     
 
