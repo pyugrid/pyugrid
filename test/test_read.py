@@ -52,4 +52,5 @@ def test_read_face_node_connectivity():
 
 # 	assert False
 
- 
+if __name__ == "__main__":
+    test_read_nodes()

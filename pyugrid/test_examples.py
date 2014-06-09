@@ -23,7 +23,11 @@ def two_triangles():
                   (1,3),
                   (3,2),
                   (2,0)]
-    return ugrid.UGrid(nodes, faces, edges)
+    
+    depths = [1, 2, 3, 4]
+    depth_unit = "unknown"
+    
+    return ugrid.UGrid(nodes, faces, edges, depths, depth_unit)
 
 
 def twenty_one_triangles():
@@ -96,7 +100,10 @@ def twenty_one_triangles():
              (6,3),
              ]
 
-    return ugrid.UGrid(nodes, faces, edges)
+    depths = range(1, 21)
+    depth_unit = "unknown"
+
+    return ugrid.UGrid(nodes, faces, edges, depths, depth_unit)
 
 
     
