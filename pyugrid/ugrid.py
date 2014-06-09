@@ -395,6 +395,8 @@ class UGrid(object):
         # nMesh2_edge = 5 ; // nEdges
         # nMesh2_face = 2 ; // nFaces
         # nMesh2_face_links = 1 ; // nFacePairs
+        has_edges = len(self.edges) > 0
+        has_faces = len(self.faces) > 0
 
         # name 'nmesh_node' is hardcoded in open_cf_to_dict
         nclocal.createDimension('nmesh_node', len(self.nodes) )
@@ -410,33 +412,36 @@ class UGrid(object):
         mesh.long_name = "Topology data of 2D unstructured mesh" 
         mesh.topology_dimension = 2 
         mesh.node_coordinates = "node_lon node_lat" 
-        mesh.face_node_connectivity = "mesh_face_nodes" 
 
-        mesh.edge_node_connectivity = "mesh_edge_nodes"  ## attribute required if variables will be defined on edges
-        mesh.edge_coordinates = "mesh_edge_lon mesh_edge_lat"  ## optional attribute (requires edge_node_connectivity)
-        mesh.face_coordinates = "mesh_face_lon mesh_face_lat" ##  optional attribute
-        mesh.face_edge_connectivity = "mesh_face_edges"  ## optional attribute (requires edge_node_connectivity)
-        mesh.face_face_connectivity = "mesh_face_links"  ## optional attribute
+        if has_faces:
+            mesh.face_node_connectivity = "mesh_face_nodes" 
+            mesh.face_coordinates = "mesh_face_lon mesh_face_lat" ##  optional attribute
+            mesh.face_edge_connectivity = "mesh_face_edges"  ## optional attribute (requires edge_node_connectivity)
+            mesh.face_face_connectivity = "mesh_face_links"  ## optional attribute
 
-        face_nodes = nclocal.createVariable("mesh_face_nodes",
-                                            IND_DT,
-                                            ('num_faces', 'num_vertices'),
-                                            )
-        face_nodes[:] = self.faces
+            face_nodes = nclocal.createVariable("mesh_face_nodes",
+                                                IND_DT,
+                                                ('num_faces', 'num_vertices'),
+                                                )
+            face_nodes[:] = self.faces
 
-        face_nodes.cf_role = "face_node_connectivity"
-        face_nodes.long_name = "Maps every triangular face to its three corner nodes."
-        face_nodes.start_index = 0 ;
+            face_nodes.cf_role = "face_node_connectivity"
+            face_nodes.long_name = "Maps every triangular face to its three corner nodes."
+            face_nodes.start_index = 0 ;
 
-        edge_nodes = nclocal.createVariable("mesh_edge_nodes",
-                                            IND_DT,
-                                            ('num_edges', 'two'),
-                                            )
-        edge_nodes[:] = self.edges
+        if has_edges:
+            mesh.edge_node_connectivity = "mesh_edge_nodes"  ## attribute required if variables will be defined on edges
+            mesh.edge_coordinates = "mesh_edge_lon mesh_edge_lat"  ## optional attribute (requires edge_node_connectivity)
 
-        edge_nodes.cf_role = "edge_node_connectivity"
-        edge_nodes.long_name = "Maps every edge to the two nodes that it connects."
-        edge_nodes.start_index = 0 ;
+            edge_nodes = nclocal.createVariable("mesh_edge_nodes",
+                                                IND_DT,
+                                                ('num_edges', 'two'),
+                                                )
+            edge_nodes[:] = self.edges
+
+            edge_nodes.cf_role = "edge_node_connectivity"
+            edge_nodes.long_name = "Maps every edge to the two nodes that it connects."
+            edge_nodes.start_index = 0 ;
 
         node_lon = nclocal.createVariable('node_lon',
                                      self._nodes.dtype,
@@ -549,9 +554,9 @@ def open_cf_todict( filename ):
                 # logic below will fail for 3 element grids
                 if faces.shape[0] == 3:
                     faces = faces.T
-            index_base = np.min(np.min(faces))
-            if index_base  >= 1:
-                faces = faces - index_base
+                index_base = np.min(np.min(faces))
+                if index_base  >= 1:
+                    faces = faces - index_base
             try:
                 if edge_node_conn_name != None:
                     edges = ncvars[edge_node_conn_name][:,:]
