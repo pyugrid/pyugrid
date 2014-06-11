@@ -12,19 +12,19 @@ def two_triangles():
     returns about the simplest triangle grid possible
     """
     nodes = [(0,0),
-                  (2,0),
-                  (1,2),
-                  (3,2)]
+             (2,0),
+             (1,2),
+             (3,2)]
 
     faces = [(0, 1, 2),
-                  (1, 3, 2),]
+             (1, 3, 2),]
 
     edges = [(0,1),
-                  (1,3),
-                  (3,2),
-                  (2,0)]
+             (1,3),
+             (3,2),
+             (2,0),
+             (1,2)]
     return ugrid.UGrid(nodes, faces, edges)
-
 
 def twenty_one_triangles():
     """

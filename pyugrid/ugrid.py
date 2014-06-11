@@ -26,30 +26,54 @@ IND_DT = np.int32 ## datatype used for indexes -- might want to change for 64 bi
 NODE_DT = np.float64 ## datatype used for node coordinates
 
 
-class data_set(object):
+class DataSet(object):
     """
-    a class to hold the data assocated with nodes, edges, etc
+    A class to hold the data assocated with nodes, edges, etc.
+
+    It holds an array of the data, as well as the attributes associated
+     with that data (attributes get stored in the netcdf file)
 
     """
-    ##fixme: is this neccessary? -- only if there is more in it later..
-    def __init__(self, name, type='node', data=None):
+    def __init__(self, name, location='node', data=None, attributes=None):
         """
         create a data_set object
-        name: the name of the data (depth, u_velocity, etc)
-        type: the type of grid element: node, edge, or face the data is assigned to
-        data: the data
+        :param name: the name of the data (depth, u_velocity, etc.)
+        :type name: string
+
+        :param location: the type of grid element: 'node', 'edge', or 'face' the data is assigned to
+
+        :param data: the data
+        :type data: 1-d numpy array, or somthing compatible (list, etc.)        
+
         """
         self.name = name
-        if type not in ['node', 'edge', 'face']:
-            raise ValueError("type must be one of: 'node', 'edge', 'face'")
-        self.type = type # must be 'node', 'edge', of 'face' (eventually 'volume')
+
+        if location not in ['node', 'edge', 'face']:
+            raise ValueError("location must be one of: 'node', 'edge', 'face'")
+        self.location = location # must be 'node', 'edge', of 'face' (eventually 'volume')
 
         if data is None:
-            self.data = np.zeros((0,), dtype=np.float) # could be any data type
+            self._data = np.zeros((0,), dtype=np.float64) # could be any data type
         else:
-            self.data = data
+            self._data = np.asarray(data)
 
-class data_set_indexed(data_set):
+        self.attributes = {} if attributes is None else attributes
+
+    @property
+    def data(self):
+        return self._data
+    @data.setter
+    def data(self, data):
+        self._data = np.asarray(data)
+    @data.deleter
+    def data(self):
+        self._data = self._data = np.zeros((0,), dtype=np.float64)
+
+    def __str__(self):
+        return "DataSet object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)
+
+
+class DataSetIndexed(DataSet):
     """
     a class to hold the arrays used to map data to indexes of the nodes, edges
     or faces they are assigned to, if there is not that data on all of the objects
@@ -130,10 +154,12 @@ class UGrid(object):
         else:
             self._face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT).reshape((-1, self.num_vertices))
 
-
-        self._node_data = {}
-        self._edge_data = {}
-        self._face_data = {}
+        # the data associated with the grid
+        # should be a dict of DataSet objects
+        self._data = {} # the data associated with the grid
+        # self._node_data = {}
+        # self._edge_data = {}
+        # self._face_data = {}
 
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None):
@@ -157,7 +183,7 @@ class UGrid(object):
 
     def check_consistent(self):
         """
-        check if the various data is consisent: the edges and faces reference
+        check if the various data is consistent: the edges and faces reference
         existing nodes, etc.
         """
         raise NotImplimentedError
@@ -216,65 +242,98 @@ class UGrid(object):
         return self._face_face_connectivity
     @face_face_connectivity.setter
     def face_face_connectivity(self, face_face_connectivity):
-        ## admore checking?
+        ## add more checking?
         face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT).reshape((-1, self.num_vertices))
     @face_face_connectivity.deleter
     def face_face_connectivity(self):
         self._face_face_connectivity = None
 
+    @property
+    def data(self):
+        """
+        dict of data associated with the data arrays
+
+        you can't set this -- msut use UGrid.add_data()
+
+        """
+        return self._data
+
+    def add_data(self, data_set):
+        """
+        Add a dataset to the data dict
+
+        :param data_set: the DataSet object to add. its name will be the key in the data dict.
+        :type data_set: a ugrid.DataSet object
+
+        some sanity checking is done to make sure array sizes are correct.
+
+        """
+        # do a size check:
+        if data_set.location == 'node':
+            if len(data_set.data) != len(self.nodes):
+                raise ValueError("length of data array much match the number of nodes")
+        elif data_set.location == 'edge':
+            if len(data_set.data) != len(self.edges):
+                raise ValueError("length of data array much match the number of edges")
+        elif data_set.location == 'face':
+            if len(data_set.data) != len(self.faces):
+                raise ValueError("length of data array much match the number of faces")
+        print self._data
+        self._data[data_set.name] = data_set
 
 
-##fixme: repeated code here -- should these methods be combined?
-    def set_node_data(self, name, data, indexes=None):
-        if indexes is None:
-            data = np.asarray(data)
-            if not data.shape == (self.num_nodes,):
-                raise ValueError("size of data should match number of nodes") # shape should match edges, data type can be anything
-            self._node_data[name] = data
-        else:
-            indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-            self._node_data[name][indexes] = data
+# ##fixme: repeated code here -- should these methods be combined?
+#          is there any need for this at all?
+#     def set_node_data(self, name, data, indexes=None):
+#         if indexes is None:
+#             data = np.asarray(data)
+#             if not data.shape == (self.num_nodes,):
+#                 raise ValueError("size of data should match number of nodes") # shape should match edges, data type can be anything
+#             self._node_data[name] = data
+#         else:
+#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
+#             self._node_data[name][indexes] = data
 
-    def get_node_data(self, name, indexes=None):
-        if indexes is None:
-            return self._node_data[name]
-        else:
-            indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-            return self._node_data[name][indexes]
+#     def get_node_data(self, name, indexes=None):
+#         if indexes is None:
+#             return self._node_data[name]
+#         else:
+#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
+#             return self._node_data[name][indexes]
 
-    def set_edge_data(self, name, data, indexes=None):
-        if indexes is None:
-            data = np.asarray(data)
-            if not data.shape == (self.num_edges,):
-                raise ValueError("size of data shold match number of edges") # shape should match edges, data type can be anything
-            self._edge_data[name] = data
-        else:
-            indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-            self._edge_data[name][indexes] = data
+#     def set_edge_data(self, name, data, indexes=None):
+#         if indexes is None:
+#             data = np.asarray(data)
+#             if not data.shape == (self.num_edges,):
+#                 raise ValueError("size of data shold match number of edges") # shape should match edges, data type can be anything
+#             self._edge_data[name] = data
+#         else:
+#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
+#             self._edge_data[name][indexes] = data
 
-    def get_edge_data(self, name, indexes=None):
-        if indexes is None:
-            return self._edge_data[name]
-        else:
-            indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-            return self._edge_data[name][indexes]
+#     def get_edge_data(self, name, indexes=None):
+#         if indexes is None:
+#             return self._edge_data[name]
+#         else:
+#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
+#             return self._edge_data[name][indexes]
 
-    def set_face_data(self, name, data, indexes=None):
-        if indexes is None:
-            data = np.asarray(data)
-            if not data.shape == (self.num_faces,):
-                raise ValueError("size of data shold match number of faces") # shape should match faces, data type can be anything
-            self._face_data[name] = data
-        else:
-            indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-            self._face_data[name][indexes] = data
+#     def set_face_data(self, name, data, indexes=None):
+#         if indexes is None:
+#             data = np.asarray(data)
+#             if not data.shape == (self.num_faces,):
+#                 raise ValueError("size of data shold match number of faces") # shape should match faces, data type can be anything
+#             self._face_data[name] = data
+#         else:
+#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
+#             self._face_data[name][indexes] = data
 
-    def get_face_data(self, name, indexes=None):
-        if indexes is None:
-            return self._face_data[name]
-        else:
-            indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-            return self._face_data[name][indexes]
+#     def get_face_data(self, name, indexes=None):
+#         if indexes is None:
+#             return self._face_data[name]
+#         else:
+#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
+#             return self._face_data[name][indexes]
 
 
     def locate_face_simple(self, point):

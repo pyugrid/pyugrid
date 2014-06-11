@@ -101,8 +101,8 @@ if __name__ == "__main__":
 
     app = wx.App(False)
     F = DrawFrame(None, title="UGRID Test App", size=(700,700) )
-    #F.Draw_UGRID( test_examples.two_triangles() )
-    F.Draw_UGRID( test_examples.twenty_one_triangles() )
+    F.Draw_UGRID( test_examples.two_triangles() )
+    #F.Draw_UGRID( test_examples.twenty_one_triangles() )
 
     app.MainLoop()
     
