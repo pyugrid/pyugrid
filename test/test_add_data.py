@@ -31,7 +31,7 @@ def test_add_node_data():
     # create a dataset object for the depths:
     depths = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
     depths.attributes['units'] = 'm'
-    depths.attributes["standard_name"] = "sea_floor_depth_below_geoid"
+    depths.attributes["standard_name"] = "sea_floor_depth"
     depths.attributes["positive"] = "down"
 
     grid.add_data(depths)

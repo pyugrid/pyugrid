@@ -5,14 +5,13 @@ ugrid classes
 
 set of classes for working with unstructured model grids
 
-The "ugrid" class is the base class: it stores eveything in memory
+The "ugrid" class is the base class: it stores everything in memory
 
-subclasses include a nc_ugrid, which points to a netcdf file (Or opendap url).
+It can read from and write to netcdf files in the UGRID format.
 
-It provides the same API, but does not store the data in memory, rather
-reading it on demand
+It may be able to reference a netcdf file at some point, rather than storing directly in memory.
 
-NOTE: only full support for triangular mesh grids at the moment
+NOTE: only support for triangular mesh grids at the moment
 
 """
 
@@ -28,7 +27,7 @@ NODE_DT = np.float64 ## datatype used for node coordinates
 
 class DataSet(object):
     """
-    A class to hold the data assocated with nodes, edges, etc.
+    A class to hold the data associated with nodes, edges, etc.
 
     It holds an array of the data, as well as the attributes associated
      with that data (attributes get stored in the netcdf file)
@@ -73,43 +72,6 @@ class DataSet(object):
         return "DataSet object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)
 
 
-class DataSetIndexed(DataSet):
-    """
-    a class to hold the arrays used to map data to indexes of the nodes, edges
-    or faces they are assigned to, if there is not that data on all of the objects
-    do we ever need this?
-
-    """
-    ## fixme: do we want a special case for when there is data on all the nodes, edges, etc?
-
-    def __init__(self, name, type='node', indexes=None, data=None):
-        """
-        create a data_set object
-
-        name: the name of the data (depth, u_velocity, etc)
-
-        type: the type of grid element: node, edge, or face the data is assigned to
-
-        """
-        self.name = name
-        self.type = type # must be 'node', 'edge', of 'face' (eventually 'volume')
-        if (indexes is None) ^  (data is None):
-            raise ValueError("indexes and data both need to be either None or have values")
-        if indexes is None:
-            self.indexes = np.zeros((0,), dtype=IND_DT) 
-        else:
-            self.indexes = indexes
-        if data is None:
-            self.data = np.zeros((0,), dtype=np.float) # could be any data type
-        else:
-            self.data = data
-
-    def check_consistent(self):
-        """
-        check if the indexes match the data, etc.
-        """
-        raise NotImplimentedError
-
 
 class UGrid(object):
     """
@@ -122,7 +84,12 @@ class UGrid(object):
                  nodes=None,
                  faces=None,
                  edges=None,
-                 face_face_connectivity=None):
+                 face_face_connectivity=None,
+                 face_edge_connectivity=None,
+                 edge_coordinates=None,
+                 face_coordinates=None,
+                 data = None,
+                 ):
         """
         ugrid class -- holds, saves, etc an unstructured grid
 
@@ -134,32 +101,19 @@ class UGrid(object):
         specialized constructors will be used instead (load from file, etc.)
         """
 
-        if nodes is None:
-            self._nodes = np.zeros((0,2), dtype=NODE_DT)
-        else:
-            self._nodes = np.asarray(nodes, dtype=NODE_DT).reshape((-1, 2))
-
-        if faces is None:
-            self._faces = None
-        else:
-            self._faces = np.asarray(faces, dtype=IND_DT).reshape((-1, 3))
-
-        if edges is None:
-            self._edges = None
-        else:
-            self._edges = np.asarray(edges, dtype=IND_DT).reshape((-1, 2))
-
-        if face_face_connectivity is None:
-            self._face_face_connectivity = None
-        else:
-            self._face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT).reshape((-1, self.num_vertices))
+        self.nodes = nodes
+        self.faces = faces
+        self.edges = edges
+        self.face_face_connectivity = face_face_connectivity
+        self.face_edge_connectivity = face_edge_connectivity
 
         # the data associated with the grid
         # should be a dict of DataSet objects
+
         self._data = {} # the data associated with the grid
-        # self._node_data = {}
-        # self._edge_data = {}
-        # self._face_data = {}
+        if data is not None:
+            for dataset in data.values():
+                self.add_data(dataset)
 
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None):
@@ -205,7 +159,11 @@ class UGrid(object):
     def nodes(self, nodes_coords):
         # room here to do consistency checking, etc.
         # for now -- simply make sure it's a numpy array
-        self._nodes = np.asarray(nodes_coords, dtype=NODE_DT).reshape((-1, 2))
+        if nodes_coords is None:
+            self.nodes = np.zeros((0,2), dtype=NODE_DT)
+        else:    
+            self._nodes = np.asarray(nodes_coords, dtype=NODE_DT).reshape((-1, 2))
+
     @nodes.deleter
     def nodes(self):
         ## if there are no nodes, there can't be any faces or edges
@@ -220,10 +178,20 @@ class UGrid(object):
     def faces(self, faces_indexes):
         # room here to do consistency checking, etc.
         # for now -- simply make sure it's a numpy array
-        self._faces = np.asarray(faces_indexes, dtype=IND_DT).reshape((-1, 3))
+        if faces_indexes is not None:
+            self._faces = np.asarray(faces_indexes, dtype=IND_DT)
+        else:
+            self._faces = None
+            # other things are no longer valid
+            self._face_face_connectivity = None
+            self._face_edge_connectivity = None
     @faces.deleter
     def faces(self):
         self._faces = None
+        self._faces = None
+        # other things are no longer valid
+        self._face_face_connectivity = None
+        self._face_edge_connectivity = None
 
     @property
     def edges(self):
@@ -232,10 +200,15 @@ class UGrid(object):
     def edges(self, edges_indexes):
         # room here to do consistency checking, etc.
         # for now -- simply make sure it's a numpy array
-        self._edges = np.asarray(edges_indexes, dtype=IND_DT).reshape((-1, 2))
+        if edges_indexes is not None:
+            self._edges = np.asarray(edges_indexes, dtype=IND_DT).reshape((-1, 2))
+        else:
+            self._edges = None
+            self._face_edge_connectivity = None
     @edges.deleter
     def edges(self):
         self._edges = None
+        self._face_edge_connectivity = None
 
     @property
     def face_face_connectivity(self):
@@ -243,18 +216,36 @@ class UGrid(object):
     @face_face_connectivity.setter
     def face_face_connectivity(self, face_face_connectivity):
         ## add more checking?
-        face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT).reshape((-1, self.num_vertices))
+        if face_face_connectivity is not None:
+            face_face_connectivity = np.asarray(face_face_connectivity, dtype=IND_DT)
+            if face_face_connectivity.shape != (len(self.faces), self.num_vertices):
+                raise ValueError("face_face_connectivity must be size (num_faces, %i)"%self.num_vertices)
+        self._face_face_connectivity = face_face_connectivity
     @face_face_connectivity.deleter
     def face_face_connectivity(self):
         self._face_face_connectivity = None
 
     @property
+    def face_edge_connectivity(self):
+        return self._face_edge_connectivity
+    @face_face_connectivity.setter
+    def face_edge_connectivity(self, face_edge_connectivity):
+        ## add more checking?
+        if face_edge_connectivity is not None:
+            face_edge_connectivity = np.asarray(face_edge_connectivity, dtype=IND_DT)
+            if face_edge_connectivity.shape != (len(self.faces), self.num_vertices):
+                raise ValueError("face_face_connectivity must be size (num_faces, %i)"%self.num_vertices)
+        self._face_edge_connectivity = face_edge_connectivity
+    @face_edge_connectivity.deleter
+    def face_edge_connectivity(self):
+        self._face_edge_connectivity = None
+
+
+    @property
     def data(self):
         """
         dict of data associated with the data arrays
-
-        you can't set this -- msut use UGrid.add_data()
-
+        You can't set this -- must use UGrid.add_data()
         """
         return self._data
 
@@ -271,69 +262,15 @@ class UGrid(object):
         # do a size check:
         if data_set.location == 'node':
             if len(data_set.data) != len(self.nodes):
-                raise ValueError("length of data array much match the number of nodes")
+                raise ValueError("length of data array must match the number of nodes")
         elif data_set.location == 'edge':
             if len(data_set.data) != len(self.edges):
-                raise ValueError("length of data array much match the number of edges")
+                raise ValueError("length of data array must match the number of edges")
         elif data_set.location == 'face':
             if len(data_set.data) != len(self.faces):
-                raise ValueError("length of data array much match the number of faces")
+                raise ValueError("length of data array must match the number of faces")
         print self._data
         self._data[data_set.name] = data_set
-
-
-# ##fixme: repeated code here -- should these methods be combined?
-#          is there any need for this at all?
-#     def set_node_data(self, name, data, indexes=None):
-#         if indexes is None:
-#             data = np.asarray(data)
-#             if not data.shape == (self.num_nodes,):
-#                 raise ValueError("size of data should match number of nodes") # shape should match edges, data type can be anything
-#             self._node_data[name] = data
-#         else:
-#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-#             self._node_data[name][indexes] = data
-
-#     def get_node_data(self, name, indexes=None):
-#         if indexes is None:
-#             return self._node_data[name]
-#         else:
-#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-#             return self._node_data[name][indexes]
-
-#     def set_edge_data(self, name, data, indexes=None):
-#         if indexes is None:
-#             data = np.asarray(data)
-#             if not data.shape == (self.num_edges,):
-#                 raise ValueError("size of data shold match number of edges") # shape should match edges, data type can be anything
-#             self._edge_data[name] = data
-#         else:
-#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-#             self._edge_data[name][indexes] = data
-
-#     def get_edge_data(self, name, indexes=None):
-#         if indexes is None:
-#             return self._edge_data[name]
-#         else:
-#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-#             return self._edge_data[name][indexes]
-
-#     def set_face_data(self, name, data, indexes=None):
-#         if indexes is None:
-#             data = np.asarray(data)
-#             if not data.shape == (self.num_faces,):
-#                 raise ValueError("size of data shold match number of faces") # shape should match faces, data type can be anything
-#             self._face_data[name] = data
-#         else:
-#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-#             self._face_data[name][indexes] = data
-
-#     def get_face_data(self, name, indexes=None):
-#         if indexes is None:
-#             return self._face_data[name]
-#         else:
-#             indexes = np.array(indexes, dtype=IND_DT).reshape((-1,))
-#             return self._face_data[name][indexes]
 
 
     def locate_face_simple(self, point):
@@ -357,6 +294,8 @@ class UGrid(object):
         """
         builds the face_face_connectivity array:
         essentially giving the neighbors of each triangle
+
+        note: arbitrary order and CW vs CCW may not be consistent
         """        
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
@@ -366,7 +305,7 @@ class UGrid(object):
         # loop through all the triangles to find the matching edges:
         edges = {} # dict to store the edges in 
         for i, face in enumerate(self.faces):
-            # loop through edges:
+            # loop through edges of the triangle:
             for j in range(num_vertices):
                 edge = (face[j-1], face[j])
                 if edge[0] > edge[1]: # sort the node numbers
@@ -384,6 +323,8 @@ class UGrid(object):
     def build_edges(self):
         """
         builds the edges array: all the edges defined by the triangles
+
+        This will replace the existing edge array, if there is one.
 
         NOTE: arbitrary order -- should the order be preserved?
         """        
@@ -403,8 +344,16 @@ class UGrid(object):
                 edges.add(edge)
         self._edges = np.array(list(edges), dtype=IND_DT)
 
+    def build_face_edge_connectivity(self):
+        """
+        Builds the face-edge connectivity array
 
-    def save_as_netcdf(self, filepath):
+        Not implemented yet.
+        """
+        raise NotImplimentedError
+
+
+    def save_as_netcdf(self, filepath, mesh_name=None):
         """
         save the ugrid object as a netcdf file
 
@@ -416,86 +365,114 @@ class UGrid(object):
         http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model
 
         """
+        mesh_name = mesh_name if mesh_name is not None else 'mesh'
+
 
         from netCDF4 import Dataset as ncDataset
         from netCDF4 import num2date, date2num
         # create a new netcdf file
         nclocal = ncDataset(filepath, mode="w", clobber=True)
 
-        # dimensions:
-        # nMesh2_node = 4 ; // nNodes
-        # nMesh2_edge = 5 ; // nEdges
-        # nMesh2_face = 2 ; // nFaces
-        # nMesh2_face_links = 1 ; // nFacePairs
-
-        nclocal.createDimension('num_nodes', len(self.nodes) )
-        nclocal.createDimension('num_edges', len(self.edges) )
-        nclocal.createDimension('num_faces', len(self.faces) )
-        nclocal.createDimension('num_vertices', self.faces.shape[1] )
+        nclocal.createDimension(mesh_name+'_num_nodes', len(self.nodes) )
+        if self._edges is not None:
+            nclocal.createDimension(mesh_name+'_num_edges', len(self.edges) )
+        if self._faces is not None:
+            nclocal.createDimension(mesh_name+'_num_faces', len(self.faces) )
+            nclocal.createDimension(mesh_name+'_num_vertices', self.faces.shape[1] )
         nclocal.createDimension('two', 2)
 
         #mesh topology
-        mesh = nclocal.createVariable('mesh', IND_DT, (), )
+        mesh = nclocal.createVariable(mesh_name, IND_DT, (), )
         mesh.cf_role = "mesh_topology" 
         mesh.long_name = "Topology data of 2D unstructured mesh" 
         mesh.topology_dimension = 2 
-        mesh.node_coordinates = "node_lon node_lat" 
-        mesh.face_node_connectivity = "mesh_face_nodes" 
+        mesh.node_coordinates = mesh_name+"_node_lon " + mesh_name + "_node_lat" 
 
-        mesh.edge_node_connectivity = "mesh_edge_nodes"  ## attribute required if variables will be defined on edges
-        mesh.edge_coordinates = "mesh_edge_lon mesh_edge_lat"  ## optional attribute (requires edge_node_connectivity)
-        mesh.face_coordinates = "mesh_face_lon mesh_face_lat" ##  optional attribute
-        mesh.face_edge_connectivity = "mesh_face_edges"  ## optional attribute (requires edge_node_connectivity)
-        mesh.face_face_connectivity = "mesh_face_links"  ## optional attribute
+        if self.edges is not None:
+            mesh.edge_node_connectivity = mesh_name+"edge_nodes"  ## attribute required if variables will be defined on edges
+            mesh.edge_coordinates = mesh_name+"_edge_lon mesh_edge_lat"  ## optional attribute (requires edge_node_connectivity)
+        if self.faces is not None:
+            mesh.face_node_connectivity = mesh_name+"_face_nodes" 
+            mesh.face_coordinates = mesh_name+"_face_lon mesh_face_lat" ##  optional attribute
+        if self.face_edge_connectivity is not None:
+            mesh.face_edge_connectivity = mesh_name+"_face_edges"  ## optional attribute (requires edge_node_connectivity)
+        if self.face_face_connectivity is not None:
+            mesh.face_face_connectivity = mesh_name+"_face_links"  ## optional attribute
 
-        face_nodes = nclocal.createVariable("mesh_face_nodes",
-                                            IND_DT,
-                                            ('num_faces', 'num_vertices'),
-                                            )
-        face_nodes[:] = self.faces
+        if self.faces is not None:
+            face_nodes = nclocal.createVariable(mesh_name+"_face_nodes",
+                                                IND_DT,
+                                                (mesh_name+'_num_faces', mesh_name+'_num_vertices'),
+                                                )
+            face_nodes[:] = self.faces
 
-        face_nodes.cf_role = "face_node_connectivity"
-        face_nodes.long_name = "Maps every triangular face to its three corner nodes."
-        face_nodes.start_index = 0 ;
+            face_nodes.cf_role = "face_node_connectivity"
+            face_nodes.long_name = "Maps every triangular face to its three corner nodes."
+            face_nodes.start_index = 0 ;
 
-        edge_nodes = nclocal.createVariable("mesh_edge_nodes",
-                                            IND_DT,
-                                            ('num_edges', 'two'),
-                                            )
-        edge_nodes[:] = self.edges
+        if self.edges is not None:
+            edge_nodes = nclocal.createVariable(mesh_name+"_edge_nodes",
+                                                IND_DT,
+                                                (mesh_name+'_num_edges', 'two'),
+                                                )
+            edge_nodes[:] = self.edges
 
-        edge_nodes.cf_role = "edge_node_connectivity"
-        edge_nodes.long_name = "Maps every edge to the two nodes that it connects."
-        edge_nodes.start_index = 0 ;
+            edge_nodes.cf_role = "edge_node_connectivity"
+            edge_nodes.long_name = "Maps every edge to the two nodes that it connects."
+            edge_nodes.start_index = 0 ;
 
-        node_lon = nclocal.createVariable('node_lon',
-                                     self._nodes.dtype,
-                                     ('num_nodes',),
-                                     chunksizes=(len(self.nodes), ),
-                                     #zlib=False,
-                                     #complevel=0,
-                                     )
+        ## the node data
+        node_lon = nclocal.createVariable(mesh_name+'_node_lon',
+                                          self._nodes.dtype,
+                                          (mesh_name+'_num_nodes',),
+                                          chunksizes=(len(self.nodes), ),
+                                          #zlib=False,
+                                          #complevel=0,
+                                          )
         node_lon[:] = self.nodes[:,0]
         node_lon.standard_name = "longitude"
         node_lon.long_name = "Longitude of 2D mesh nodes."
         node_lon.units = "degrees_east"
-        node_lat = nclocal.createVariable('node_lat',
-                                     self._nodes.dtype,
-                                     ('num_nodes',),
-                                     chunksizes=(len(self.nodes), ),
-                                     #zlib=False,
-                                     #complevel=0,
-                                     )
+
+        node_lat = nclocal.createVariable(mesh_name+'_node_lat',
+                                          self._nodes.dtype,
+                                          (mesh_name+'_num_nodes',),
+                                          chunksizes=(len(self.nodes), ),
+                                          #zlib=False,
+                                          #complevel=0,
+                                          )
         node_lat[:] = self.nodes[:,1]
         node_lat.standard_name = "latitude"
         node_lat.long_name = "Latitude of 2D mesh nodes."
         node_lat.units = "degrees_north"
 
-        # // Mesh node coordinates
-        # double Mesh2_node_x(nMesh2_node) ;
-        #         Mesh2_node_x:standard_name = "longitude" ;
-        #         Mesh2_node_x:long_name = "Longitude of 2D mesh nodes." ;
-        #         Mesh2_node_x:units = "degrees_east" ;
+        ## write the associated data
+        for dataset in self.data.values():
+            if dataset.location == 'node':
+                shape = (mesh_name + '_num_nodes',)
+                chunksizes = (len(self.nodes), )
+            elif dataset.location == 'face':
+                shape = (mesh_name + '_num_faces',)
+                chunksizes = (len(self.faces), )
+            elif dataset.location == 'edge':
+                shape = (mesh_name + '_num_edges',)
+                chunksizes = (len(self.edges), )
+            data_var = nclocal.createVariable(dataset.name,
+                                              dataset.data.dtype,
+                                              shape,
+                                              chunksizes=chunksizes,
+                                              #zlib=False,
+                                              #complevel=0,
+                                              )
+            data_var[:] = dataset.data
+            ## add the standard attributes:
+
+            data_var.location = dataset.location
+            data_var.coordinates = mesh_name+"_node_lon " + mesh_name + "_node_lat"
+            ## add the extra attributes
+            for att_name, att_value in dataset.attributes.items():
+                setattr(data_var, att_name, att_value)
+
         nclocal.sync()
 
 ## this code moved here to fix circular import issues:

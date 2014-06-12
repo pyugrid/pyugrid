@@ -10,20 +10,23 @@ from pyugrid import ugrid
 def two_triangles():
     """
     returns about the simplest triangle grid possible
+
+    4 nodes, two triangles, five edges
     """
-    nodes = [(0,0),
-             (2,0),
-             (1,2),
-             (3,2)]
+    nodes = [(0.1, 0.1),
+             (2.1, 0.1),
+             (1.1, 2.1),
+             (3.1, 2.1)]
 
     faces = [(0, 1, 2),
              (1, 3, 2),]
 
-    edges = [(0,1),
-             (1,3),
-             (3,2),
-             (2,0),
-             (1,2)]
+    edges = [(0, 1),
+             (1, 3),
+             (3, 2),
+             (2, 0),
+             (1, 2)]
+
     return ugrid.UGrid(nodes, faces, edges)
 
 def twenty_one_triangles():
@@ -74,29 +77,40 @@ def twenty_one_triangles():
              (15,17,18),
              (17,18,19),
              ]
-    
-    edges = [(0,1),
-             (1,5),
-             (5,11),
-             (11,14),
-             (14,16),
-             (16,18),
-             (18,19),
-             (19,17),
-             (17,15),
-             (15,13),
-             (13,12),
-             (12,7),
-             (7,2),
-             (2,0),
-             (3,4),
-             (4,10),
-             (10,9),
-             (9,6),
-             (6,3),
-             ]
 
-    return ugrid.UGrid(nodes, faces, edges)
+    # we may want to use this later to define just the outer boundary
+    # edges = [(0,1),
+    #          (1,5),
+    #          (5,11),
+    #          (11,14),
+    #          (14,16),
+    #          (16,18),
+    #          (18,19),
+    #          (19,17),
+    #          (17,15),
+    #          (15,13),
+    #          (13,12),
+    #          (12,7),
+    #          (7,2),
+    #          (2,0),
+    #          (3,4),
+    #          (4,10),
+    #          (10,9),
+    #          (9,6),
+    #          (6,3),
+    #          ]
+
+    grid = ugrid.UGrid(nodes, faces)
+    grid.build_edges()
+    return grid
+
+if __name__ == "__main__":
+    grid = twenty_one_triangles()
+    print grid.edges
+    print len(grid.edges)
+    grid.build_edges()
+    print grid.edges
+    print len(grid.edges)
 
 
     
