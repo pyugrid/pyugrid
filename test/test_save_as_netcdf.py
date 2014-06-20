@@ -81,63 +81,65 @@ def nc_var_has_attr_vals(ds, var_name, att_dict):
 
 def test_simple_write():
 
-    fname = 'two_triangles.nc'
+    fname = 'temp.nc'
     grid = two_triangles()
 
     grid.save_as_netcdf(fname)
 
     ## could be lots of tests here...
-    ds = netCDF4.Dataset(fname)
-    assert nc_has_variable(ds, 'mesh')
+    with netCDF4.Dataset(fname) as ds:
 
-    assert nc_var_has_attr_vals(ds, 'mesh', {'cf_role':'mesh_topology',
-                                            'topology_dimension' : 2,
-                                            'long_name': u'Topology data of 2D unstructured mesh'
-                                            })
-    ds.close()
+        assert nc_has_variable(ds, 'mesh')
+
+        assert nc_var_has_attr_vals(ds, 'mesh', {'cf_role':'mesh_topology',
+                                                'topology_dimension' : 2,
+                                                'long_name': u'Topology data of 2D unstructured mesh'
+                                                })
 
 def test_set_mesh_name():
-    fname = 'two_triangles2.nc'
+    fname = 'temp.nc'
+    
     grid  =  two_triangles()
+    grid.mesh_name = "mesh_2"
+    
+    grid.save_as_netcdf(fname)
 
-    grid.save_as_netcdf(fname, mesh_name = "mesh_2")
+    with netCDF4.Dataset(fname) as ds:
+        assert nc_has_variable(ds, 'mesh_2')
 
-    ds = netCDF4.Dataset(fname)
-    assert nc_has_variable(ds, 'mesh_2')
+        assert nc_var_has_attr_vals(ds, 'mesh_2', {'cf_role':'mesh_topology',
+                                                   'topology_dimension' : 2,
+                                                   'long_name': u'Topology data of 2D unstructured mesh'
+                                                   })
 
-    assert nc_var_has_attr_vals(ds, 'mesh_2', {'cf_role':'mesh_topology',
-                                               'topology_dimension' : 2,
-                                               'long_name': u'Topology data of 2D unstructured mesh'
-                                               })
+        assert nc_var_has_attr_vals(ds, 'mesh_2', {'cf_role':'mesh_topology',
+                                                   'topology_dimension' : 2,
+                                                   'long_name': u'Topology data of 2D unstructured mesh',
+                                                   'node_coordinates': 'mesh_2_node_lon mesh_2_node_lat',
+                                                   })
 
-    assert nc_var_has_attr_vals(ds, 'mesh_2', {'cf_role':'mesh_topology',
-                                               'topology_dimension' : 2,
-                                               'long_name': u'Topology data of 2D unstructured mesh',
-                                               'node_coordinates': 'mesh_2_node_lon mesh_2_node_lat',
-                                               })
+        assert nc_has_variable(ds, 'mesh_2_node_lon')
+        assert nc_has_variable(ds, 'mesh_2_node_lat')
+        assert nc_has_variable(ds, 'mesh_2_face_nodes')
+        assert nc_has_variable(ds, 'mesh_2_edge_nodes')
 
-    assert nc_has_variable(ds, 'mesh_2_node_lon')
-    assert nc_has_variable(ds, 'mesh_2_node_lat')
-    assert nc_has_variable(ds, 'mesh_2_face_nodes')
-    assert nc_has_variable(ds, 'mesh_2_edge_nodes')
+        assert nc_has_dimension(ds, "mesh_2_num_nodes")
+        assert nc_has_dimension(ds, "mesh_2_num_edges")
+        assert nc_has_dimension(ds, "mesh_2_num_faces")
+        assert nc_has_dimension(ds, "mesh_2_num_vertices")
 
-    assert nc_has_dimension(ds, "mesh_2_num_nodes")
-    assert nc_has_dimension(ds, "mesh_2_num_edges")
-    assert nc_has_dimension(ds, "mesh_2_num_faces")
-    assert nc_has_dimension(ds, "mesh_2_num_vertices")
+        assert not nc_var_has_attr(ds, 'mesh_2', "face_edge_connectivity")
 
-    assert not nc_var_has_attr(ds, 'mesh_2', "face_edge_connectivity")
-
-    ds.close()
 
 def test_write_with_depths():
     '''
     tests writting a netcdf file with depth data
     '''
 
-    fname = 'two_triangles_depth.nc'
+    fname = 'temp.nc'
 
     grid = two_triangles()
+    grid.mesh_name='mesh1'
 
     # create a dataset object for the depths:
     depths = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
@@ -149,23 +151,24 @@ def test_write_with_depths():
 
     grid.save_as_netcdf(fname)
 
-    ds = netCDF4.Dataset(fname)
+    with netCDF4.Dataset(fname) as ds:
 
-    assert nc_has_variable(ds, 'mesh')
-    assert nc_has_variable(ds, 'depth')
+        assert nc_has_variable(ds, 'mesh1')
+        assert nc_has_variable(ds, 'depth')
 
-    assert nc_var_has_attr_vals(ds, 'depth', {"coordinates" : "mesh_node_lon mesh_node_lat",
-                                              "location" : "node"})
+        assert nc_var_has_attr_vals(ds, 'depth', {"coordinates" : "mesh1_node_lon mesh1_node_lat",
+                                                  "location" : "node"})
 
 
 def test_write_with_velocities():
     '''
-    tests writting a netcdf file with velocities on the faces
+    tests writing a netcdf file with velocities on the faces
     '''
 
-    fname = 'two_triangles_vel.nc'
+    fname = 'temp.nc'
 
     grid = two_triangles()
+    grid.mesh_name = 'mesh2'
 
     # create a dataset object for u velocity:
     u_vel = DataSet('u', location='face', data=[1.0, 2.0])
@@ -183,22 +186,97 @@ def test_write_with_velocities():
 
     grid.save_as_netcdf(fname)
 
-    ds = netCDF4.Dataset(fname)
+    with netCDF4.Dataset(fname) as ds:
+        assert nc_has_variable(ds, 'mesh2')
+        assert nc_has_variable(ds, 'u')
+        assert nc_has_variable(ds, 'v')
 
-    assert nc_has_variable(ds, 'mesh')
-    assert nc_has_variable(ds, 'u')
-    assert nc_has_variable(ds, 'v')
+        assert nc_var_has_attr_vals(ds, 'u', {
+                                              "coordinates" : "mesh2_face_lon mesh2_face_lat",
+                                              "location" : "face",
+                                              })
 
-    assert nc_var_has_attr_vals(ds, 'u', {
-                                          #"coordinates" : "mesh_node_lon mesh_node_lat",
-                                          "location" : "face",
-                                          })
+def test_write_with_edge_data():
+    '''
+    tests writing a netcdf file with data on teh edges (fluxes, maybe?)
+    '''
+    fname = 'temp.nc'
+
+    grid = two_triangles()
+    grid.mesh_name = 'mesh2'
+
+    # create a dataset object for fluxes:
+    flux = DataSet('flux', location='edge', data=[0.0, 0.0, 4.1, 0.0, 5.1, ])
+    flux.attributes['units'] = 'm^3/s'
+    flux.attributes["long_name"] = "volume flux between cells"
+
+    grid.add_data(flux)
+
+    grid.save_as_netcdf(fname)
+
+    with netCDF4.Dataset(fname) as ds:
+
+        assert nc_has_variable(ds, 'mesh2')
+        assert nc_has_variable(ds, 'flux')
+
+        assert nc_var_has_attr_vals(ds, 'flux', {
+                                              "coordinates" : "mesh2_edge_lon mesh2_edge_lat",
+                                              "location" : "edge",
+                                              'units' : 'm^3/s',
+                                              })
+
+def test_write_with_bound_data():
+    '''
+    tests writing a netcdf file with data on the boundaries
+    suitable for boundary conditions, for example --  (fluxes, maybe?)
+    '''
+    fname = 'temp.nc'
+
+    grid = two_triangles() # using default mesh name
+    # add the boundary definitions:
+    grid.boundaries = [(0,1),
+                       (0,2),
+                       (1,3),
+                       (2,3),
+                      ]
 
 
-    assert False
+    # create a dataset object for boundary conditions
+    # create a dataset object for boundary conditions:
+    bnds = DataSet('bnd_cond', location='boundary', data=[0, 1, 0, 0])
+    bnds.attributes["long_name"] = "model boundary conditions"
+    bnds.attributes["flag_values"] = "0 1"
+    bnds.attributes["flag_meanings"] = "no_flow_boundary  open_boundary"
+
+    grid.add_data(bnds)
+
+    grid.save_as_netcdf(fname)
+
+    with netCDF4.Dataset(fname) as ds:
+
+        assert nc_has_variable(ds, 'mesh')
+        assert nc_has_variable(ds, 'bnd_cond')
+
+        assert nc_var_has_attr_vals(ds, 'mesh', {
+                                              "boundary_node_connectivity" : "mesh_boundary_nodes",
+                                              })
+
+        assert nc_var_has_attr_vals(ds, 'bnd_cond', {
+                                              "coordinates" : u'mesh_boundary_lon mesh_boundary_lat',
+                                              "location" : "boundary",
+                                              "flag_values" : "0 1",
+                                              "flag_meanings" : "no_flow_boundary  open_boundary",
+                                              })
 
 
+if __name__ == "__main__":
+    # run the tests:
 
+    test_simple_write()
+    test_set_mesh_name()
+    test_write_with_depths()
+    test_write_with_velocities()
+    test_write_with_edge_data()
    
 
  

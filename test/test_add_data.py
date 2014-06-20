@@ -83,7 +83,6 @@ def test_add_edge_data():
 
     grid = two_triangles()
 
-    print grid.edges
     # create a dataset object for velocity:
     bnds = DataSet('bounds', location='edge', data=[0, 1, 0, 0, 1])
     bnds.attributes["standard_name"] = "boundary type"
@@ -98,10 +97,41 @@ def test_add_edge_data_wrong():
 
     grid = two_triangles()
 
-    print grid.edges
     # create a dataset object for velocity:
+    # a miss-matched set
     bnds = DataSet('bounds', location='edge', data=[0, 1, 0, 0, 1, 3, 3])
 
     with pytest.raises(ValueError):
         grid.add_data(bnds)
+
+def test_add_boundary_data():
+
+    grid = two_triangles()
+
+    print grid.boundaries
+
+    # add the boundary definitions:
+    grid.boundaries = [(0,1),
+                       (0,2),
+                       (1,3),
+                       (2,3),
+                      ]
+    # create a dataset object for boundary conditions:
+    bnds = DataSet('bounds', location='boundary', data=[0, 1, 0, 0, 1])
+    bnds.attributes["long_name"] = "model boundary conditions"
+
+    # wrong size for data
+    with pytest.raises(ValueError):
+        grid.add_data(bnds)
+    # correct data
+    bnds.data = [0, 1, 0, 0]
+    grid.add_data(bnds)
+
+    assert grid.data['bounds'].name == 'bounds'
+    assert np.array_equal( grid.data['bounds'].data, [0, 1, 0, 0] )
+
+
+
+
+
 

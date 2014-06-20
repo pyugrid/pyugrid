@@ -54,4 +54,26 @@ def test_build_edges():
                                   [1, 3],
                                   [2, 3]])
 
+def test_build_face_coordinates():
+    grid = two_triangles()
+    grid.build_face_coordinates()
+    coords = grid.face_coordinates
+
+    assert coords.shape == (2,2)
+    assert np.allclose(coords, [ (1.1, 0.76666667),
+                                 (2.1, 1.43333333)]) 
+def test_build_edge_coordinates():
+    grid = two_triangles()
+    grid.build_edge_coordinates()
+    coords = grid.edge_coordinates
+    nodes = grid.nodes
+    print coords
+
+    assert coords.shape == (5,2)
+    assert np.allclose(coords, [[ 1.1,  0.1],
+                                [ 2.6,  1.1],
+                                [ 2.1,  2.1],
+                                [ 0.6,  1.1],
+                                [ 1.6,  1.1]]) 
+
 
