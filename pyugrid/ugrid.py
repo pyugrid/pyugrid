@@ -223,6 +223,7 @@ class UGrid(object):
         # other things are no longer valid
         self._face_face_connectivity = None
         self._face_edge_connectivity = None
+        self.edge_coordinates = None
 
     @property
     def edges(self):
@@ -240,6 +241,7 @@ class UGrid(object):
     def edges(self):
         self._edges = None
         self._face_edge_connectivity = None
+        self.edge_coordinates = None
 
     @property
     def boundaries(self):
@@ -255,6 +257,7 @@ class UGrid(object):
     @boundaries.deleter
     def boundaries(self):
         self._boundaries = None
+        self.boundary_coordinates = None
 
 
     @property
@@ -281,7 +284,7 @@ class UGrid(object):
         if face_edge_connectivity is not None:
             face_edge_connectivity = np.asarray(face_edge_connectivity, dtype=IND_DT)
             if face_edge_connectivity.shape != (len(self.faces), self.num_vertices):
-                raise ValueError("face_face_connectivity must be size (num_faces, %i)"%self.num_vertices)
+                raise ValueError("face_face_connectivity must be size (num_face, %i)"%self.num_vertices)
         self._face_edge_connectivity = face_edge_connectivity
     @face_edge_connectivity.deleter
     def face_edge_connectivity(self):
@@ -408,6 +411,10 @@ class UGrid(object):
         Builds the face_coordinates array, using the average of the
         nodes defining each face.
 
+        Note that you may want a different definition of the face
+        coordinates than this computes, but this is here to have
+        an easy default.
+
         This will write-over an existing face_coordinates array
 
         Useful if you want this in the output file
@@ -422,7 +429,12 @@ class UGrid(object):
     def build_edge_coordinates(self):
         """
         Builds the face_coordinates array, using the average of the
-        nodes defining each face.
+        nodes defining each edge.
+
+        Note that you may want a different definition of the edge
+        coordinates than this computes, but this is here to have
+        an easy default.
+
 
         This will write-over an existing face_coordinates array
 
@@ -434,6 +446,26 @@ class UGrid(object):
             coords = self.nodes[edge]
             edge_coordinates[i] = coords.mean(axis=0)
         self.edge_coordinates = edge_coordinates
+
+    def build_boundary_coordinates(self):
+        """
+        Builds the boundary_coordinates array, using the average of the
+        nodes defining each boundary segment.
+
+        Note that you may want a different definition of the boundary
+        coordinates than this computes, but this is here to have
+        an easy default.
+
+        This will write-over an existing face_coordinates array
+
+        Useful if you want this in the output file
+        """
+        boundary_coordinates = np.zeros( (len(self.boundaries),2), dtype=NODE_DT )
+        ## fixme: there has got to be a way to vectorize this
+        for i, bound in enumerate(self.boundaries):
+            coords = self.nodes[bound]
+            boundary_coordinates[i] = coords.mean(axis=0)
+        self.boundary_coordinates = boundary_coordinates
 
 
     def save_as_netcdf(self, filepath):
@@ -456,13 +488,13 @@ class UGrid(object):
         # create a new netcdf file
         with ncDataset(filepath, mode="w", clobber=True) as nclocal:
 
-            nclocal.createDimension(mesh_name+'_num_nodes', len(self.nodes) )
+            nclocal.createDimension(mesh_name+'_num_node', len(self.nodes) )
             if self._edges is not None:
-                nclocal.createDimension(mesh_name+'_num_edges', len(self.edges) )
+                nclocal.createDimension(mesh_name+'_num_edge', len(self.edges) )
             if self._boundaries is not None:
-                nclocal.createDimension(mesh_name+'_num_boundaries', len(self.boundaries) )
+                nclocal.createDimension(mesh_name+'_num_boundary', len(self.boundaries) )
             if self._faces is not None:
-                nclocal.createDimension(mesh_name+'_num_faces', len(self.faces) )
+                nclocal.createDimension(mesh_name+'_num_face', len(self.faces) )
                 nclocal.createDimension(mesh_name+'_num_vertices', self.faces.shape[1] )
             nclocal.createDimension('two', 2)
 
@@ -486,10 +518,12 @@ class UGrid(object):
             if self.boundaries is not None:
                 mesh.boundary_node_connectivity = mesh_name+"_boundary_nodes"
 
+            ## fixme: This could be re-factored to be more generic, rather than separate for each type of data
+            ##        see the coordinates example below
             if self.faces is not None:
                 face_nodes = nclocal.createVariable(mesh_name+"_face_nodes",
                                                     IND_DT,
-                                                    (mesh_name+'_num_faces', mesh_name+'_num_vertices'),
+                                                    (mesh_name+'_num_face', mesh_name+'_num_vertices'),
                                                     )
                 face_nodes[:] = self.faces
 
@@ -500,7 +534,7 @@ class UGrid(object):
             if self.edges is not None:
                 edge_nodes = nclocal.createVariable(mesh_name+"_edge_nodes",
                                                     IND_DT,
-                                                    (mesh_name+'_num_edges', 'two'),
+                                                    (mesh_name+'_num_edge', 'two'),
                                                     )
                 edge_nodes[:] = self.edges
 
@@ -510,19 +544,33 @@ class UGrid(object):
 
             if self.boundaries is not None:
                 boundary_nodes = nclocal.createVariable(mesh_name+"_boundary_nodes",
-                                                    IND_DT,
-                                                    (mesh_name+'_num_boundaries', 'two'),
-                                                    )
+                                                        IND_DT,
+                                                        (mesh_name+'_num_boundary', 'two'),
+                                                        )
                 boundary_nodes[:] = self.boundaries
 
                 boundary_nodes.cf_role = "boundary_node_connectivity"
-                boundary_nodes.long_name = "Maps every boundary to the two nodes that it connects."
+                boundary_nodes.long_name = "Maps every boundary segment to the two nodes that it connects."
                 boundary_nodes.start_index = 0 ;
+
+            ## optional "coordinate variables"
+            for location in ['face', 'edge', 'boundary']:
+                if getattr(self, "{0}_coordinates".format(location)) is not None:
+                    for axis, ind in [('lat',1), ('lon',0)]:
+                        var = nclocal.createVariable("{0}_{1}_{2}".format(mesh_name, location, axis),
+                                                     NODE_DT,
+                                                     dimensions=("{0}_num_{1}".format(mesh_name, location)),
+                                                    )
+                        var[:] = getattr(self, "{0}_coordinates".format(location))[:,ind]
+                        ## attributes of the variable
+                        var.standard_name = "longitude" if axis == 'lon' else 'latitude'
+                        var.units = "degrees_east" if axis == 'lon' else 'degrees_north'
+                        var.long_name = "Characteristics {0} of 2D mesh {1}".format(var.standard_name, location)
 
             ## the node data
             node_lon = nclocal.createVariable(mesh_name+'_node_lon',
                                               self._nodes.dtype,
-                                              (mesh_name+'_num_nodes',),
+                                              (mesh_name+'_num_node',),
                                               chunksizes=(len(self.nodes), ),
                                               #zlib=False,
                                               #complevel=0,
@@ -534,7 +582,7 @@ class UGrid(object):
 
             node_lat = nclocal.createVariable(mesh_name+'_node_lat',
                                               self._nodes.dtype,
-                                              (mesh_name+'_num_nodes',),
+                                              (mesh_name+'_num_node',),
                                               chunksizes=(len(self.nodes), ),
                                               #zlib=False,
                                               #complevel=0,
@@ -547,20 +595,20 @@ class UGrid(object):
             ## write the associated data
             for dataset in self.data.values():
                 if dataset.location == 'node':
-                    shape = (mesh_name + '_num_nodes',)
+                    shape = (mesh_name + '_num_node',)
                     coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)
                     chunksizes = (len(self.nodes), )
                 elif dataset.location == 'face':
-                    shape = (mesh_name + '_num_faces',)
-                    coordinates = "{0}_face_lon {0}_face_lat".format(mesh_name)
+                    shape = (mesh_name + '_num_face',)
+                    coordinates = "{0}_face_lon {0}_face_lat".format(mesh_name) if self.face_coordinates is not None else None
                     chunksizes = (len(self.faces), )
                 elif dataset.location == 'edge':
-                    shape = (mesh_name + '_num_edges',)
-                    coordinates = "{0}_edge_lon {0}_edge_lat".format(mesh_name)
+                    shape = (mesh_name + '_num_edge',)
+                    coordinates = "{0}_edge_lon {0}_edge_lat".format(mesh_name) if self.edge_coordinates is not None else None
                     chunksizes = (len(self.edges), )
                 elif dataset.location == 'boundary':
-                    shape = (mesh_name + '_num_boundaries',)
-                    coordinates = "{0}_boundary_lon {0}_boundary_lat".format(mesh_name)
+                    shape = (mesh_name + '_num_boundary',)
+                    coordinates = "{0}_boundary_lon {0}_boundary_lat".format(mesh_name) if self.boundary_coordinates is not None else None
                     chunksizes = (len(self.boundaries), )
                 data_var = nclocal.createVariable(dataset.name,
                                                   dataset.data.dtype,
@@ -574,7 +622,8 @@ class UGrid(object):
 
                 data_var.location = dataset.location
 
-                data_var.coordinates = coordinates
+                if coordinates is not None:
+                    data_var.coordinates = coordinates
                 ## add the extra attributes
                 for att_name, att_value in dataset.attributes.items():
                     setattr(data_var, att_name, att_value)
@@ -609,11 +658,11 @@ def open_cf_todict( filename ):
             
             ## Grab node coordinates from mesh meta-variable, and pull out the coord values
             node_coordinates = meshatts.get('node_coordinates', None)
-            num_nodes = len(nc.dimensions['n'+meshname+'_node'])
+            num_node = len(nc.dimensions['n'+meshname+'_node'])
             if node_coordinates == None:
                 raise AttributeError("Unstructured meshes must include node coordinates, specified with the 'node_coordinates' attribute")
             node_coordinates = node_coordinates.split(" ")
-            nodes = np.empty((num_nodes, 2), dtype=np.float64)
+            nodes = np.empty((num_node, 2), dtype=np.float64)
             for coord in node_coordinates:
                 units = ncvars[coord].units
                 if 'north' in units:

@@ -6,10 +6,11 @@ tests for saving a UGrid in netcdf format
 designed to be run with pytest
 """
 
+import numpy as np
 import netCDF4
 
 from pyugrid.ugrid import UGrid, DataSet
-from pyugrid.test_examples import two_triangles
+from pyugrid.test_examples import two_triangles, twenty_one_triangles
 
 # code to check netcdf files for stuff:
 def nc_has_variable(ds, var_name):
@@ -123,9 +124,9 @@ def test_set_mesh_name():
         assert nc_has_variable(ds, 'mesh_2_face_nodes')
         assert nc_has_variable(ds, 'mesh_2_edge_nodes')
 
-        assert nc_has_dimension(ds, "mesh_2_num_nodes")
-        assert nc_has_dimension(ds, "mesh_2_num_edges")
-        assert nc_has_dimension(ds, "mesh_2_num_faces")
+        assert nc_has_dimension(ds, "mesh_2_num_node")
+        assert nc_has_dimension(ds, "mesh_2_num_edge")
+        assert nc_has_dimension(ds, "mesh_2_num_face")
         assert nc_has_dimension(ds, "mesh_2_num_vertices")
 
         assert not nc_var_has_attr(ds, 'mesh_2', "face_edge_connectivity")
@@ -184,6 +185,9 @@ def test_write_with_velocities():
 
     grid.add_data(v_vel)
 
+    # add coordinates for face data
+    grid.build_face_coordinates()
+
     grid.save_as_netcdf(fname)
 
     with netCDF4.Dataset(fname) as ds:
@@ -198,7 +202,7 @@ def test_write_with_velocities():
 
 def test_write_with_edge_data():
     '''
-    tests writing a netcdf file with data on teh edges (fluxes, maybe?)
+    tests writing a netcdf file with data on the edges (fluxes, maybe?)
     '''
     fname = 'temp.nc'
 
@@ -211,6 +215,8 @@ def test_write_with_edge_data():
     flux.attributes["long_name"] = "volume flux between cells"
 
     grid.add_data(flux)
+    #add coordinates for edges
+    grid.build_edge_coordinates()
 
     grid.save_as_netcdf(fname)
 
@@ -224,6 +230,8 @@ def test_write_with_edge_data():
                                               "location" : "edge",
                                               'units' : 'm^3/s',
                                               })
+        assert np.array_equal( ds.variables['mesh2_edge_lon'], grid.edge_coordinates[:,0] )
+        assert np.array_equal( ds.variables['mesh2_edge_lat'], grid.edge_coordinates[:,1] )
 
 def test_write_with_bound_data():
     '''
@@ -241,7 +249,6 @@ def test_write_with_bound_data():
                       ]
 
 
-    # create a dataset object for boundary conditions
     # create a dataset object for boundary conditions:
     bnds = DataSet('bnd_cond', location='boundary', data=[0, 1, 0, 0])
     bnds.attributes["long_name"] = "model boundary conditions"
@@ -262,11 +269,118 @@ def test_write_with_bound_data():
                                               })
 
         assert nc_var_has_attr_vals(ds, 'bnd_cond', {
-                                              "coordinates" : u'mesh_boundary_lon mesh_boundary_lat',
                                               "location" : "boundary",
                                               "flag_values" : "0 1",
                                               "flag_meanings" : "no_flow_boundary  open_boundary",
                                               })
+        ## there should be no coordinates attribute or variable for the boundaries
+        ##  as there is no boundaries_coordinates defined
+        assert not nc_has_variable(ds, 'mesh_boundary_lon')
+        assert not nc_has_variable(ds, 'mesh_boundary_lat')
+        assert not nc_var_has_attr(ds, 'bnd_cond', 'coordinates')
+
+def test_write_everything():
+    """ An example with all features enabled, and a less trivial grid """
+
+    # use a small, but interesting grid
+    fname = 'full_example.nc'
+
+    grid = twenty_one_triangles() # using default mesh name
+    grid.build_face_face_connectivity()
+    grid.build_edges()
+
+    grid.build_edge_coordinates()
+    grid.build_face_coordinates()
+    grid.build_boundary_coordinates()
+
+    # depth on the nodes
+    depths = DataSet('depth', location='node', data=np.linspace(1,10,20))
+    depths.attributes['units'] = 'm'
+    depths.attributes["standard_name"] = "sea_floor_depth_below_geoid"
+    depths.attributes["positive"] = "down"
+
+    grid.add_data(depths)
+
+    # velocities on the faces:
+    u_vel = DataSet('u', location='face', data=np.sin(np.linspace(3,12,21)))
+    u_vel.attributes['units'] = 'm/s'
+    u_vel.attributes["standard_name"] = "eastward_sea_water_velocity"
+
+    grid.add_data(u_vel)
+
+    # create a dataset object for v velocity:
+    v_vel = DataSet('v', location='face', data=np.sin(np.linspace(12,15,21)))
+    v_vel.attributes['units'] = 'm/s'
+    v_vel.attributes["standard_name"] = "northward_sea_water_velocity"
+
+    grid.add_data(v_vel)
+
+    # fluxes on the edges:
+    flux = DataSet('flux', location='edge', data=np.linspace(1000,2000,41))
+    flux.attributes['units'] = 'm^3/s'
+    flux.attributes["long_name"] = "volume flux between cells"
+
+    grid.add_data(flux)
+
+    # Some boundary conditions:
+
+    print grid.boundaries.shape
+    print grid.boundaries
+    bounds = np.zeros( (19,), dtype=np.uint8 )
+    bounds[7] = 1
+    bnds = DataSet('bnd_cond', location='boundary', data=bounds)
+    bnds.attributes["long_name"] = "model boundary conditions"
+    bnds.attributes["flag_values"] = "0 1"
+    bnds.attributes["flag_meanings"] = "no_flow_boundary  open_boundary"
+
+    grid.add_data(bnds)
+
+    grid.save_as_netcdf(fname)
+
+    ## now the tests:
+    with netCDF4.Dataset(fname) as ds:
+
+        assert nc_has_variable(ds, 'mesh')
+        assert nc_has_variable(ds, 'depth')
+
+        assert nc_var_has_attr_vals(ds, 'depth', {"coordinates" : "mesh_node_lon mesh_node_lat",
+                                                  "location" : "node"})
+
+        assert nc_has_variable(ds, 'u')
+        assert nc_has_variable(ds, 'v')
+
+        assert nc_var_has_attr_vals(ds, 'u', {
+                                              "coordinates" : "mesh_face_lon mesh_face_lat",
+                                              "location" : "face",
+                                              })
+
+        assert nc_var_has_attr_vals(ds, 'v', {
+                                              "coordinates" : "mesh_face_lon mesh_face_lat",
+                                              "location" : "face",
+                                              })
+
+        assert nc_has_variable(ds, 'flux')
+
+        assert nc_var_has_attr_vals(ds, 'flux', {
+                                              "coordinates" : "mesh_edge_lon mesh_edge_lat",
+                                              "location" : "edge",
+                                              'units' : 'm^3/s',
+                                              })
+        assert nc_has_variable(ds, 'mesh')
+        assert nc_has_variable(ds, 'bnd_cond')
+
+        assert nc_var_has_attr_vals(ds, 'mesh', {
+                                              "boundary_node_connectivity" : "mesh_boundary_nodes",
+                                              })
+
+        assert nc_var_has_attr_vals(ds, 'bnd_cond', {
+                                              "location" : "boundary",
+                                              "flag_values" : "0 1",
+                                              "flag_meanings" : "no_flow_boundary  open_boundary",
+                                              })
+
+
+    assert False
 
 
 if __name__ == "__main__":

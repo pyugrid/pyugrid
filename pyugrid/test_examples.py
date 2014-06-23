@@ -78,29 +78,29 @@ def twenty_one_triangles():
              (17,18,19),
              ]
 
-    # we may want to use this later to define just the outer boundary
-    # edges = [(0,1),
-    #          (1,5),
-    #          (5,11),
-    #          (11,14),
-    #          (14,16),
-    #          (16,18),
-    #          (18,19),
-    #          (19,17),
-    #          (17,15),
-    #          (15,13),
-    #          (13,12),
-    #          (12,7),
-    #          (7,2),
-    #          (2,0),
-    #          (3,4),
-    #          (4,10),
-    #          (10,9),
-    #          (9,6),
-    #          (6,3),
-    #          ]
+    ## we may want to use this later to define just the outer boundary
+    boundaries = [(0,1),
+                  (1,5),
+                  (5,11),
+                  (11,14),
+                  (14,16),
+                  (16,18),
+                  (18,19),
+                  (19,17),
+                  (17,15),
+                  (15,13),
+                  (13,12),
+                  (12,7),
+                  (7,2),
+                  (2,0),
+                  (3,4),
+                  (4,10),
+                  (10,9),
+                  (9,6),
+                  (6,3),
+                  ]
 
-    grid = ugrid.UGrid(nodes, faces)
+    grid = ugrid.UGrid(nodes, faces, boundaries=boundaries)
     grid.build_edges()
     return grid
 
