@@ -1,21 +1,54 @@
 #!/usr/bin/env python
 
 """
-tests for testing a ugrid file read.
+Tests for testing a ugrid file read.
 
-we really need some  more sample data files....
+We really need a LOT more sample data files....
 
 """
+import pytest
+
 import numpy as np
+import netCDF4
 
-from pyugrid.ugrid import UGrid
-
+from pyugrid import ugrid
+UGrid = ugrid.UGrid
 
 def test_simple_read():
-	""" can it be read at all """
-	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+    """ can it be read at all """
+    ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
 
-	assert True
+    assert True
+
+def test_get_mesh_names():
+    """
+    check that it can find the mesh variable
+    
+    NOTE: this really should check for more than one mesh..
+    """
+    nc = netCDF4.Dataset('files/ElevenPoints_UGRIDv0.9.nc')
+    names = ugrid.find_mesh_names( nc )
+
+    assert names == [u'Mesh2']
+
+def test_mesh_not_there():
+    with pytest.raises(ValueError):
+        ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc', mesh_name='garbage')
+
+def test_load_grid_from_nc():
+    """
+    test reading a fairly full example file
+    """
+    grid = ugrid.load_grid_from_nc('files/ElevenPoints_UGRIDv0.9.nc')
+
+    assert grid.mesh_name == 'Mesh2'
+
+    assert grid.nodes.shape == (11, 2)
+    assert grid.faces.shape == (13, 3)
+    assert grid.face_face_connectivity.shape == (13,3) 
+    assert grid.boundaries.shape == (9,2)
+
+    assert grid.edges is None # no edges in this data
 
 def test_read_nodes():
 	""" Do we get the right nodes array? """
@@ -27,29 +60,46 @@ def test_read_nodes():
 	assert np.array_equal( ug.nodes[0,:],	 (-62.242, 12.774999) )
 	assert np.array_equal( ug.nodes[-1,:],	 (-34.911235,  29.29379) )
 
-## no edge data in test file at this point
-# def test_read_edges():
-# 	""" Do we get the right edges array? """
-# 	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+def test_read_faces():
+    """ Do we get the right faces array? """
+    ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
 
-# 	print ug.edges
+    assert ug.faces.shape == (13, 3)
 
-# 	assert False
+    # not ideal to pull specific values out, but how else to test?
+    assert np.array_equal( ug.faces[0,:],    ( 2, 3, 10) )
+    assert np.array_equal( ug.faces[-1,:],   (10, 5,  6) )
 
-def test_read_face_node_connectivity():
-	""" Do we get the right connectivity array? """
-	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+def test_read_face_face():
+    """ Do we get the right face_face_connectivity array? """
+    ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
 
-	assert ug.faces.shape == (13, 3)
+    assert ug.face_face_connectivity.shape == (13, 3)
 
-	# # not ideal to pull specific values out, but how else to test?
-	## note: file is 1-indexed, so these values are adjusted
-	assert np.array_equal( ug.faces[0,:],	 (2, 3, 10) )
-	assert np.array_equal( ug.faces[-1,:],	 (10, 5, 6) )
+    # not ideal to pull specific values out, but how else to test?
+    assert np.array_equal( ug.face_face_connectivity[0,:],    ( 11, 5, -1) )
+    assert np.array_equal( ug.face_face_connectivity[-1,:],   (-1, 5,  11) )
 
-# def test_simple_read():
-# 	ug = UGrid.from_ncfile('files/two_triangles.nc')
 
-# 	assert False
+
+def test_read_boundaries():
+    """ Do we get the right boundaries array? """
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    assert grid.boundaries.shape == (9, 2)
+
+    print grid.boundaries
+    # # not ideal to pull specific values out, but how else to test?
+    ## note: file is 1-indexed, so these values are adjusted
+    assert np.array_equal( grid.boundaries,[[0, 1],
+                                            [1, 2],
+                                            [2, 3],
+                                            [3, 4],
+                                            [4, 0],
+                                            [5, 6],
+                                            [6, 7],
+                                            [7, 8],
+                                            [8, 5]]
+                                            )
 
  
