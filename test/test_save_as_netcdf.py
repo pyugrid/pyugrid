@@ -380,9 +380,6 @@ def test_write_everything():
                                               })
 
 
-    assert False
-
-
 if __name__ == "__main__":
     # run the tests:
 

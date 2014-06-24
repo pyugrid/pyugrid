@@ -12,6 +12,8 @@ import numpy as np
 import netCDF4
 
 from pyugrid import ugrid
+from pyugrid import read_netcdf
+
 UGrid = ugrid.UGrid
 
 def test_simple_read():
@@ -27,7 +29,7 @@ def test_get_mesh_names():
     NOTE: this really should check for more than one mesh..
     """
     nc = netCDF4.Dataset('files/ElevenPoints_UGRIDv0.9.nc')
-    names = ugrid.find_mesh_names( nc )
+    names = read_netcdf.find_mesh_names( nc )
 
     assert names == [u'Mesh2']
 
@@ -39,7 +41,7 @@ def test_load_grid_from_nc():
     """
     test reading a fairly full example file
     """
-    grid = ugrid.load_grid_from_nc('files/ElevenPoints_UGRIDv0.9.nc')
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
 
     assert grid.mesh_name == 'Mesh2'
 
@@ -59,6 +61,12 @@ def test_read_nodes():
 	# not ideal to pull specific values out, but how else to test?
 	assert np.array_equal( ug.nodes[0,:],	 (-62.242, 12.774999) )
 	assert np.array_equal( ug.nodes[-1,:],	 (-34.911235,  29.29379) )
+
+def test_read_edges():
+    """ sample file has no edges """
+    ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    assert ug.edges is None
 
 def test_read_faces():
     """ Do we get the right faces array? """
@@ -88,7 +96,6 @@ def test_read_boundaries():
 
     assert grid.boundaries.shape == (9, 2)
 
-    print grid.boundaries
     # # not ideal to pull specific values out, but how else to test?
     ## note: file is 1-indexed, so these values are adjusted
     assert np.array_equal( grid.boundaries,[[0, 1],
@@ -101,5 +108,32 @@ def test_read_boundaries():
                                             [7, 8],
                                             [8, 5]]
                                             )
+
+def test_read_face_coordinates():
+    """ Do we get the right face_coordinates array? """
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    assert grid.face_coordinates.shape == (13, 2)
+
+    # # not ideal to pull specific values out, but how else to test?
+    assert np.array_equal( grid.face_coordinates[0], (-37.1904106666667, 30.57093) )
+    assert np.array_equal( grid.face_coordinates[-1], (-38.684412, 27.7132626666667) )
+
+def test_read_edge_coordinates():
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    # not in this sample file
+    assert grid.edge_coordinates is None
+
+def test_read_boundary_coordinates():
+    """ Do we get the right boundary_coordinates array? """
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    # not in this sample file
+    assert grid.boundary_coordinates is None
+
+
+if __name__ == "__main__":
+    test_simple_read()
 
  
