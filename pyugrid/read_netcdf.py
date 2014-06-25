@@ -11,6 +11,8 @@ This code is called by the UGrid class to load inot a UGRID object.
 
 import numpy as np
 
+from .data_set import DataSet
+
 def find_mesh_names( nc ):
     """
     find all the meshes in an open netcCDF4.DataSet
@@ -67,6 +69,24 @@ grid_defs = [{'grid_attr':'faces', # attribute name in UGrid object
               },
 
              ]
+# defintions for various coordinate arrays
+coord_defs = [ {'grid_attr':'nodes', # attribute name in UGrid object
+                'role': 'node_coordinates', # attribute name in mesh variable
+                'required': True, # is this required?
+               },
+               {'grid_attr':'face_coordinates', # attribute name in UGrid object
+                'role': 'face_coordinates', # attribute name in mesh variable
+                'required': False, # is this required?
+               },
+               {'grid_attr':'edge_coordinates', # attribute name in UGrid object
+                'role': 'edge_coordinates', # attribute name in mesh variable
+                'required': False, # is this required?
+               },
+               {'grid_attr':'boundary_coordinates', # attribute name in UGrid object
+                'role': 'boundary_coordinates', # attribute name in mesh variable
+                'required': False, # is this required?
+               }
+             ]
 
 
 def load_grid_from_nc(filename, grid, mesh_name=None):
@@ -110,35 +130,15 @@ def load_grid_from_nc(filename, grid, mesh_name=None):
 
     mesh_var = ncvars[mesh_name]
 
-    # defintions for various coordinate arrays
-    coord_defs = [ {'grid_attr':'nodes', # attribute name in UGrid object
-                    'role': 'node_coordinates', # attribute name in mesh variable
-                    'required': True, # is this required?
-                   },
-                   {'grid_attr':'face_coordinates', # attribute name in UGrid object
-                    'role': 'face_coordinates', # attribute name in mesh variable
-                    'required': False, # is this required?
-                   },
-                   {'grid_attr':'edge_coordinates', # attribute name in UGrid object
-                    'role': 'edge_coordinates', # attribute name in mesh variable
-                    'required': False, # is this required?
-                   },
-                   {'grid_attr':'boundary_coordinates', # attribute name in UGrid object
-                    'role': 'boundary_coordinates', # attribute name in mesh variable
-                    'required': False, # is this required?
-                   }
-                 ]
 
     ## Load the coordinate variables
     for defs in coord_defs:
-        print "loading:", defs
         try:
             coord_names = mesh_var.getncattr(defs['role']).strip().split()
             coord_vars = [nc.variables[name] for name in coord_names]
         except AttributeError:
             if defs['required']:
                 raise ValueError("Mesh variable must include %s attribute"%defs['role'])
-            print "not there"
             continue
         except KeyError:
             raise ValueError("file must include %s variables for %s named in mesh variable"%(coord_names, defs['role']))
@@ -187,6 +187,31 @@ def load_grid_from_nc(filename, grid, mesh_name=None):
         except KeyError:
             pass ## OK not to have this...
 
+    ## Load the associated data:
+
+    ## look for data arrays -- they should have a "location" attribute
+    for name, var in nc.variables.items():
+
+        #Data Arrays should have "location" and "mesh" attributes
+        try:
+            location = var.location
+            # the mesh attribute should match the mesh we're loading:
+            if var.mesh != mesh_name:
+                continue
+        except AttributeError:
+            continue
+
+        print "found:", name, location
+
+        #get the attributes
+        ## fixme: is there a way to get the attributes a dict directly?
+        attributes = { n: var.getncattr(n) for n in var.ncattrs() if n not in ('location' 'coordinates')}
+
+        # trick with the name: fixme: is this a good idea?
+        name = name.lstrip(mesh_name).lstrip('_')
+        ds = DataSet(name, data=var[:], location=location, attributes=attributes)
+
+        grid.add_data(ds)
 
 
 

@@ -132,6 +132,27 @@ def test_read_boundary_coordinates():
     # not in this sample file
     assert grid.boundary_coordinates is None
 
+def test_read_data1():
+    """ sample file has depths on the nodes -- that should get read in """
+
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    assert sorted(grid.data.keys()) == [u'boundary_count', u'boundary_types', u'depth']
+
+def test_read_data2():
+    """ sample file has depths on the nodes -- that should get read in """
+
+    grid = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
+
+    assert grid.data['depth'] is not None
+    assert np.array_equal( grid.data['depth'].data, [1, 1, 1, 102, 1, 1, 60, 1, 1, 97, 1] )
+    assert grid.data['depth'].attributes == { 'standard_name' : "sea_floor_depth_below_geoid",
+                                              'units' : "m",
+                                              'positive' : "down",
+                                              'mesh' : "Mesh2",
+                                              }
+
+
 
 if __name__ == "__main__":
     test_simple_read()

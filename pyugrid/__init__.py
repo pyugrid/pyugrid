@@ -5,4 +5,6 @@ This brings in the names we want in the package
 
 """
 from .ugrid import UGrid
+from .data_set import DataSet 
+
 
