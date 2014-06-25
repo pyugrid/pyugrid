@@ -158,7 +158,8 @@ def test_write_with_depths():
         assert nc_has_variable(ds, 'depth')
 
         assert nc_var_has_attr_vals(ds, 'depth', {"coordinates" : "mesh1_node_lon mesh1_node_lat",
-                                                  "location" : "node"})
+                                                  "location" : "node",
+                                                  "mesh": "mesh1"})
 
 
 def test_write_with_velocities():
@@ -198,6 +199,7 @@ def test_write_with_velocities():
         assert nc_var_has_attr_vals(ds, 'u', {
                                               "coordinates" : "mesh2_face_lon mesh2_face_lat",
                                               "location" : "face",
+                                              "mesh": "mesh2",
                                               })
 
 def test_write_with_edge_data():
@@ -229,6 +231,7 @@ def test_write_with_edge_data():
                                               "coordinates" : "mesh2_edge_lon mesh2_edge_lat",
                                               "location" : "edge",
                                               'units' : 'm^3/s',
+                                              "mesh": "mesh2",
                                               })
         assert np.array_equal( ds.variables['mesh2_edge_lon'], grid.edge_coordinates[:,0] )
         assert np.array_equal( ds.variables['mesh2_edge_lat'], grid.edge_coordinates[:,1] )
@@ -272,6 +275,7 @@ def test_write_with_bound_data():
                                               "location" : "boundary",
                                               "flag_values" : "0 1",
                                               "flag_meanings" : "no_flow_boundary  open_boundary",
+                                              "mesh": "mesh",
                                               })
         ## there should be no coordinates attribute or variable for the boundaries
         ##  as there is no boundaries_coordinates defined
@@ -352,11 +356,13 @@ def test_write_everything():
         assert nc_var_has_attr_vals(ds, 'u', {
                                               "coordinates" : "mesh_face_lon mesh_face_lat",
                                               "location" : "face",
+                                              "mesh": "mesh"
                                               })
 
         assert nc_var_has_attr_vals(ds, 'v', {
                                               "coordinates" : "mesh_face_lon mesh_face_lat",
                                               "location" : "face",
+                                              "mesh": "mesh",
                                               })
 
         assert nc_has_variable(ds, 'flux')
@@ -365,6 +371,7 @@ def test_write_everything():
                                               "coordinates" : "mesh_edge_lon mesh_edge_lat",
                                               "location" : "edge",
                                               'units' : 'm^3/s',
+                                              "mesh": "mesh",
                                               })
         assert nc_has_variable(ds, 'mesh')
         assert nc_has_variable(ds, 'bnd_cond')
@@ -377,6 +384,7 @@ def test_write_everything():
                                               "location" : "boundary",
                                               "flag_values" : "0 1",
                                               "flag_meanings" : "no_flow_boundary  open_boundary",
+                                              "mesh": "mesh",
                                               })
 
 

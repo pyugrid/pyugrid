@@ -574,9 +574,8 @@ class UGrid(object):
                                                   )
                 data_var[:] = dataset.data
                 ## add the standard attributes:
-
                 data_var.location = dataset.location
-
+                data_var.mesh = mesh_name
                 if coordinates is not None:
                     data_var.coordinates = coordinates
                 ## add the extra attributes
