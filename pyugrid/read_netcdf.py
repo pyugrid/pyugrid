@@ -89,7 +89,7 @@ coord_defs = [ {'grid_attr':'nodes', # attribute name in UGrid object
              ]
 
 
-def load_grid_from_nc(filename, grid, mesh_name=None):
+def load_grid_from_nc(filename, grid, mesh_name=None, load_data=True):
     """
     loads UGrid object from a netcdf file, adding the data
     to the passed-in grid object.
@@ -104,6 +104,12 @@ def load_grid_from_nc(filename, grid, mesh_name=None):
 
     :param mesh_name=None: name of the mesh to load
     :type mesh_name: string
+
+    :param load_data=False: flag to indicate whether you want to load the associated
+                            data or not. The mesh will be loaded in any case. If False,
+                            only the mesh will be loaded. If True, then all the data
+                            associated with the mesh will be loaded. This could be huge!
+    :type load_data: boolean
 
     NOTE: passing the UGrid object in to avoid circular references,
     while keeping the netcdf reading code in its own file.
@@ -193,24 +199,25 @@ def load_grid_from_nc(filename, grid, mesh_name=None):
 
         ## Load the associated data:
 
-        ## look for data arrays -- they should have a "location" attribute
-        for name, var in nc.variables.items():
+        if load_data:
+            ## look for data arrays -- they should have a "location" attribute
+            for name, var in nc.variables.items():
 
-            #Data Arrays should have "location" and "mesh" attributes
-            try:
-                location = var.location
-                # the mesh attribute should match the mesh we're loading:
-                if var.mesh != mesh_name:
+                #Data Arrays should have "location" and "mesh" attributes
+                try:
+                    location = var.location
+                    # the mesh attribute should match the mesh we're loading:
+                    if var.mesh != mesh_name:
+                        continue
+                except AttributeError:
                     continue
-            except AttributeError:
-                continue
 
-            #get the attributes
-            ## fixme: is there a way to get the attributes a dict directly?
-            attributes = { n: var.getncattr(n) for n in var.ncattrs() if n not in ('location', 'coordinates', 'mesh')}
+                #get the attributes
+                ## fixme: is there a way to get the attributes a dict directly?
+                attributes = { n: var.getncattr(n) for n in var.ncattrs() if n not in ('location', 'coordinates', 'mesh')}
 
-            # trick with the name: fixme: is this a good idea?
-            name = name.lstrip(mesh_name).lstrip('_')
-            ds = DataSet(name, data=var[:], location=location, attributes=attributes)
+                # trick with the name: fixme: is this a good idea?
+                name = name.lstrip(mesh_name).lstrip('_')
+                ds = DataSet(name, data=var[:], location=location, attributes=attributes)
 
-            grid.add_data(ds)
+                grid.add_data(ds)

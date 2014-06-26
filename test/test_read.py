@@ -11,6 +11,8 @@ import os
 import contextlib
 import pytest
 
+from .utilities import chdir
+
 import numpy as np
 import netCDF4
 
@@ -21,18 +23,6 @@ UGrid = ugrid.UGrid
 
 files = os.path.join(os.path.split(__file__)[0], 'files')
 file11 = 'ElevenPoints_UGRIDv0.9.nc'
-
-
-@contextlib.contextmanager
-def chdir(dirname=None):
-    curdir = os.getcwd()
-    try:
-        if dirname is not None:
-            os.chdir(dirname)
-        yield
-    finally:
-        os.chdir(curdir)
-
 
 def test_simple_read():
     """
@@ -214,7 +204,7 @@ def test_read_data1():
     """
 
     with chdir(files):
-        grid = UGrid.from_ncfile(file11)
+        grid = UGrid.from_ncfile(file11, load_data=True)
 
     assert sorted(grid.data.keys()) == [u'boundary_count',
                                         u'boundary_types',
@@ -227,7 +217,7 @@ def test_read_data2():
     """
 
     with chdir(files):
-        grid = UGrid.from_ncfile(file11)
+        grid = UGrid.from_ncfile(file11, load_data=True)
 
     # assert grid.data['depth'] is not None
     depth_data11 = [1, 1, 1, 102, 1, 1, 60, 1, 1, 97, 1]
