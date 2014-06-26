@@ -1,0 +1,11 @@
+#requirements.txt file for pyugrid
+
+# NOTE: no version numbers, as so far, there is nothing version
+#       specific -- though recent versions are probably required,
+#       I have no idea what the minimums are.
+#       If you run inot a versin-specific requirement -- please
+#       add that version here.
+
+numpy
+netCDF4
+pytest

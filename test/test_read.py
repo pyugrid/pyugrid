@@ -235,7 +235,6 @@ def test_read_data2():
     depth_attributes11 = {'standard_name': "sea_floor_depth_below_geoid",
                           'units': "m",
                           'positive': "down",
-                          'mesh': "Mesh2",
                           }
     assert grid.data['depth'].attributes == depth_attributes11
 

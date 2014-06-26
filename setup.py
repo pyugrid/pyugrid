@@ -2,11 +2,11 @@
 
 #from distutils.core import setup
 from setuptools import setup # to support "develop" mode
-from distutils.extension import Extension
-from Cython.Distutils import build_ext
+#from distutils.extension import Extension
+#from Cython.Distutils import build_ext
 from setuptools.command.test import test as TestCommand
 
-import numpy # for the includes for the Cython code
+#import numpy # for the includes for the Cython code
 
 class PyTest(TestCommand):
     def finalize_options(self):
@@ -30,6 +30,7 @@ setup(
 #    long_description=read('README'),
     install_requires=[
         'numpy',
+        'netCDF4',
         ],
     tests_require=[
         'pytest>=2.3.2',
