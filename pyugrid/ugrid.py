@@ -287,6 +287,26 @@ class UGrid(object):
             raise ValueError("I don't know how to add data associated with '%s'"%data_set.location)
         self._data[data_set.name] = data_set
 
+    def find_data_sets(self, standard_name, location=None):
+        """
+        Find all :py:class:`DataSet`s that match the specified standard name
+        
+        :param str standard_name: the standard name attribute (based on the UGRID conventions)
+        
+        :keyword location: optional attribute location to narrow the returned :py:class:`DataSet`s (one of 'node', 'edge', 'face', or 'boundary').
+        
+        :return: set of matching :py:class:`DataSet`s
+        """
+        found = set()
+        for ds in self._data.values():
+            if not ds.attributes:
+                continue
+            if ds.attributes['standard_name'] == standard_name:
+                if location is not None and ds.location != location:
+                    continue
+                found.add(ds)
+        return found
+
 
     def locate_face_simple(self, point):
         """
