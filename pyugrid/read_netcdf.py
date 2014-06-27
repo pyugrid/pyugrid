@@ -157,7 +157,17 @@ def load_grid_from_nc(filename, grid, mesh_name=None, load_data=True):
                 try:
                     standard_name = var.standard_name
                 except AttributeError:
-                    raise ValueError("%s variable doesn't contain standard_name attribute"%var)
+                    # CF does not require a standard name, so look in units, instead
+                    try:
+                        units = var.units
+                    except AttributeError:
+                        raise ValueError("%s variable doesn't contain units attribute: required by CF"%var)
+                    if units in ('degrees_east', 'degree_east', 'degree_E', 'degrees_E', 'degreeE', 'degreesE'): # CF accepted units attributes for longitude
+                            standard_name = 'longitude'
+                    elif units in ('degrees_north', 'degree_north', 'degree_N', 'degrees_N', 'degreeN', 'degreesN'): # CF accepted units attributes for longitude
+                            standard_name = 'latitude'
+                    else:
+                        raise ValueError("%s variable's units value (%s) doesn't look like latitude or longitude"%(var, units))
                 if standard_name == 'latitude':
                     nodes[:,1] = var[:]
                 elif standard_name == 'longitude':

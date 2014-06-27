@@ -58,7 +58,6 @@ def test_mesh_not_there():
         with chdir(files):
             ug = UGrid.from_ncfile(file11, mesh_name='garbage')
 
-
 def test_load_grid_from_nc():
     """
     Test reading a fairly full example file.
@@ -196,6 +195,17 @@ def test_read_boundary_coordinates():
 
     # not in this sample file
     assert grid.boundary_coordinates is None
+
+def test_read_longitude_no_standard_name():
+
+    with chdir(files):
+        ug = UGrid.from_ncfile('no_stand_name_long.nc')
+
+    assert ug.nodes.shape == (11, 2)
+
+    # not ideal to pull specific values out, but how else to test?
+    assert np.array_equal(ug.nodes[0, :],     (-62.242, 12.774999))
+    assert np.array_equal(ug.nodes[-1, :],    (-34.911235, 29.29379))
 
 
 def test_read_data1():
