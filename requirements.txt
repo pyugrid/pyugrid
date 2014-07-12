@@ -7,5 +7,6 @@
 #       add that version here.
 
 numpy
+scipy
 netCDF4
 pytest
