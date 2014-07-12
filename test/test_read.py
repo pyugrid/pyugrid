@@ -250,6 +250,5 @@ def test_read_from_nc_dataset():
     assert grid.nodes.shape == (11, 2)
     assert grid.faces.shape == (13, 3)
 
-
 if __name__ == "__main__":
     test_simple_read()

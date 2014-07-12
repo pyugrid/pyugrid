@@ -56,7 +56,7 @@ def test_locate_middle():
     # assert ugrid.locate_nodes( (3, 5) ) == 2
 
     # perturb the point a bit, and nearest changes to:
-    assert ugrid.locate_nodes( (3.0000000001, 5) ) == 6
+    assert ugrid.locate_nodes( (3.0000000001, 5)  ) == 6
     assert ugrid.locate_nodes( (3, 5.00000000001) ) == 7
     assert ugrid.locate_nodes( (3, 4.99999999999) ) == 2
 
