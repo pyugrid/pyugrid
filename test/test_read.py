@@ -238,6 +238,18 @@ def test_read_data2():
                           }
     assert grid.data['depth'].attributes == depth_attributes11
 
+def test_read_from_nc_dataset():
+    """
+    minimal test, but makes sure you can read from an already open netCDF4.Dataset
+    """
+    with chdir(files):
+        with netCDF4.Dataset(file11) as nc:
+            grid = UGrid.from_nc_dataset(nc)
+    
+    assert grid.mesh_name == 'Mesh2'
+    assert grid.nodes.shape == (11, 2)
+    assert grid.faces.shape == (13, 3)
+
 
 if __name__ == "__main__":
     test_simple_read()

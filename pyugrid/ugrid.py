@@ -105,7 +105,7 @@ class UGrid(object):
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None, load_data=False):
         """
-        create a UGrid object from a netcdf file (or opendap url)
+        create a UGrid object from a netcdf file name (or opendap url)
 
         :param nc_url: the filename or OpenDap url you want to load
 
@@ -120,10 +120,33 @@ class UGrid(object):
         :type load_data: boolean
 
         """
-        ## fixme: this should pass the klass to the load_grid...
-        ##        to fix teh circular references
         grid = klass()
-        read_netcdf.load_grid_from_nc(nc_url, grid, mesh_name, load_data)
+        read_netcdf.load_grid_from_ncfilename(nc_url, grid, mesh_name, load_data)
+        return grid
+
+    @classmethod
+    def from_nc_dataset(klass, nc, mesh_name=None, load_data=False):
+        """
+        create a UGrid object from a netcdf file (or opendap url)
+
+        :param nc: An already open Dataset object
+        :type nc: netCDF4.DataSet
+
+        :param mesh_name=None: the name of the mesh you want. If None, then
+                               you'll get the only mesh in the file. If there
+                               is more than one mesh in the file, a ValueError
+                               Will be raised
+
+        :param load_data=False: flag to indicate whether you want to load the associated
+                                data or not. The mesh will be loaded in any case. If False,
+                                only the mesh will be loaded. If True, then all the data
+                                associated with the mesh will be loaded. This could be huge!
+
+        :type load_data: boolean
+
+        """
+        grid = klass()
+        read_netcdf.load_grid_from_nc_dataset(nc, grid, mesh_name, load_data)
         return grid
 
     def check_consistent(self):
