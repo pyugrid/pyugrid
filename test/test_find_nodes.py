@@ -45,6 +45,21 @@ def test_locate_exact():
                         range(len(ugrid.nodes))
                        )    
 
+def test_locate_middle():
+    """
+    see what happens the point is equidistant to two nodes
+    """
+    ugrid = twenty_one_triangles()
+
+    # (3,5) is equidistant bewteen nodes 2, 6 and 7
+    # 2 is returned, but might be arbitrary
+    # assert ugrid.locate_nodes( (3, 5) ) == 2
+
+    # perturb the point a bit, and nearest changes to:
+    assert ugrid.locate_nodes( (3.0000000001, 5) ) == 6
+    assert ugrid.locate_nodes( (3, 5.00000000001) ) == 7
+    assert ugrid.locate_nodes( (3, 4.99999999999) ) == 2
+
 
 if __name__ == "__main__":
     test_locate_nodes()
