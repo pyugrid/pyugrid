@@ -365,7 +365,10 @@ class UGrid(object):
         for i, face in enumerate(self.faces):
             # loop through edges of the triangle:
             for j in range(num_vertices):
-                edge = (face[j-1], face[j])
+                if j < self.num_vertices-1:
+                    edge = (face[j], face[j+1])
+                else:
+                    edge = (face[-1], face[0])
                 if edge[0] > edge[1]: # sort the node numbers
                     edge = (edge[1], edge[0]) 
                 # see if it is already in there
@@ -375,7 +378,7 @@ class UGrid(object):
                     face_face[i,j] = face_num
                     face_face[face_num, edge_num] = i
                 else:
-                    edges[edge] = (i, j)
+                    edges[edge] = (i, j) # face num, edge_num
         self._face_face_connectivity = face_face
 
     def build_edges(self):
@@ -401,6 +404,27 @@ class UGrid(object):
                     edge = (edge[1], edge[0]) 
                 edges.add(edge)
         self._edges = np.array(list(edges), dtype=IND_DT)
+
+    def build_boundaries(self):
+        """
+        builds the boundary segments from the cell array
+
+        It is assumed that -1 means no neighbor, which indicates a boundary
+        
+        This will over-write the existing boundaries array if there is one.
+
+        This is a not-very-smart just loop through all the faces method.
+        """
+        boundaries = []
+        for i, face in enumerate(self.face_face_connectivity):
+            for j, neighbor in enumerate(face):
+                if neighbor == -1:
+                    if j == self.num_vertices-1:
+                        bound = ( self.faces[i,-1], self.faces[i,0] )
+                    else:
+                        bound = ( self.faces[i,j], self.faces[i,j+1] )
+                    boundaries.append(bound) 
+        self.boundaries = boundaries
 
     def build_face_edge_connectivity(self):
         """
