@@ -316,13 +316,14 @@ class UGrid(object):
         
         :param str standard_name: the standard name attribute (based on the UGRID conventions)
         
-        :keyword location: optional attribute location to narrow the returned :py:class:`DataSet`s (one of 'node', 'edge', 'face', or 'boundary').
+        :keyword location: optional attribute location to narrow the returned
+                           :py:class:`DataSet`s (one of 'node', 'edge', 'face', or 'boundary').
         
         :return: set of matching :py:class:`DataSet`s
         """
         found = set()
         for ds in self._data.values():
-            if not ds.attributes:
+            if not ds.attributes or 'standard_name' not in ds.attributes:
                 continue
             if ds.attributes['standard_name'] == standard_name:
                 if location is not None and ds.location != location:

@@ -215,6 +215,7 @@ def test_write_with_edge_data():
     flux = DataSet('flux', location='edge', data=[0.0, 0.0, 4.1, 0.0, 5.1, ])
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
+    flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
 
     grid.add_data(flux)
     #add coordinates for edges
@@ -323,6 +324,7 @@ def test_write_everything():
     flux = DataSet('flux', location='edge', data=np.linspace(1000,2000,41))
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
+    flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
 
     grid.add_data(flux)
 
