@@ -23,7 +23,7 @@ def nc_has_variable(ds, var_name):
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
 
-    if ds.variables.has_key(var_name):
+    if var_name in ds.variables:
         return True
     else:
         print var_name, " is not a variable in the dataset"
@@ -39,7 +39,7 @@ def nc_has_dimension(ds, dim_name):
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
 
-    if ds.dimensions.has_key(dim_name):
+    if dim_name in ds.dimensions:
         return True
     else:
         print dim_name, " is not a dimension in the dataset"
