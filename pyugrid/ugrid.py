@@ -15,6 +15,8 @@ NOTE: only support for triangular mesh grids at the moment
 
 """
 
+from __future__ import print_function
+
 import numpy as np
 
 from . import read_netcdf

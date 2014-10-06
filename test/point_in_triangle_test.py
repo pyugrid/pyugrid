@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from pyugrid.util import point_in_tri
 import numpy as np
 

@@ -4,6 +4,8 @@
 Tests for the DataSet object
 """
 
+from __future__ import print_function
+
 import numpy as np
 import pytest
 
@@ -48,7 +50,7 @@ def test_delete_data():
 
 def test_str():
     d = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
-    print str(d)
+    print(str(d))
     assert str(d) == "DataSet object: depth, on the nodes, and 4 data points\nAttributes: {}"
 
 def add_attributes():

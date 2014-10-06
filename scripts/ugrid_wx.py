@@ -6,6 +6,8 @@ ugid_wx.py:
 A small wxPython utility app to visualize pyugrids, etc.
 """
 
+from __future__ import print_function
+
 import wx
 
 import pyugrid

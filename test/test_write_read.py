@@ -8,6 +8,7 @@ i.e. making sure round trip works
 This is, of course, totally incomplete, but a start
 """
 
+from __future__ import print_function
 
 import pytest
 
@@ -34,7 +35,7 @@ def test_with_faces():
     assert np.array_equal(grid.nodes, grid2.nodes)
     assert np.array_equal(grid.faces, grid2.faces)
 
-    print grid2.edges
+    print(grid2.edges)
 
     assert np.array_equal(grid.edges, grid2.edges)
 

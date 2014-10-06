@@ -4,6 +4,8 @@
 DataSet object, used to hold data associated with a ugrid
 """
 
+from __future__ import print_function
+
 import numpy as np
 
 class DataSet(object):

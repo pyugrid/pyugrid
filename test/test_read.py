@@ -7,6 +7,8 @@ We really need a LOT more sample data files....
 
 """
 
+from __future__ import print_function
+
 import os
 import contextlib
 import pytest

@@ -9,6 +9,8 @@ This code is called by the UGrid class to load inot a UGRID object.
 
 """
 
+from __future__ import print_function
+
 import numpy as np
 import netCDF4
 

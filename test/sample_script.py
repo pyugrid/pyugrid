@@ -6,6 +6,8 @@ simple script to test out using pyugrid
 Example from Rich Signell
 """
 
+from __future__ import print_function
+
 import pyugrid
 
 # dataset form FVcom...
@@ -13,13 +15,13 @@ url =  'http://testbedapps-dev.sura.org/thredds/dodsC/in/usf/fvcom/ike/ultralite
 
 # get the datasets:
 # note: this reads the whole thing in to memory at once: maybe we don't want to do that.
-print "Loading data: This could take a while..."
+print("Loading data: This could take a while...")
 ug = pyugrid.UGrid.from_ncfile(url)
 
 # What's in there?
 
-print "There are %i nodes"%ug.nodes.shape[0]
-print "There are %i edges"%ug.edges.shape[0]
-print "There are %i faces"%ug.faces.shape[0]
+print("There are %i nodes"%ug.nodes.shape[0])
+print("There are %i edges"%ug.edges.shape[0])
+print("There are %i faces"%ug.faces.shape[0])
 
-print 'The start of the "connectivity array":', ug.faces[:10]
+print('The start of the "connectivity array":', ug.faces[:10])

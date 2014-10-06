@@ -5,6 +5,8 @@ Some example UGRIDs to test, etc with
 
 """
 
+from __future__ import print_function
+
 from py_ugrid import ugrid
 
 def get_triangle_1():

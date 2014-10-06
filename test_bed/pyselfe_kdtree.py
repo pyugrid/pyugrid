@@ -21,6 +21,9 @@ model = pyselfe.Dataset('./data/1_elev.61') #path to first file of series
 
 #where param = elev.61,hvel.64 etc. read_time_series is documented in detail below.
 """
+
+from __future__ import print_function
+
 #
 #
 __author__ = 'Dharhas Pothina'
@@ -301,7 +304,7 @@ class Dataset:
         if (parent==-1):
             sys.exit('Cannot find a parent:' + str(x00) +',' +str(y00))
         else:
-            print 'Parent Element :',parent+1,' ,Nodes: ',node3
+            print('Parent Element :',parent+1,' ,Nodes: ',node3)
             return [parent, arco, node3]
       
         
