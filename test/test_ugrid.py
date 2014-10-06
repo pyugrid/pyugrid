@@ -5,7 +5,7 @@ The basic test of the UGrid object.
 more speicifc functionaily is other test modules.
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 from pyugrid import UGrid
 from pyugrid.ugrid import IND_DT, NODE_DT

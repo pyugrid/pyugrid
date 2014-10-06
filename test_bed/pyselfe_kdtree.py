@@ -22,7 +22,7 @@ model = pyselfe.Dataset('./data/1_elev.61') #path to first file of series
 #where param = elev.61,hvel.64 etc. read_time_series is documented in detail below.
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 #
 #
@@ -229,11 +229,11 @@ class Dataset:
         #convert nodal values back to xy point values if needed
         if xy.size!=0:
             #try:#not sure about this. need to look at it ion more detail put in to remove shape error
-            tmpdata = N.zeros((data.shape[0],data.shape[1]/3,data.shape[2],data.shape[3]))/0.
+            tmpdata = N.zeros((data.shape[0],data.shape[1]//3,data.shape[2],data.shape[3]))/0.
             #except:
-            #    tmpdata = N.zeros((data.shape[0],data.shape[1]/3,data.shape[2]))/0.
-            tmpeta = N.zeros((eta.shape[0],eta.shape[1]/3))/0.
-            tmpdp = N.zeros(dp.shape[0]/3)/0.
+            #    tmpdata = N.zeros((data.shape[0],data.shape[1]//3,data.shape[2]))/0.
+            tmpeta = N.zeros((eta.shape[0],eta.shape[1]//3))/0.
+            tmpdp = N.zeros(dp.shape[0]//3)/0.
             for i in range(xy.shape[0]):
                 n1 = i*3
                 n2 = n1+1
@@ -342,7 +342,7 @@ class Dataset:
         elif sigma_level=='bottom':
             sigma_level = self.nlevels - 1 
         elif sigma_level=='middle':
-            sigma_level = self.nlevels/2
+            sigma_level = self.nlevels//2
 
         t, t_iter, eta, dp, data = self.read_time_series(variable, nodes=nodes, levels=sigma_level)
         eta = eta.mean(axis=1)

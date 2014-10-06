@@ -8,7 +8,7 @@ i.e. making sure round trip works
 This is, of course, totally incomplete, but a start
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import pytest
 

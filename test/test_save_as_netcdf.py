@@ -6,7 +6,7 @@ tests for saving a UGrid in netcdf format
 designed to be run with pytest
 """
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
 import netCDF4

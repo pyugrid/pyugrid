@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import (absolute_import, print_function)
+from __future__ import (absolute_import, division, print_function)
 
 #from distutils.core import setup
 from setuptools import setup # to support "develop" mode
