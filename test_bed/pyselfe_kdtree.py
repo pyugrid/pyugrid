@@ -22,7 +22,7 @@ model = pyselfe.Dataset('./data/1_elev.61') #path to first file of series
 #where param = elev.61,hvel.64 etc. read_time_series is documented in detail below.
 """
 
-from __future__ import print_function
+from __future__ import (absolute_import, print_function)
 
 #
 #

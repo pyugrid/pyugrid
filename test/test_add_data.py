@@ -6,7 +6,7 @@ Tests for adding a data atrribute to a UGrid object
 Designed to be run with pytest
 """
 
-from __future__ import print_function
+from __future__ import (absolute_import, print_function)
 
 import numpy as np
 import pytest

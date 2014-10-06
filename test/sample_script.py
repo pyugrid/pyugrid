@@ -6,7 +6,7 @@ simple script to test out using pyugrid
 Example from Rich Signell
 """
 
-from __future__ import print_function
+from __future__ import (absolute_import, print_function)
 
 import pyugrid
 
