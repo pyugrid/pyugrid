@@ -20,7 +20,7 @@ def test_init():
 
     assert d.attributes == {}
 
-    with pytest.raises(ValueError):       
+    with pytest.raises(ValueError):
         d = DataSet('depth', location='nodes')
 
 def test_add_data():
@@ -48,7 +48,7 @@ def test_delete_data():
 
 def test_str():
     d = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
-    print str(d)
+    print('{}'.format(d))
     assert str(d) == "DataSet object: depth, on the nodes, and 4 data points\nAttributes: {}"
 
 def add_attributes():
@@ -61,7 +61,3 @@ def add_attributes():
 
     assert d.attributes['units'] == 'm'
     assert d.attributes['posative'] == 'down'
-
-
-
- 

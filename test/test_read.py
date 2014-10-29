@@ -46,7 +46,7 @@ def test_get_mesh_names():
         nc = netCDF4.Dataset(file11)
     names = read_netcdf.find_mesh_names(nc)
 
-    assert names == [u'Mesh2']
+    assert names == ['Mesh2']
 
 
 def test_mesh_not_there():
@@ -216,9 +216,9 @@ def test_read_data1():
     with chdir(files):
         grid = UGrid.from_ncfile(file11, load_data=True)
 
-    assert sorted(grid.data.keys()) == [u'boundary_count',
-                                        u'boundary_types',
-                                        u'depth']
+    assert sorted(grid.data.keys()) == ['boundary_count',
+                                        'boundary_types',
+                                        'depth']
 
 
 def test_read_data2():
@@ -245,7 +245,7 @@ def test_read_from_nc_dataset():
     with chdir(files):
         with netCDF4.Dataset(file11) as nc:
             grid = UGrid.from_nc_dataset(nc)
-    
+
     assert grid.mesh_name == 'Mesh2'
     assert grid.nodes.shape == (11, 2)
     assert grid.faces.shape == (13, 3)

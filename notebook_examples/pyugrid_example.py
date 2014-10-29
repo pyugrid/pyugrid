@@ -34,7 +34,7 @@ cube = iris.load_cube(url,'sea_surface_height_above_geoid')
 
 # <codecell>
 
-print cube
+print(cube)
 
 # <codecell>
 

@@ -2,7 +2,7 @@
 """
 The basic test of the UGrid object.
 
-more speicifc functionaily is other test modules.
+more specific functionally is other test modules.
 """
 
 
