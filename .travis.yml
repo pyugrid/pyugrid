@@ -24,6 +24,6 @@ before_install:
   - source activate $ENV_NAME
 install:
   - export PYTHONWARNINGS=all
-  - python setup test
+  - python setup.py test
 notifications:
   irc: "chat.freenode.net#renci"
