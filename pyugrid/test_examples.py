@@ -54,7 +54,7 @@ def twenty_one_triangles():
              (9,13),
              (7,15),
              ]
-    
+
     faces = [(0,1,3),
              (0,6,2),
              (0,3,6),
@@ -106,21 +106,8 @@ def twenty_one_triangles():
 
 if __name__ == "__main__":
     grid = twenty_one_triangles()
-    print grid.edges
-    print len(grid.edges)
+    print(grid.edges)
+    print(len(grid.edges))
     grid.build_edges()
-    print grid.edges
-    print len(grid.edges)
-
-
-    
-    
-    
-    
-
-
-
-
-
-
-
+    print(grid.edges)
+    print(len(grid.edges))

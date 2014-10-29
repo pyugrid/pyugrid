@@ -7,8 +7,9 @@ i.e. making sure round trip works
 
 This is, of course, totally incomplete, but a start
 """
+from __future__ import absolute_import
 
-
+import os
 import pytest
 
 from .utilities import chdir
@@ -18,12 +19,14 @@ import numpy as np
 from pyugrid.ugrid import UGrid, DataSet
 from pyugrid.test_examples import two_triangles
 
+rootpath = os.path.dirname(os.path.abspath(__file__))
+
 def test_with_faces():
     """
-    test with faces, edges, but no face_coordintates or edge_coordinates
+    test with faces, edges, but no face_coordinates or edge_coordinates
     """
 
-    with chdir('files'):
+    with chdir(os.path.join(rootpath, 'files')):
         grid = two_triangles()
 
         grid.save_as_netcdf('2_triangles.nc')
@@ -34,7 +37,7 @@ def test_with_faces():
     assert np.array_equal(grid.nodes, grid2.nodes)
     assert np.array_equal(grid.faces, grid2.faces)
 
-    print grid2.edges
+    print(grid2.edges)
 
     assert np.array_equal(grid.edges, grid2.edges)
 
@@ -44,7 +47,7 @@ def test_without_faces():
     del grid.faces
     assert grid.faces is None
 
-    with chdir('files'):
+    with chdir(os.path.join(rootpath, 'files')):
         grid.save_as_netcdf('2_triangles.nc')
 
         # read it back in and check it out
@@ -73,7 +76,7 @@ def test_with_just_nodes_and_depths():
 
     grid.add_data(depth)
 
-    with chdir('files'):
+    with chdir(os.path.join(rootpath, 'files')):
         grid.save_as_netcdf(filename)
 
         # read it back in and check it out
@@ -83,8 +86,8 @@ def test_with_just_nodes_and_depths():
     assert grid2.edges is None
     assert np.array_equal( grid2.nodes, grid.nodes )
 
-    assert np.array_equal( grid2.data['depth'].data, depth_array )     
-    assert grid2.data['depth'].attributes == depth.attributes     
+    assert np.array_equal( grid2.data['depth'].data, depth_array )
+    assert grid2.data['depth'].attributes == depth.attributes
 
 
 

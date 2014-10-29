@@ -9,6 +9,8 @@ This code is called by the UGrid class to load inot a UGRID object.
 
 """
 
+from __future__ import absolute_import
+
 import numpy as np
 import netCDF4
 
@@ -17,25 +19,25 @@ from .data_set import DataSet
 def find_mesh_names( nc ):
     """
     find all the meshes in an open netcCDF4.DataSet
-    
+
     :param nc: the netCDF4 Dataset object to look for mesh names in
 
     NOTE: checks for 2-d topology_dimension
     """
     mesh_names = []
-    for varname in nc.variables.iterkeys():
+    for varname in nc.variables.keys():
         if is_valid_mesh(nc, varname):
                     mesh_names.append(varname)
-    return mesh_names            
+    return mesh_names
 
 def is_valid_mesh(nc, varname):
     """
     determine if the given variable name is a valid mesh definition
-    
+
     :param nc: a netCDF4 Dataset to check
 
     :param varname: name of the candidate mesh variable
-    
+
     """
     try:
         mesh_var = nc.variables[varname]
@@ -98,7 +100,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
     for the first one it finds if none is specified
 
     :param filename: filename or OpenDAP url of dataset.
-    
+
     :param grid: ther gird object to put the mesh and data into.
     :type grid: UGrid object.
 
@@ -128,7 +130,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
     else:
         if not is_valid_mesh(nc, mesh_name):
             raise ValueError("Mesh: %s is not in %s"%(mesh_name, nc.filepath))
-    
+
     grid.mesh_name = mesh_name
 
     mesh_var = ncvars[mesh_name]
@@ -169,8 +171,8 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             elif standard_name == 'longitude':
                 nodes[:,0] = var[:]
             else:
-                raise ValueError('Node coordinates standard_name is neither "longitude" nor "latitude" ') 
-        
+                raise ValueError('Node coordinates standard_name is neither "longitude" nor "latitude" ')
+
         setattr(grid, defs['grid_attr'], nodes)
 
 
@@ -191,10 +193,10 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             except AttributeError:
                 start_index = 0
             if start_index  >= 1:
-                array -= start_index
+                array = array - start_index
                 # check for flag value
                 try:
-                    ## fixme: this won't work for more than one flag value
+                    ## FIXME: this won't work for more than one flag value
                     flag_value = var.flag_values
                     array[array==flag_value-start_index] = flag_value
                 except AttributeError:
@@ -237,7 +239,7 @@ def load_grid_from_ncfilename(filename, grid, mesh_name=None, load_data=True):
     for the first one it finds if none is specified
 
     :param filename: filename or OpenDAP url of dataset.
-    
+
     :param grid: ther gird object to put the mesh and data into.
     :type grid: UGrid object.
 

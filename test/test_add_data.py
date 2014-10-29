@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Tests for adding a data atrribute to a UGrid object
+Tests for adding a data attribute to a UGrid object
 
 Designed to be run with pytest
 """
@@ -108,7 +108,7 @@ def test_add_boundary_data():
 
     grid = two_triangles()
 
-    print grid.boundaries
+    print(grid.boundaries)
 
     # add the boundary definitions:
     grid.boundaries = [(0,1),

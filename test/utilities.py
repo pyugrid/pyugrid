@@ -5,6 +5,7 @@ assorted utilities useful for the tests
 import os
 import contextlib
 
+rootpath = os.path.dirname(os.path.abspath(__file__))
 
 @contextlib.contextmanager
 def chdir(dirname=None):
@@ -18,4 +19,4 @@ def chdir(dirname=None):
 
 def get_test_file_path(file_path):
     """translates a file path to be relative to the test files directory"""
-    return os.path.join(os.path.dirname(__file__), 'files', file_path)
+    return os.path.join(rootpath, 'files', file_path)

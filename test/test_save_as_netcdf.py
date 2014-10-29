@@ -16,33 +16,33 @@ from pyugrid.test_examples import two_triangles, twenty_one_triangles
 def nc_has_variable(ds, var_name):
     """
     checks that a netcdf file has the given variable defined
-    
+
     :param ds: a netCDF4 Dataset object, or a netcdf file name
 
     """
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
 
-    if ds.variables.has_key(var_name):
+    if var_name in ds.variables:
         return True
     else:
-        print var_name, " is not a variable in the dataset"
+        print("{} is not a variable in the dataset".format(var_name))
         return False
 
 def nc_has_dimension(ds, dim_name):
     """
     checks that a netcdf file has the given dimension defined
-    
+
     :param ds: a netCDF4 Dataset object, or a netcdf file name
 
     """
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
 
-    if ds.dimensions.has_key(dim_name):
+    if dim_name in ds.dimensions:
         return True
     else:
-        print dim_name, " is not a dimension in the dataset"
+        print("{} is not a dimension in the dataset".format(dim_name))
         return False
 
 
@@ -57,12 +57,12 @@ def nc_var_has_attr(ds, var_name, att_name):
         getattr(ds.variables[var_name], att_name)
         return True
     except AttributeError:
-        print att_name, "is not in the var:", var_name
-        return False    
+        print("{} is not in the var: {}".format(att_name, var_name))
+        return False
 
 def nc_var_has_attr_vals(ds, var_name, att_dict):
     """
-    checks that the variable, var_name, as teh attribtes (and values) in the att_dict
+    checks that the variable, var_name, as the attributes (and values) in the att_dict
     """
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
@@ -70,12 +70,13 @@ def nc_var_has_attr_vals(ds, var_name, att_dict):
     for key, val in att_dict.items():
         try:
             if val != getattr(ds.variables[var_name], key):
-                print "attribute:", key
-                print "expected val:", val
-                print "val in file:", repr( getattr(ds.variables[var_name], key) )
+                print("attribute: {}".format(key))
+                print("expected val:".format(val))
+                var = getattr(ds.variables[var_name])
+                print("val in file: {!r}".format(var, key))
                 return False
         except AttributeError:
-            print key, "is not an attribute of var:", var_name
+            print("{} is not an attribute of var: {}".format(key, var_name))
             return False
     return True
 
@@ -94,15 +95,15 @@ def test_simple_write():
 
         assert nc_var_has_attr_vals(ds, 'mesh', {'cf_role':'mesh_topology',
                                                 'topology_dimension' : 2,
-                                                'long_name': u'Topology data of 2D unstructured mesh'
+                                                'long_name': 'Topology data of 2D unstructured mesh'
                                                 })
 
 def test_set_mesh_name():
     fname = 'temp.nc'
-    
+
     grid  =  two_triangles()
     grid.mesh_name = "mesh_2"
-    
+
     grid.save_as_netcdf(fname)
 
     with netCDF4.Dataset(fname) as ds:
@@ -110,12 +111,12 @@ def test_set_mesh_name():
 
         assert nc_var_has_attr_vals(ds, 'mesh_2', {'cf_role':'mesh_topology',
                                                    'topology_dimension' : 2,
-                                                   'long_name': u'Topology data of 2D unstructured mesh'
+                                                   'long_name': 'Topology data of 2D unstructured mesh'
                                                    })
 
         assert nc_var_has_attr_vals(ds, 'mesh_2', {'cf_role':'mesh_topology',
                                                    'topology_dimension' : 2,
-                                                   'long_name': u'Topology data of 2D unstructured mesh',
+                                                   'long_name': 'Topology data of 2D unstructured mesh',
                                                    'node_coordinates': 'mesh_2_node_lon mesh_2_node_lat',
                                                    })
 
@@ -390,11 +391,11 @@ def test_write_everything():
     grid = UGrid.from_ncfile(fname,load_data=True)
     # and that some things are the same:
     # note:  more testing might be good here...
-    #        maybe some grid comparison functions? 
+    #        maybe some grid comparison functions?
 
     assert grid.mesh_name == 'mesh'
 
-    print "grid data:", grid.data
+    print("grid data: {}".format(grid.data))
     assert len(grid.nodes) == 20
 
 
@@ -413,6 +414,5 @@ if __name__ == "__main__":
     test_write_with_depths()
     test_write_with_velocities()
     test_write_with_edge_data()
-   
 
- 
+

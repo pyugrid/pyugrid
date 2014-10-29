@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 #from distutils.core import setup
 from setuptools import setup # to support "develop" mode
 #from distutils.extension import Extension
