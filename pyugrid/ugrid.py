@@ -105,7 +105,7 @@ class UGrid(object):
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None, load_data=False):
         """
-        create a UGrid object from a netcdf file (or opendap url)
+        create a UGrid object from a netcdf file name (or opendap url)
 
         :param nc_url: the filename or OpenDap url you want to load
 
@@ -120,10 +120,33 @@ class UGrid(object):
         :type load_data: boolean
 
         """
-        ## fixme: this should pass the klass to the load_grid...
-        ##        to fix teh circular references
         grid = klass()
-        read_netcdf.load_grid_from_nc(nc_url, grid, mesh_name, load_data)
+        read_netcdf.load_grid_from_ncfilename(nc_url, grid, mesh_name, load_data)
+        return grid
+
+    @classmethod
+    def from_nc_dataset(klass, nc, mesh_name=None, load_data=False):
+        """
+        create a UGrid object from a netcdf file (or opendap url)
+
+        :param nc: An already open Dataset object
+        :type nc: netCDF4.DataSet
+
+        :param mesh_name=None: the name of the mesh you want. If None, then
+                               you'll get the only mesh in the file. If there
+                               is more than one mesh in the file, a ValueError
+                               Will be raised
+
+        :param load_data=False: flag to indicate whether you want to load the associated
+                                data or not. The mesh will be loaded in any case. If False,
+                                only the mesh will be loaded. If True, then all the data
+                                associated with the mesh will be loaded. This could be huge!
+
+        :type load_data: boolean
+
+        """
+        grid = klass()
+        read_netcdf.load_grid_from_nc_dataset(nc, grid, mesh_name, load_data)
         return grid
 
     def check_consistent(self):
@@ -293,13 +316,14 @@ class UGrid(object):
         
         :param str standard_name: the standard name attribute (based on the UGRID conventions)
         
-        :keyword location: optional attribute location to narrow the returned :py:class:`DataSet`s (one of 'node', 'edge', 'face', or 'boundary').
+        :keyword location: optional attribute location to narrow the returned
+                           :py:class:`DataSet`s (one of 'node', 'edge', 'face', or 'boundary').
         
         :return: set of matching :py:class:`DataSet`s
         """
         found = set()
         for ds in self._data.values():
-            if not ds.attributes:
+            if not ds.attributes or 'standard_name' not in ds.attributes:
                 continue
             if ds.attributes['standard_name'] == standard_name:
                 if location is not None and ds.location != location:
@@ -342,7 +366,10 @@ class UGrid(object):
         for i, face in enumerate(self.faces):
             # loop through edges of the triangle:
             for j in range(num_vertices):
-                edge = (face[j-1], face[j])
+                if j < self.num_vertices-1:
+                    edge = (face[j], face[j+1])
+                else:
+                    edge = (face[-1], face[0])
                 if edge[0] > edge[1]: # sort the node numbers
                     edge = (edge[1], edge[0]) 
                 # see if it is already in there
@@ -352,7 +379,7 @@ class UGrid(object):
                     face_face[i,j] = face_num
                     face_face[face_num, edge_num] = i
                 else:
-                    edges[edge] = (i, j)
+                    edges[edge] = (i, j) # face num, edge_num
         self._face_face_connectivity = face_face
 
     def build_edges(self):
@@ -378,6 +405,27 @@ class UGrid(object):
                     edge = (edge[1], edge[0]) 
                 edges.add(edge)
         self._edges = np.array(list(edges), dtype=IND_DT)
+
+    def build_boundaries(self):
+        """
+        builds the boundary segments from the cell array
+
+        It is assumed that -1 means no neighbor, which indicates a boundary
+        
+        This will over-write the existing boundaries array if there is one.
+
+        This is a not-very-smart just loop through all the faces method.
+        """
+        boundaries = []
+        for i, face in enumerate(self.face_face_connectivity):
+            for j, neighbor in enumerate(face):
+                if neighbor == -1:
+                    if j == self.num_vertices-1:
+                        bound = ( self.faces[i,-1], self.faces[i,0] )
+                    else:
+                        bound = ( self.faces[i,j], self.faces[i,j+1] )
+                    boundaries.append(bound) 
+        self.boundaries = boundaries
 
     def build_face_edge_connectivity(self):
         """

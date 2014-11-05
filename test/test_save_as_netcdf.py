@@ -134,7 +134,7 @@ def test_set_mesh_name():
 
 def test_write_with_depths():
     '''
-    tests writting a netcdf file with depth data
+    tests writing a netcdf file with depth data
     '''
 
     fname = 'temp.nc'
@@ -215,6 +215,7 @@ def test_write_with_edge_data():
     flux = DataSet('flux', location='edge', data=[0.0, 0.0, 4.1, 0.0, 5.1, ])
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
+    flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
 
     grid.add_data(flux)
     #add coordinates for edges
@@ -323,13 +324,12 @@ def test_write_everything():
     flux = DataSet('flux', location='edge', data=np.linspace(1000,2000,41))
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
+    flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
 
     grid.add_data(flux)
 
     # Some boundary conditions:
 
-    print grid.boundaries.shape
-    print grid.boundaries
     bounds = np.zeros( (19,), dtype=np.uint8 )
     bounds[7] = 1
     bnds = DataSet('bnd_cond', location='boundary', data=bounds)
@@ -386,6 +386,23 @@ def test_write_everything():
                                               "flag_meanings" : "no_flow_boundary  open_boundary",
                                               "mesh": "mesh",
                                               })
+    # and make sure pyugrid can reload it!
+    grid = UGrid.from_ncfile(fname,load_data=True)
+    # and that some things are the same:
+    # note:  more testing might be good here...
+    #        maybe some grid comparison functions? 
+
+    assert grid.mesh_name == 'mesh'
+
+    print "grid data:", grid.data
+    assert len(grid.nodes) == 20
+
+
+    depth = grid.data['depth']
+    assert depth.attributes['units'] == 'm'
+
+    u = grid.data['u']
+    assert u.attributes['units'] == 'm/s'
 
 
 if __name__ == "__main__":
