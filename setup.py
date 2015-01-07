@@ -20,7 +20,7 @@ class PyTest(TestCommand):
 
 setup(
     name = "pyugrid",
-    version = "0.1.1",
+    version = "0.1.2",
     author = "Dharhas Pothina, Alex Crosby, Chris Barker",
     author_email = "Chris.Barker@noaa.gov",
     description = ("A package for working with unstructured grids, and the data on them"),
