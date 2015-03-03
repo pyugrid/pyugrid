@@ -154,7 +154,7 @@ class UGrid(object):
         check if the various data is consistent: the edges and faces reference
         existing nodes, etc.
         """
-        raise NotImplimentedError
+        raise NotImplementedError
     
     @property
     def num_vertices(self):
@@ -433,7 +433,7 @@ class UGrid(object):
 
         Not implemented yet.
         """
-        raise NotImplimentedError
+        raise NotImplementedError
 
     def build_face_coordinates(self):
         """
