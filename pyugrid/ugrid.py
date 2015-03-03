@@ -345,7 +345,7 @@ class UGrid(object):
         """
         for i, face in enumerate(self._faces):
             f = self._nodes[face]
-            if point_in_poly(f, point):
+            if point_in_tri(f, point):
                 return i
         return None
 
