@@ -5,4 +5,5 @@
 *.txt text
 *.csv text
 *.md text
+*.bat text
 *.nc binary
