@@ -263,7 +263,7 @@ class UGrid(object):
     def face_edge_connectivity(self):
         return self._face_edge_connectivity
     @face_face_connectivity.setter
-    def face_edge_connectivity(self, face_edge_connectivity):
+    def face_edge_connectivity(self, face_edge_connectivity):  # @DuplicatedSignature
         ## add more checking?
         if face_edge_connectivity is not None:
             face_edge_connectivity = np.asarray(face_edge_connectivity, dtype=IND_DT)
