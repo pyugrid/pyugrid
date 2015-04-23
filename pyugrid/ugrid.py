@@ -262,7 +262,7 @@ class UGrid(object):
     @property
     def face_edge_connectivity(self):
         return self._face_edge_connectivity
-    @face_face_connectivity.setter
+    @face_edge_connectivity.setter
     def face_edge_connectivity(self, face_edge_connectivity):
         ## add more checking?
         if face_edge_connectivity is not None:
