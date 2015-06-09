@@ -19,15 +19,15 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name = "pyugrid",
-    version = "0.1.2",
-    author = "Dharhas Pothina, Alex Crosby, Chris Barker",
-    author_email = "Chris.Barker@noaa.gov",
-    description = ("A package for working with unstructured grids, and the data on them"),
-    license = "BSD",
-    keywords = "unstructured numpy models",
-    url = "https://github.com/pyugrid/pyugrid",
-#    long_description=read('README'),
+    name="pyugrid",
+    version="0.1.2",
+    author="Chris Barker, Chris Calloway, Rich Signell",
+    author_email="Chris.Barker@noaa.gov",
+    description=("A package for working with triangular unstructured grids, and the data on them"),
+    license="BSD",
+    keywords="unstructured numpy models",
+    url="https://github.com/pyugrid/pyugrid",
+    long_description=open('README.rst').read(),
     install_requires=[
         'numpy',
         'netCDF4',
@@ -41,6 +41,6 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
         ],
-    packages = ["pyugrid", "test"],
-    scripts = [],
+    packages=["pyugrid", "test"],
+    scripts=[],
     )
