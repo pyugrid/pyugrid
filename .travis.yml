@@ -6,10 +6,10 @@ before_install:
   - sudo apt-get install -y python-dev
   - sudo apt-get install -y libhdf5-serial-dev
   - sudo apt-get install -y libnetcdf-dev
-  - sudo apt-get install -y python-scipy
 install: 
   - "pip install numpy"
   - "pip install netCDF4"
-script: "py.test"
+  - "pip install scipy"
+script: "py.test test/"
 notifications:
   irc: "chat.freenode.net#renci"
