@@ -8,6 +8,6 @@ install:
   - "pip install numpy"
   - "pip install netCDF4"
   - "pip install scipy"
-script: "py.test test/"
+script: "py.test test"
 notifications:
   irc: "chat.freenode.net#renci"
