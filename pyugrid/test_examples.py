@@ -5,6 +5,8 @@ Some example UGRIDs to test, etc with
 
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 from pyugrid import ugrid
 
 def two_triangles():
@@ -106,11 +108,11 @@ def twenty_one_triangles():
 
 if __name__ == "__main__":
     grid = twenty_one_triangles()
-    print grid.edges
-    print len(grid.edges)
+    print(grid.edges)
+    print(len(grid.edges))
     grid.build_edges()
-    print grid.edges
-    print len(grid.edges)
+    print(grid.edges)
+    print(len(grid.edges))
 
 
     

@@ -6,6 +6,8 @@ ugid_wx.py:
 A small wxPython utility app to visualize pyugrids, etc.
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 import wx
 
 import pyugrid
@@ -91,7 +93,8 @@ class DrawFrame(wx.Frame):
                 self.Canvas.AddPolygon(face, FillColor=self.face_color, LineColor=self.face_edge_color, LineWidth=2)
                 mid = face.mean(axis=0)
                 if preferences['draw_indexes']:
-                    self.Canvas.AddText(`i`, mid, Size=self.label_size, Position='cc')
+                    self.Canvas.AddText(repr(i), mid, Size=self.label_size,
+                                        Position='cc')
         
         # add the edges:
         if grid.edges is not None:
@@ -100,7 +103,7 @@ class DrawFrame(wx.Frame):
                 self.Canvas.AddLine(edge, LineColor=self.edge_color, LineWidth=3)
                 if preferences['draw_indexes']:
                     mid = edge.mean(axis=0)
-                    self.Canvas.AddText(`i`,
+                    self.Canvas.AddText(repr(i),
                                         mid,
                                         Size=self.label_size,
                                         Position='cc',
@@ -110,7 +113,8 @@ class DrawFrame(wx.Frame):
         # add the Nodes
         if preferences['draw_indexes']:
             for i, n in enumerate(nodes):
-                self.Canvas.AddText(`i`, n, Size=self.label_size, BackgroundColor=self.label_background_color)
+                self.Canvas.AddText(repr(i), n, Size=self.label_size,
+                                    BackgroundColor=self.label_background_color)
         self.Canvas.AddPointSet(nodes, Diameter=preferences['node_diameter'], Color=self.node_color) 
         self.Canvas.ZoomToBB()
 

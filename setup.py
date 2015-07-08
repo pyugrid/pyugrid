@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import (absolute_import, division, print_function)
+
 #from distutils.core import setup
 from setuptools import setup # to support "develop" mode
 #from distutils.extension import Extension
@@ -16,6 +18,7 @@ class PyTest(TestCommand):
     def run_tests(self):
         import pytest
         errno = pytest.main(self.test_args)
+        import sys
         sys.exit(errno)
 
 setup(
@@ -40,6 +43,12 @@ setup(
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
         ],
     packages=["pyugrid", "test"],
     scripts=[],
