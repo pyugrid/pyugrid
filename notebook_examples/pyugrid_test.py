@@ -7,6 +7,8 @@
 
 # <codecell>
 
+from __future__ import (absolute_import, division, print_function)
+
 import matplotlib.tri as tri
 import datetime as dt
 
@@ -34,7 +36,7 @@ cube = iris.load_cube(url,'sea_surface_height_above_geoid')
 
 # <codecell>
 
-print cube
+print(cube)
 
 # <codecell>
 

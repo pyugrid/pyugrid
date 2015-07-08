@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import (absolute_import, division, print_function)
+
 #from distutils.core import setup
 from setuptools import setup # to support "develop" mode
 #from distutils.extension import Extension
@@ -16,18 +18,19 @@ class PyTest(TestCommand):
     def run_tests(self):
         import pytest
         errno = pytest.main(self.test_args)
+        import sys
         sys.exit(errno)
 
 setup(
-    name = "pyugrid",
-    version = "0.1.1",
-    author = "Dharhas Pothina, Alex Crosby, Chris Barker",
-    author_email = "Chris.Barker@noaa.gov",
-    description = ("A package for working with unstructured grids, and the data on them"),
-    license = "BSD",
-    keywords = "unstructured numpy models",
-    url = "https://github.com/pyugrid/pyugrid",
-#    long_description=read('README'),
+    name="pyugrid",
+    version="0.1.2",
+    author="Chris Barker, Chris Calloway, Rich Signell",
+    author_email="Chris.Barker@noaa.gov",
+    description=("A package for working with triangular unstructured grids, and the data on them"),
+    license="BSD",
+    keywords="unstructured numpy models",
+    url="https://github.com/pyugrid/pyugrid",
+    long_description=open('README.rst').read(),
     install_requires=[
         'numpy',
         'netCDF4',
@@ -40,7 +43,13 @@ setup(
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
         ],
-    packages = ["pyugrid", "test"],
-    scripts = [],
+    packages=["pyugrid", "test"],
+    scripts=[],
     )

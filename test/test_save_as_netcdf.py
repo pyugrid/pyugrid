@@ -6,6 +6,8 @@ tests for saving a UGrid in netcdf format
 designed to be run with pytest
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 import numpy as np
 import netCDF4
 
@@ -23,10 +25,10 @@ def nc_has_variable(ds, var_name):
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
 
-    if ds.variables.has_key(var_name):
+    if var_name in ds.variables:
         return True
     else:
-        print var_name, " is not a variable in the dataset"
+        print(var_name, " is not a variable in the dataset")
         return False
 
 def nc_has_dimension(ds, dim_name):
@@ -39,10 +41,10 @@ def nc_has_dimension(ds, dim_name):
     if not isinstance(ds, netCDF4.Dataset):
         ds = netCDF4.Dataset(ds)
 
-    if ds.dimensions.has_key(dim_name):
+    if dim_name in ds.dimensions:
         return True
     else:
-        print dim_name, " is not a dimension in the dataset"
+        print(dim_name, " is not a dimension in the dataset")
         return False
 
 
@@ -57,7 +59,7 @@ def nc_var_has_attr(ds, var_name, att_name):
         getattr(ds.variables[var_name], att_name)
         return True
     except AttributeError:
-        print att_name, "is not in the var:", var_name
+        print(att_name, "is not in the var:", var_name)
         return False    
 
 def nc_var_has_attr_vals(ds, var_name, att_dict):
@@ -70,12 +72,12 @@ def nc_var_has_attr_vals(ds, var_name, att_dict):
     for key, val in att_dict.items():
         try:
             if val != getattr(ds.variables[var_name], key):
-                print "attribute:", key
-                print "expected val:", val
-                print "val in file:", repr( getattr(ds.variables[var_name], key) )
+                print("attribute:", key)
+                print("expected val:", val)
+                print("val in file:", repr( getattr(ds.variables[var_name], key) ))
                 return False
         except AttributeError:
-            print key, "is not an attribute of var:", var_name
+            print(key, "is not an attribute of var:", var_name)
             return False
     return True
 
@@ -134,7 +136,7 @@ def test_set_mesh_name():
 
 def test_write_with_depths():
     '''
-    tests writting a netcdf file with depth data
+    tests writing a netcdf file with depth data
     '''
 
     fname = 'temp.nc'
@@ -215,6 +217,7 @@ def test_write_with_edge_data():
     flux = DataSet('flux', location='edge', data=[0.0, 0.0, 4.1, 0.0, 5.1, ])
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
+    flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
 
     grid.add_data(flux)
     #add coordinates for edges
@@ -323,13 +326,12 @@ def test_write_everything():
     flux = DataSet('flux', location='edge', data=np.linspace(1000,2000,41))
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
+    flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
 
     grid.add_data(flux)
 
     # Some boundary conditions:
 
-    print grid.boundaries.shape
-    print grid.boundaries
     bounds = np.zeros( (19,), dtype=np.uint8 )
     bounds[7] = 1
     bnds = DataSet('bnd_cond', location='boundary', data=bounds)
@@ -386,6 +388,23 @@ def test_write_everything():
                                               "flag_meanings" : "no_flow_boundary  open_boundary",
                                               "mesh": "mesh",
                                               })
+    # and make sure pyugrid can reload it!
+    grid = UGrid.from_ncfile(fname,load_data=True)
+    # and that some things are the same:
+    # note:  more testing might be good here...
+    #        maybe some grid comparison functions? 
+
+    assert grid.mesh_name == 'mesh'
+
+    print("grid data:", grid.data)
+    assert len(grid.nodes) == 20
+
+
+    depth = grid.data['depth']
+    assert depth.attributes['units'] == 'm'
+
+    u = grid.data['u']
+    assert u.attributes['units'] == 'm/s'
 
 
 if __name__ == "__main__":
