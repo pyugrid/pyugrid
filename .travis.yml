@@ -1,15 +1,37 @@
 language: python
 python:
   - "2.7"
+  - "3.3"
+  - "3.4"
+sudo: false
+
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y python-dev
-  - sudo apt-get install -y libhdf5-serial-dev
-  - sudo apt-get install -y libnetcdf-dev
-  - sudo apt-get install -y python-scipy
-install: 
-  - "pip install numpy"
-  - "pip install netCDF4"
-script: "py.test"
+  # Install miniconda
+  # -----------------
+  - export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda
+  - if [[ "$TRAVIS_PYTHON_VERSION" == 2* ]]; then
+      wget ${CONDA_BASE}-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget ${CONDA_BASE}3-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+
+  # Create the basic testing environment
+  # ------------------------------------
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --set show_channel_urls True
+  - conda update --quiet conda
+  - ENV_NAME='test-environment'
+  - conda create --quiet -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION
+  - source activate $ENV_NAME
+
+  # Customise the testing environment
+  # ---------------------------------
+  - conda install --quiet --file conda-requirements.txt
+install:
+  - mkdir files
+script:
+  - py.test --ignore=notebook_examples
 notifications:
   irc: "chat.freenode.net#renci"

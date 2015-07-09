@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
 """
-tests for saving a UGrid in netcdf format
+tests for finding a given DataSet by standard name
+
+This could use some more testing and cleaning up -- no need for all
+this reading and writting -- that is tested elsewhere
 
 designed to be run with pytest
 """
+
+from __future__ import (absolute_import, division, print_function)
+
 import numpy as np
 
 from pyugrid.ugrid import UGrid, DataSet
@@ -31,6 +37,21 @@ def find_depths(grid):
     if found:
         return found.pop()
     return None
+
+def test_no_std_name():
+    """
+    tests to make sure it doesn' crash if a DataSet does not have a standard_name
+    """
+    grid = two_triangles_with_depths()
+
+    junk = DataSet('junk', location='node', data=[1.0, 2.0, 3.0, 4.0])
+    junk.attributes['units'] = 'unknown'
+    grid.add_data(junk)
+    
+    depths = find_depths(grid)
+
+    assert depths.name == 'depth'
+
     
 def test_two_triangles():
     grid = two_triangles_with_depths()

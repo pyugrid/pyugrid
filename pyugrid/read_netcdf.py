@@ -9,6 +9,8 @@ This code is called by the UGrid class to load inot a UGRID object.
 
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 import numpy as np
 import netCDF4
 
@@ -23,7 +25,7 @@ def find_mesh_names( nc ):
     NOTE: checks for 2-d topology_dimension
     """
     mesh_names = []
-    for varname in nc.variables.iterkeys():
+    for varname in nc.variables.keys():
         if is_valid_mesh(nc, varname):
                     mesh_names.append(varname)
     return mesh_names            
