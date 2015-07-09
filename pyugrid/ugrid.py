@@ -160,7 +160,7 @@ class UGrid(object):
         check if the various data is consistent: the edges and faces reference
         existing nodes, etc.
         """
-        raise NotImplimentedError
+        raise NotImplementedError
     
     @property
     def num_vertices(self):
@@ -268,7 +268,7 @@ class UGrid(object):
     @property
     def face_edge_connectivity(self):
         return self._face_edge_connectivity
-    @face_face_connectivity.setter
+    @face_edge_connectivity.setter
     def face_edge_connectivity(self, face_edge_connectivity):
         ## add more checking?
         if face_edge_connectivity is not None:
@@ -371,7 +371,7 @@ class UGrid(object):
         """
         for i, face in enumerate(self._faces):
             f = self._nodes[face]
-            if point_in_poly(f, point):
+            if point_in_tri(f, point):
                 return i
         return None
 
@@ -459,7 +459,7 @@ class UGrid(object):
 
         Not implemented yet.
         """
-        raise NotImplimentedError
+        raise NotImplementedError
 
     def build_face_coordinates(self):
         """
