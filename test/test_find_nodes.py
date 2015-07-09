@@ -37,7 +37,8 @@ def test_locate_nodes():
 
 def test_locate_exact():
     """
-    The nearest neighbor of the exact node locations has better be the nodes!
+    The nearest neighbor of the exact node locations had better be
+    the nodes!
     """
     ugrid = twenty_one_triangles()
 
