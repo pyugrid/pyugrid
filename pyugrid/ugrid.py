@@ -104,6 +104,10 @@ class UGrid(object):
             for dataset in data.values():
                 self.add_data(dataset)
 
+        # a kdtree is used to locate nodes. It will be created if/when it is needed
+        self._kdtree = None
+
+
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None, load_data=False):
         """
@@ -332,6 +336,26 @@ class UGrid(object):
                     continue
                 found.add(ds)
         return found
+
+    def locate_nodes(self, points):
+        """
+        returns the index of the closest nodes to the input locations
+
+        :param points: the lon/lats of locations you want the nodes closest to.
+        :type point: a (N,2) ndarray of points (or something that can be conveted)
+
+        :returns: teh index of the closest node.
+        """
+        if self._kdtree is None:
+            self._build_kdtree()
+
+        node_inds = self._kdtree.query(points, k=1)[1]
+        return node_inds
+
+    def _build_kdtree(self):
+        # only import if it's used
+         from scipy.spatial import cKDTree
+         self._kdtree = cKDTree(self.nodes)
 
 
     def locate_face_simple(self, point):
