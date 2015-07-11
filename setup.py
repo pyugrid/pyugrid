@@ -1,36 +1,60 @@
-#!/usr/bin/env python
-
 from __future__ import (absolute_import, division, print_function)
 
-#from distutils.core import setup
-from setuptools import setup # to support "develop" mode
-#from distutils.extension import Extension
-#from Cython.Distutils import build_ext
+import os
+from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-#import numpy # for the includes for the Cython code
+
+rootpath = os.path.abspath(os.path.dirname(__file__))
+long_description = open(os.path.join(rootpath, 'README.rst')).read()
+
 
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
+
     def run_tests(self):
         import pytest
         errno = pytest.main(self.test_args)
         import sys
         sys.exit(errno)
 
+
+def version():
+    """Get the version number."""
+    with open(os.path.join(rootpath, "VERSION.txt")) as v:
+        _version = v.read()
+    return _version.strip()
+
+
+__version__ = version()
+
+
+def set_version(filename, new_string=__version__):
+    with open(filename) as f:
+        lines = f.readlines()
+    for k, line in enumerate(lines):
+        if (line.startswith('__version__')):
+            lines[k] = "__version__ = '{}'\n".format(__version__)
+            break
+    with open(filename, 'w') as f:
+        f.writelines(lines)
+
+set_version(os.path.join(rootpath, 'pyugrid', '__init__.py'))
+
 setup(
     name="pyugrid",
-    version="0.1.2",
+    version=__version__,
     author="Chris Barker, Chris Calloway, Rich Signell",
     author_email="Chris.Barker@noaa.gov",
-    description=("A package for working with triangular unstructured grids, and the data on them"),
+    description=("A package for working with triangular unstructured grids, "
+                 "and the data on them"),
     license="BSD",
     keywords="unstructured numpy models",
     url="https://github.com/pyugrid/pyugrid",
-    long_description=open('README.rst').read(),
+    long_description=long_description,
     install_requires=[
         'numpy',
         'netCDF4',
