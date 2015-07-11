@@ -54,7 +54,7 @@ class UGrid(object):
         """
         ugrid class -- holds, saves, etc. an unstructured grid
 
-        :param nodes=None : the coordinates of the nodes -- (NX2) float array
+        :param nodes=None : the coordinates of the nodes -- (NX2) float64 array -- (X,Y) or (lon, lat)
         :param faces=None : the faces of the grid -- (NX3) integer array of indexes into the nodes array
         :param edges=None : the edges of the grid -- (NX2) integer array of indexes into the nodes array
         :param boundaries=None: specification of the boundaries -- are usually a subset of edges
