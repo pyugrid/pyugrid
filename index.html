@@ -1,0 +1,521 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to pyugrid’s documentation! &mdash; pyugrid 0.1.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyugrid 0.1.2 documentation" href="#" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">pyugrid 0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-pyugrid-s-documentation">
+<h1>Welcome to pyugrid&#8217;s documentation!<a class="headerlink" href="#welcome-to-pyugrid-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+<hr class="docutils" />
+<span class="target" id="module-pyugrid.ugrid"></span><p>ugrid classes</p>
+<p>set of classes for working with unstructured model grids</p>
+<p>The &#8220;ugrid&#8221; class is the base class: it stores everything in memory</p>
+<p>It can read from and write to netcdf files in the UGRID format.</p>
+<p>It may be able to reference a netcdf file at some point, rather than storing directly in memory.</p>
+<p>NOTE: only support for triangular mesh grids at the moment</p>
+<dl class="class">
+<dt id="pyugrid.ugrid.UGrid">
+<em class="property">class </em><code class="descclassname">pyugrid.ugrid.</code><code class="descname">UGrid</code><span class="sig-paren">(</span><em>nodes=None</em>, <em>faces=None</em>, <em>edges=None</em>, <em>boundaries=None</em>, <em>face_face_connectivity=None</em>, <em>face_edge_connectivity=None</em>, <em>edge_coordinates=None</em>, <em>face_coordinates=None</em>, <em>boundary_coordinates=None</em>, <em>data=None</em>, <em>mesh_name='mesh'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>a basic class to hold an unstructured grid (triangular mesh)</p>
+<p>the internal structure mirrors the netcdf data standard.</p>
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.add_data">
+<code class="descname">add_data</code><span class="sig-paren">(</span><em>data_set</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.add_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a dataset to the data dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data_set</strong> (<em>a ugrid.DataSet object</em>) &#8211; the DataSet object to add. its name will be the key in the data dict.</td>
+</tr>
+</tbody>
+</table>
+<p>some sanity checking is done to make sure array sizes are correct.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.boundaries">
+<code class="descname">boundaries</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.boundaries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_boundaries">
+<code class="descname">build_boundaries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_boundaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>builds the boundary segments from the cell array</p>
+<p>It is assumed that -1 means no neighbor, which indicates a boundary</p>
+<p>This will over-write the existing boundaries array if there is one.</p>
+<p>This is a not-very-smart just loop through all the faces method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_boundary_coordinates">
+<code class="descname">build_boundary_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_boundary_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the boundary_coordinates array, using the average of the
+nodes defining each boundary segment.</p>
+<p>Note that you may want a different definition of the boundary
+coordinates than this computes, but this is here to have
+an easy default.</p>
+<p>This will write-over an existing face_coordinates array</p>
+<p>Useful if you want this in the output file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_edge_coordinates">
+<code class="descname">build_edge_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_edge_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the face_coordinates array, using the average of the
+nodes defining each edge.</p>
+<p>Note that you may want a different definition of the edge
+coordinates than this computes, but this is here to have
+an easy default.</p>
+<p>This will write-over an existing face_coordinates array</p>
+<p>Useful if you want this in the output file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_edges">
+<code class="descname">build_edges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>builds the edges array: all the edges defined by the triangles</p>
+<p>This will replace the existing edge array, if there is one.</p>
+<p>NOTE: arbitrary order &#8211; should the order be preserved?</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_face_coordinates">
+<code class="descname">build_face_coordinates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_face_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the face_coordinates array, using the average of the
+nodes defining each face.</p>
+<p>Note that you may want a different definition of the face
+coordinates than this computes, but this is here to have
+an easy default.</p>
+<p>This will write-over an existing face_coordinates array</p>
+<p>Useful if you want this in the output file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_face_edge_connectivity">
+<code class="descname">build_face_edge_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_face_edge_connectivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the face-edge connectivity array</p>
+<p>Not implemented yet.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.build_face_face_connectivity">
+<code class="descname">build_face_face_connectivity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.build_face_face_connectivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>builds the face_face_connectivity array:
+essentially giving the neighbors of each triangle</p>
+<p>note: arbitrary order and CW vs CCW may not be consistent</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.check_consistent">
+<code class="descname">check_consistent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.check_consistent" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if the various data is consistent: the edges and faces reference
+existing nodes, etc.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.data">
+<code class="descname">data</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict of data associated with the data arrays
+You can&#8217;t set this &#8211; must use UGrid.add_data()</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.edges">
+<code class="descname">edges</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.face_edge_connectivity">
+<code class="descname">face_edge_connectivity</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.face_edge_connectivity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.face_face_connectivity">
+<code class="descname">face_face_connectivity</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.face_face_connectivity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.faces">
+<code class="descname">faces</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.faces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.find_data_sets">
+<code class="descname">find_data_sets</code><span class="sig-paren">(</span><em>standard_name</em>, <em>location=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.find_data_sets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all :py:class:<a href="#id1"><span class="problematic" id="id2">`</span></a>DataSet`s that match the specified standard name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>standard_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the standard name attribute (based on the UGRID conventions)</li>
+<li><strong>location</strong> &#8211; optional attribute location to narrow the returned
+:py:class:<a href="#id3"><span class="problematic" id="id4">`</span></a>DataSet`s (one of &#8216;node&#8217;, &#8216;edge&#8217;, &#8216;face&#8217;, or &#8216;boundary&#8217;).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">set of matching :py:class:<a href="#id5"><span class="problematic" id="id6">`</span></a>DataSet`s</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyugrid.ugrid.UGrid.from_nc_dataset">
+<em class="property">classmethod </em><code class="descname">from_nc_dataset</code><span class="sig-paren">(</span><em>klass</em>, <em>nc</em>, <em>mesh_name=None</em>, <em>load_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.from_nc_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a UGrid object from a netcdf file (or opendap url)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nc</strong> (<em>netCDF4.DataSet</em>) &#8211; An already open Dataset object</li>
+<li><strong>mesh_name=None</strong> &#8211; the name of the mesh you want. If None, then
+you&#8217;ll get the only mesh in the file. If there
+is more than one mesh in the file, a ValueError
+Will be raised</li>
+<li><strong>load_data=False</strong> &#8211; flag to indicate whether you want to load the associated
+data or not. The mesh will be loaded in any case. If False,
+only the mesh will be loaded. If True, then all the data
+associated with the mesh will be loaded. This could be huge!</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyugrid.ugrid.UGrid.from_ncfile">
+<em class="property">classmethod </em><code class="descname">from_ncfile</code><span class="sig-paren">(</span><em>klass</em>, <em>nc_url</em>, <em>mesh_name=None</em>, <em>load_data=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.from_ncfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a UGrid object from a netcdf file name (or opendap url)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nc_url</strong> &#8211; the filename or OpenDap url you want to load</li>
+<li><strong>mesh_name=None</strong> &#8211; the name of the mesh you want. If None, then
+you&#8217;ll get the only mesh in the file. If there
+is more than one mesh in the file, a ValueError
+Will be raised</li>
+<li><strong>load_data=False</strong> &#8211; flag to indicate whether you want to load the associated
+data or not. The mesh will be loaded in any case. If False,
+only the mesh will be loaded. If True, then all the data
+associated with the mesh will be loaded. This could be huge!</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.locate_face_simple">
+<code class="descname">locate_face_simple</code><span class="sig-paren">(</span><em>point</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.locate_face_simple" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the index of the face that the point is in</p>
+<p>returns None if the point is not in the mesh</p>
+<p>: param point :  the point that you want to locate &#8211; (x, y)</p>
+<p>this is a very simple, look through all the faces search.
+It is slow ( O(N) ), but should be robust</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.locate_nodes">
+<code class="descname">locate_nodes</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.locate_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the index of the closest nodes to the input locations</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>points</strong> &#8211; the lon/lats of locations you want the nodes closest to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">teh index of the closest node.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.nodes">
+<code class="descname">nodes</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.nodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyugrid.ugrid.UGrid.num_vertices">
+<code class="descname">num_vertices</code><a class="headerlink" href="#pyugrid.ugrid.UGrid.num_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of vertices in a face</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyugrid.ugrid.UGrid.save_as_netcdf">
+<code class="descname">save_as_netcdf</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.ugrid.UGrid.save_as_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>save the ugrid object as a netcdf file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> &#8211; path to file you want o save to.
+An existing one will be clobbered if it already exists.</td>
+</tr>
+</tbody>
+</table>
+<p>follows the convernsion established by the netcdf UGRID working group:</p>
+<p><a class="reference external" href="http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model">http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model</a></p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-pyugrid.data_set"></span><p>DataSet object, used to hold data associated with a ugrid</p>
+<dl class="class">
+<dt id="pyugrid.data_set.DataSet">
+<em class="property">class </em><code class="descclassname">pyugrid.data_set.</code><code class="descname">DataSet</code><span class="sig-paren">(</span><em>name</em>, <em>location='node'</em>, <em>data=None</em>, <em>attributes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.data_set.DataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to hold the data associated with nodes, edges, etc.</p>
+<dl class="docutils">
+<dt>It holds an array of the data, as well as the attributes associated</dt>
+<dd>with that data (attributes get stored in the netcdf file)</dd>
+</dl>
+<dl class="attribute">
+<dt id="pyugrid.data_set.DataSet.data">
+<code class="descname">data</code><a class="headerlink" href="#pyugrid.data_set.DataSet.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<hr class="docutils" />
+<span class="target" id="module-pyugrid.read_netcdf"></span><p>code to read the netcdf unstructured grid standard:</p>
+<p><a class="reference external" href="https://github.com/ugrid-conventions/ugrid-conventions/">https://github.com/ugrid-conventions/ugrid-conventions/</a></p>
+<p>This code is called by the UGrid class to load inot a UGRID object.</p>
+<dl class="function">
+<dt id="pyugrid.read_netcdf.find_mesh_names">
+<code class="descclassname">pyugrid.read_netcdf.</code><code class="descname">find_mesh_names</code><span class="sig-paren">(</span><em>nc</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.read_netcdf.find_mesh_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>find all the meshes in an open netcCDF4.DataSet</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nc</strong> &#8211; the netCDF4 Dataset object to look for mesh names in</td>
+</tr>
+</tbody>
+</table>
+<p>NOTE: checks for 2-d topology_dimension</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyugrid.read_netcdf.is_valid_mesh">
+<code class="descclassname">pyugrid.read_netcdf.</code><code class="descname">is_valid_mesh</code><span class="sig-paren">(</span><em>nc</em>, <em>varname</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.read_netcdf.is_valid_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>determine if the given variable name is a valid mesh definition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nc</strong> &#8211; a netCDF4 Dataset to check</li>
+<li><strong>varname</strong> &#8211; name of the candidate mesh variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyugrid.read_netcdf.load_grid_from_nc_dataset">
+<code class="descclassname">pyugrid.read_netcdf.</code><code class="descname">load_grid_from_nc_dataset</code><span class="sig-paren">(</span><em>nc</em>, <em>grid</em>, <em>mesh_name=None</em>, <em>load_data=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.read_netcdf.load_grid_from_nc_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads UGrid object from a netCDF4.DataSet object, adding the data
+to the passed-in grid object.</p>
+<p>It will load the mesh specified, or look
+for the first one it finds if none is specified</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> &#8211; filename or OpenDAP url of dataset.</li>
+<li><strong>grid</strong> (<em>UGrid object.</em>) &#8211; ther gird object to put the mesh and data into.</li>
+<li><strong>mesh_name=None</strong> &#8211; name of the mesh to load</li>
+<li><strong>load_data=False</strong> &#8211; flag to indicate whether you want to load the associated
+data or not. The mesh will be loaded in any case. If False,
+only the mesh will be loaded. If True, then all the data
+associated with the mesh will be loaded. This could be huge!</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>NOTE: passing the UGrid object in to avoid circular references,
+while keeping the netcdf reading code in its own file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyugrid.read_netcdf.load_grid_from_ncfilename">
+<code class="descclassname">pyugrid.read_netcdf.</code><code class="descname">load_grid_from_ncfilename</code><span class="sig-paren">(</span><em>filename</em>, <em>grid</em>, <em>mesh_name=None</em>, <em>load_data=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.read_netcdf.load_grid_from_ncfilename" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads UGrid object from a netcdf file, adding the data
+to the passed-in grid object.</p>
+<p>It will load the mesh specified, or look
+for the first one it finds if none is specified</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> &#8211; filename or OpenDAP url of dataset.</li>
+<li><strong>grid</strong> (<em>UGrid object.</em>) &#8211; ther gird object to put the mesh and data into.</li>
+<li><strong>mesh_name=None</strong> &#8211; name of the mesh to load</li>
+<li><strong>load_data=False</strong> &#8211; flag to indicate whether you want to load the associated
+data or not. The mesh will be loaded in any case. If False,
+only the mesh will be loaded. If True, then all the data
+associated with the mesh will be loaded. This could be huge!</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>NOTE: passing the UGrid object in to avoid circular references,
+while keeping the netcdf reading code in its own file.</p>
+</dd></dl>
+
+<hr class="docutils" />
+<span class="target" id="module-pyugrid.ucube"></span><p>Core class that handles a dataset on an unstructured grid.</p>
+<dl class="class">
+<dt id="pyugrid.ucube.UCube">
+<em class="property">class </em><code class="descclassname">pyugrid.ucube.</code><code class="descname">UCube</code><a class="headerlink" href="#pyugrid.ucube.UCube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Core class that handles a dataset on an unstructured grid.</p>
+</dd></dl>
+
+<hr class="docutils" />
+<span class="target" id="module-pyugrid.util"></span><p>miscellaneous util functions</p>
+<dl class="function">
+<dt id="pyugrid.util.point_in_tri">
+<code class="descclassname">pyugrid.util.</code><code class="descname">point_in_tri</code><span class="sig-paren">(</span><em>face_points</em>, <em>point</em>, <em>return_weights=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.util.point_in_tri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates whether point is internal/external
+to element by comparing summed area of sub triangles with area of triangle element.</p>
+</dd></dl>
+
+<hr class="docutils" />
+<span class="target" id="module-pyugrid.test_examples"></span><p>Some example UGRIDs to test, etc with</p>
+<dl class="function">
+<dt id="pyugrid.test_examples.twenty_one_triangles">
+<code class="descclassname">pyugrid.test_examples.</code><code class="descname">twenty_one_triangles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.test_examples.twenty_one_triangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a basic triangle grid with 21 triangles, a hole and a &#8220;tail&#8221;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyugrid.test_examples.two_triangles">
+<code class="descclassname">pyugrid.test_examples.</code><code class="descname">two_triangles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyugrid.test_examples.two_triangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns about the simplest triangle grid possible</p>
+<p>4 nodes, two triangles, five edges</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to pyugrid&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">pyugrid 0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Chris Barker.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
