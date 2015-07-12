@@ -75,5 +75,5 @@ setup(
         "Programming Language :: Python :: 3.4",
         ],
     packages=["pyugrid", "test"],
-    scripts=["scripts/ugrid_wx.py"],
+    scripts=[],
     )
