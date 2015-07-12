@@ -77,5 +77,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         ],
     packages=["pyugrid", "test"],
-    scripts=[],
+    entry_points=dict(gui_scripts=[
+        'ugrid_wx = pyugrid.ugrid_wx:main']
+    ),
     )

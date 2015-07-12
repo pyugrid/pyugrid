@@ -1,5 +1,3 @@
-#!/usr/bin/env pythonw
-
 """
 ugid_wx.py:
 
@@ -10,7 +8,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import wx
 
-import pyugrid
+from . import UGrid
 
 # Import the installed version.
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas
@@ -116,6 +114,7 @@ class DrawFrame(wx.Frame):
         # Add the Nodes.
         if preferences['draw_indexes']:
             for i, n in enumerate(nodes):
+                background_color = self.label_background_color
                 self.Canvas.AddText(repr(i), n, Size=self.label_size,
                                     BackgroundColor=background_color)
         self.Canvas.AddPointSet(nodes, Diameter=preferences['node_diameter'],
@@ -123,7 +122,7 @@ class DrawFrame(wx.Frame):
         self.Canvas.ZoomToBB()
 
     def load_ugrid_file(self, filename):
-        grid = pyugrid.UGrid.from_ncfile(filename)
+        grid = UGrid.from_ncfile(filename)
         self.Draw_UGRID(grid)
 
     def OnMove(self, event):
@@ -145,7 +144,7 @@ class DrawFrame(wx.Frame):
         dlg.Destroy()
 
 
-if __name__ == "__main__":
+def main():
     import sys
     app = wx.App(False)
     F = DrawFrame(None, title="UGRID Test App", size=(700, 700))
@@ -154,7 +153,10 @@ if __name__ == "__main__":
         filename = sys.argv[1]
         F.load_ugrid_file(filename)
     else:
-        from pyugrid import test_examples
+        from . import test_examples
         F.Draw_UGRID(test_examples.twenty_one_triangles())
 
     app.MainLoop()
+
+if __name__ == "__main__":
+    main()
