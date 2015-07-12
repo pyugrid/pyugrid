@@ -32,6 +32,11 @@ def version():
 __version__ = version()
 
 
+with open('requirements.txt') as f:
+    require = f.readlines()
+install_requires = [r.strip() for r in require]
+
+
 def set_version(filename, new_string=__version__):
     with open(filename) as f:
         lines = f.readlines()
@@ -55,10 +60,7 @@ setup(
     keywords="unstructured numpy models",
     url="https://github.com/pyugrid/pyugrid",
     long_description=long_description,
-    install_requires=[
-        'numpy',
-        'netCDF4',
-        ],
+    install_requires=install_requires,
     tests_require=[
         'pytest>=2.3.2',
         ],
