@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-tests for finding a given DataSet by standard name
+Tests for finding a given UVar by standard name
 
 This could use some more testing and cleaning up -- no need for all
 this reading and writting -- that is tested elsewhere
@@ -13,7 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
 
-from pyugrid.ugrid import UGrid, DataSet
+from pyugrid.ugrid import UGrid, UVar
 from pyugrid.test_examples import *
 
 import logging
@@ -24,7 +24,7 @@ logging.getLogger('pyugrid').setLevel(logging.DEBUG)
 def two_triangles_with_depths():
     grid = two_triangles()
 
-    depths = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
+    depths = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
     depths.attributes['units'] = 'unknown'
     depths.attributes['standard_name'] = "sea_floor_depth_below_geoid"
     depths.attributes['positive'] = "down"
@@ -40,11 +40,11 @@ def find_depths(grid):
 
 def test_no_std_name():
     """
-    tests to make sure it doesn' crash if a DataSet does not have a standard_name
+    tests to make sure it doesn' crash if a UVar does not have a standard_name
     """
     grid = two_triangles_with_depths()
 
-    junk = DataSet('junk', location='node', data=[1.0, 2.0, 3.0, 4.0])
+    junk = UVar('junk', location='node', data=[1.0, 2.0, 3.0, 4.0])
     junk.attributes['units'] = 'unknown'
     grid.add_data(junk)
     
@@ -80,7 +80,7 @@ def twenty_one_triangles_with_depths():
     """
     grid = twenty_one_triangles()
 
-    depths = DataSet('depth', location='node', data=range(1, 21))
+    depths = UVar('depth', location='node', data=range(1, 21))
     depths.attributes['units'] = 'unknown'
     depths.attributes['standard_name'] = "sea_floor_depth_below_geoid"
     depths.attributes['positive'] = "down"

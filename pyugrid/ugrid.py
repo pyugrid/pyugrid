@@ -23,7 +23,7 @@ from . import read_netcdf
 # used for simple locate_face test
 #from py_geometry.cy_point_in_polygon import point_in_poly as point_in_tri
 from .util import point_in_tri
-from .data_set import DataSet
+from .uvar import UVar
 
 IND_DT = np.int32 ## datatype used for indexes -- might want to change for 64 bit some day.
 NODE_DT = np.float64 ## datatype used for node coordinates
@@ -71,8 +71,8 @@ class UGrid(object):
         :param boundary_coordinates=None: representative coordinate of the boundaries
         
 
-        :param data = None: associated dataset
-        :type data: dict of DataSet objects
+        :param data = None: associated variables
+        :type data: dict of UVar objects
 
         :param mesh_name = "mesh": optional name for the mesh 
         :type string: 
@@ -97,7 +97,7 @@ class UGrid(object):
         self.mesh_name = mesh_name
 
         # the data associated with the grid
-        # should be a dict of DataSet objects
+        # should be a dict of UVar objects
 
         self._data = {} # the data associated with the grid
         if data is not None:
@@ -291,10 +291,10 @@ class UGrid(object):
 
     def add_data(self, data_set):
         """
-        Add a dataset to the data dict
+        Add a UVar to the data dict
 
-        :param data_set: the DataSet object to add. its name will be the key in the data dict.
-        :type data_set: a ugrid.DataSet object
+        :param data_set: the UVar object to add. its name will be the key in the data dict.
+        :type data_set: a ugrid.UVar object
 
         some sanity checking is done to make sure array sizes are correct.
 
@@ -318,14 +318,14 @@ class UGrid(object):
 
     def find_data_sets(self, standard_name, location=None):
         """
-        Find all :py:class:`DataSet`s that match the specified standard name
+        Find all :py:class:`UVar`s that match the specified standard name
         
         :param str standard_name: the standard name attribute (based on the UGRID conventions)
         
         :keyword location: optional attribute location to narrow the returned
-                           :py:class:`DataSet`s (one of 'node', 'edge', 'face', or 'boundary').
+                           :py:class:`UVar`s (one of 'node', 'edge', 'face', or 'boundary').
         
-        :return: set of matching :py:class:`DataSet`s
+        :return: set of matching :py:class:`UVar`s
         """
         found = set()
         for ds in self._data.values():

@@ -11,7 +11,7 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 import netCDF4
 
-from pyugrid.ugrid import UGrid, DataSet
+from pyugrid.ugrid import UGrid, UVar
 from pyugrid.test_examples import two_triangles, twenty_one_triangles
 
 # code to check netcdf files for stuff:
@@ -28,7 +28,7 @@ def nc_has_variable(ds, var_name):
     if var_name in ds.variables:
         return True
     else:
-        print(var_name, " is not a variable in the dataset")
+        print(var_name, " is not a variable in the Dataset")
         return False
 
 def nc_has_dimension(ds, dim_name):
@@ -44,7 +44,7 @@ def nc_has_dimension(ds, dim_name):
     if dim_name in ds.dimensions:
         return True
     else:
-        print(dim_name, " is not a dimension in the dataset")
+        print(dim_name, " is not a dimension in the Dataset")
         return False
 
 
@@ -144,8 +144,8 @@ def test_write_with_depths():
     grid = two_triangles()
     grid.mesh_name='mesh1'
 
-    # create a dataset object for the depths:
-    depths = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
+    # create a UVar object for the depths:
+    depths = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
     depths.attributes['units'] = 'm'
     depths.attributes["standard_name"] = "sea_floor_depth_below_geoid"
     depths.attributes["positive"] = "down"
@@ -174,15 +174,15 @@ def test_write_with_velocities():
     grid = two_triangles()
     grid.mesh_name = 'mesh2'
 
-    # create a dataset object for u velocity:
-    u_vel = DataSet('u', location='face', data=[1.0, 2.0])
+    # create a UVar object for u velocity:
+    u_vel = UVar('u', location='face', data=[1.0, 2.0])
     u_vel.attributes['units'] = 'm/s'
     u_vel.attributes["standard_name"] = "eastward_sea_water_velocity"
 
     grid.add_data(u_vel)
 
-    # create a dataset object for v velocity:
-    v_vel = DataSet('v', location='face', data=[3.2, 4.3])
+    # create a Uvar object for v velocity:
+    v_vel = UVar('v', location='face', data=[3.2, 4.3])
     v_vel.attributes['units'] = 'm/s'
     v_vel.attributes["standard_name"] = "northward_sea_water_velocity"
 
@@ -213,8 +213,8 @@ def test_write_with_edge_data():
     grid = two_triangles()
     grid.mesh_name = 'mesh2'
 
-    # create a dataset object for fluxes:
-    flux = DataSet('flux', location='edge', data=[0.0, 0.0, 4.1, 0.0, 5.1, ])
+    # create a UVar object for fluxes:
+    flux = UVar('flux', location='edge', data=[0.0, 0.0, 4.1, 0.0, 5.1, ])
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
     flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
@@ -255,8 +255,8 @@ def test_write_with_bound_data():
                       ]
 
 
-    # create a dataset object for boundary conditions:
-    bnds = DataSet('bnd_cond', location='boundary', data=[0, 1, 0, 0])
+    # create a UVar object for boundary conditions:
+    bnds = UVar('bnd_cond', location='boundary', data=[0, 1, 0, 0])
     bnds.attributes["long_name"] = "model boundary conditions"
     bnds.attributes["flag_values"] = "0 1"
     bnds.attributes["flag_meanings"] = "no_flow_boundary  open_boundary"
@@ -301,7 +301,7 @@ def test_write_everything():
     grid.build_boundary_coordinates()
 
     # depth on the nodes
-    depths = DataSet('depth', location='node', data=np.linspace(1,10,20))
+    depths = UVar('depth', location='node', data=np.linspace(1,10,20))
     depths.attributes['units'] = 'm'
     depths.attributes["standard_name"] = "sea_floor_depth_below_geoid"
     depths.attributes["positive"] = "down"
@@ -309,21 +309,21 @@ def test_write_everything():
     grid.add_data(depths)
 
     # velocities on the faces:
-    u_vel = DataSet('u', location='face', data=np.sin(np.linspace(3,12,21)))
+    u_vel = UVar('u', location='face', data=np.sin(np.linspace(3,12,21)))
     u_vel.attributes['units'] = 'm/s'
     u_vel.attributes["standard_name"] = "eastward_sea_water_velocity"
 
     grid.add_data(u_vel)
 
-    # create a dataset object for v velocity:
-    v_vel = DataSet('v', location='face', data=np.sin(np.linspace(12,15,21)))
+    # create a UVar object for v velocity:
+    v_vel = UVar('v', location='face', data=np.sin(np.linspace(12,15,21)))
     v_vel.attributes['units'] = 'm/s'
     v_vel.attributes["standard_name"] = "northward_sea_water_velocity"
 
     grid.add_data(v_vel)
 
     # fluxes on the edges:
-    flux = DataSet('flux', location='edge', data=np.linspace(1000,2000,41))
+    flux = UVar('flux', location='edge', data=np.linspace(1000,2000,41))
     flux.attributes['units'] = 'm^3/s'
     flux.attributes["long_name"] = "volume flux between cells"
     flux.attributes["standard_name"] = "ocean_volume_transport_across_line"
@@ -334,7 +334,7 @@ def test_write_everything():
 
     bounds = np.zeros( (19,), dtype=np.uint8 )
     bounds[7] = 1
-    bnds = DataSet('bnd_cond', location='boundary', data=bounds)
+    bnds = UVar('bnd_cond', location='boundary', data=bounds)
     bnds.attributes["long_name"] = "model boundary conditions"
     bnds.attributes["flag_values"] = "0 1"
     bnds.attributes["flag_meanings"] = "no_flow_boundary  open_boundary"

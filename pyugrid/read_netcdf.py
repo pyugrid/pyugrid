@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 import netCDF4
 
-from .data_set import DataSet
+from .uvar import UVar
 
 def find_mesh_names( nc ):
     """
@@ -226,7 +226,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
 
             # trick with the name: fixme: is this a good idea?
             name = name.lstrip(mesh_name).lstrip('_')
-            ds = DataSet(name, data=var[:], location=location, attributes=attributes)
+            ds = UVar(name, data=var[:], location=location, attributes=attributes)
 
             grid.add_data(ds)
 
