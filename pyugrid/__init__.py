@@ -12,4 +12,4 @@ from .data_set import DataSet
 
 
 # pyugrid version PEP-0440
-__version__ = '0.1.3'
+__version__ = '0.1.4'
