@@ -2,6 +2,7 @@
 tests for the util module.
 """
 
+from __future__ import print_function
 import numpy as np
 from pyugrid import util
 
@@ -26,7 +27,7 @@ def test_asarraylike_list():
     """
     lst = [1,2,3,4]
     result = util.asarraylike(lst)
-    print result
+    print(result)
     assert isinstance(result, np.ndarray)
     assert np.array_equal(result, lst)
 
