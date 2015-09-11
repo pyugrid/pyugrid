@@ -59,6 +59,9 @@ class DrawFrame(wx.Frame):
         item = FileMenu.Append(wx.ID_ANY, text="&Open")
         self.Bind(wx.EVT_MENU, self.OnOpen, item)
 
+        item = FileMenu.Append(wx.ID_ANY, text="&Save Image")
+        self.Bind(wx.EVT_MENU, self.OnSaveImage, item)
+
         MenuBar.Append(FileMenu, "&File")
         self.SetMenuBar(MenuBar)
 
@@ -143,6 +146,16 @@ class DrawFrame(wx.Frame):
             filename = dlg.GetPath()
             self.load_ugrid_file(filename)
         dlg.Destroy()
+
+    def OnSaveImage(self, event):
+        dlg = wx.FileDialog(self, 'Save a PNG file', ".", '', '*.png', wx.SAVE)
+        if dlg.ShowModal() == wx.ID_OK:
+            filename = dlg.GetPath()
+            self.save_image(filename)
+        dlg.Destroy()
+
+    def save_image(self, filename):
+        self.Canvas.SaveAsImage(filename)
 
 
 if __name__ == "__main__":
