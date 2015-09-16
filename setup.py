@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 import os
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
 
@@ -76,7 +76,7 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         ],
-    packages=["pyugrid", "test"],
+    packages=find_packages(exclude=['test']),
     entry_points=dict(gui_scripts=[
         'ugrid_wx = pyugrid.ugrid_wx:main']
     ),
