@@ -54,28 +54,40 @@ class UGrid(object):
         """
         ugrid class -- holds, saves, etc. an unstructured grid
 
-        :param nodes=None : the coordinates of the nodes -- (NX2) float array
-        :param faces=None : the faces of the grid -- (NX3) integer array of indexes into the nodes array
-        :param edges=None : the edges of the grid -- (NX2) integer array of indexes into the nodes array
+        :param nodes=None : the coordinates of the nodes
+        :type nodes: (NX2) array of floats
+
+        :param faces=None : the faces of the grid -- indexes into the nodes array
+        :type faces: (NX3) array of integers
+
+        :param edges=None : the edges of the grid --  of indexes into the nodes array
+        :type edges: (NX2) array of integers
+
         :param boundaries=None: specification of the boundaries -- are usually a subset of edges
                                 where boundary condition information, etc is stored.
                                 (NX2) integer array of indexes into the nodes array
-        :type boundaries: numpy array of integer dtype
+        :type boundaries: numpy array of integers
 
 
         :param face_face_connectivity=None: connectivity arrays
         :param face_edge_connectivity=None: connectivity arrays
 
         :param edge_coordinates=None: representative coordinate of the edges
-        :param face_coordinates=None: representative coordinate of the faces
+        :type edge_coordinates: (NX2) array of floats
+
+        :param face_coordinates=None: representative coordinate of the faces (NX2) float array
+        :type face_coordinates: (NX2) array of floats
+
+
         :param boundary_coordinates=None: representative coordinate of the boundaries
-        
+        :type boundary_coordinates: (NX2) array of floats
+
 
         :param data = None: associated variables
         :type data: dict of UVar objects
 
-        :param mesh_name = "mesh": optional name for the mesh 
-        :type string: 
+        :param mesh_name = "mesh": optional name for the mesh
+        :type string:
 
         often this is too much data to pass in as literals -- so usually
         specialized constructors will be used instead (load from file, etc.)
@@ -161,7 +173,7 @@ class UGrid(object):
         existing nodes, etc.
         """
         raise NotImplementedError
-    
+
     @property
     def num_vertices(self):
         """
@@ -181,7 +193,7 @@ class UGrid(object):
         # for now -- simply make sure it's a numpy array
         if nodes_coords is None:
             self.nodes = np.zeros((0,2), dtype=NODE_DT)
-        else:    
+        else:
             self._nodes = np.asarray(nodes_coords, dtype=NODE_DT)
 
     @nodes.deleter
@@ -319,12 +331,12 @@ class UGrid(object):
     def find_data_sets(self, standard_name, location=None):
         """
         Find all :py:class:`UVar`s that match the specified standard name
-        
+
         :param str standard_name: the standard name attribute (based on the UGRID conventions)
-        
+
         :keyword location: optional attribute location to narrow the returned
                            :py:class:`UVar`s (one of 'node', 'edge', 'face', or 'boundary').
-        
+
         :return: set of matching :py:class:`UVar`s
         """
         found = set()
@@ -381,14 +393,14 @@ class UGrid(object):
         essentially giving the neighbors of each triangle
 
         note: arbitrary order and CW vs CCW may not be consistent
-        """        
+        """
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
         face_face = np.zeros( (num_faces, num_vertices), dtype=IND_DT )
         face_face += -1 # fill with -1
 
         # loop through all the triangles to find the matching edges:
-        edges = {} # dict to store the edges in 
+        edges = {} # dict to store the edges in
         for i, face in enumerate(self.faces):
             # loop through edges of the triangle:
             for j in range(num_vertices):
@@ -397,7 +409,7 @@ class UGrid(object):
                 else:
                     edge = (face[-1], face[0])
                 if edge[0] > edge[1]: # sort the node numbers
-                    edge = (edge[1], edge[0]) 
+                    edge = (edge[1], edge[0])
                 # see if it is already in there
                 prev_edge = edges.pop(edge, None)
                 if prev_edge is not None:
@@ -415,7 +427,7 @@ class UGrid(object):
         This will replace the existing edge array, if there is one.
 
         NOTE: arbitrary order -- should the order be preserved?
-        """        
+        """
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
         face_face = np.zeros( (num_faces, num_vertices), dtype=IND_DT )
@@ -428,7 +440,7 @@ class UGrid(object):
             for j in range(num_vertices):
                 edge = (face[j-1], face[j])
                 if edge[0] > edge[1]: # flip them
-                    edge = (edge[1], edge[0]) 
+                    edge = (edge[1], edge[0])
                 edges.add(edge)
         self._edges = np.array(list(edges), dtype=IND_DT)
 
@@ -437,7 +449,7 @@ class UGrid(object):
         builds the boundary segments from the cell array
 
         It is assumed that -1 means no neighbor, which indicates a boundary
-        
+
         This will over-write the existing boundaries array if there is one.
 
         This is a not-very-smart just loop through all the faces method.
@@ -450,7 +462,7 @@ class UGrid(object):
                         bound = ( self.faces[i,-1], self.faces[i,0] )
                     else:
                         bound = ( self.faces[i,j], self.faces[i,j+1] )
-                    boundaries.append(bound) 
+                    boundaries.append(bound)
         self.boundaries = boundaries
 
     def build_face_edge_connectivity(self):
@@ -555,10 +567,10 @@ class UGrid(object):
 
             #mesh topology
             mesh = nclocal.createVariable(mesh_name, IND_DT, (), )
-            mesh.cf_role = "mesh_topology" 
-            mesh.long_name = "Topology data of 2D unstructured mesh" 
-            mesh.topology_dimension = 2 
-            mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name) 
+            mesh.cf_role = "mesh_topology"
+            mesh.long_name = "Topology data of 2D unstructured mesh"
+            mesh.topology_dimension = 2
+            mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)
 
             if self.edges is not None:
                 mesh.edge_node_connectivity = mesh_name+"_edge_nodes"  ## attribute required if variables will be defined on edges
@@ -566,7 +578,7 @@ class UGrid(object):
                     mesh.edge_coordinates =   "{0}_edge_lon {0}_edge_lat".format(mesh_name)  ## optional attribute (requires edge_node_connectivity)
             if self.faces is not None:
                 mesh.face_node_connectivity = mesh_name+"_face_nodes"
-                if self.face_coordinates is not None: 
+                if self.face_coordinates is not None:
                     mesh.face_coordinates = "{0}_face_lon {0}_face_lat".format(mesh_name) ##  optional attribute
             if self.face_edge_connectivity is not None:
                 mesh.face_edge_connectivity = mesh_name+"_face_edges"  ## optional attribute (requires edge_node_connectivity)

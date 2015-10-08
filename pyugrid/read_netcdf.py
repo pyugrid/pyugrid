@@ -5,7 +5,11 @@ code to read the netcdf unstructured grid standard:
 
 https://github.com/ugrid-conventions/ugrid-conventions/
 
-This code is called by the UGrid class to load inot a UGRID object.
+This code is called by the UGrid class to load into a UGRID object.
+
+
+    NOTE: passing the UGrid object in to avoid circular references,
+    while keeping the netcdf reading code in its own file.
 
 """
 
@@ -19,7 +23,7 @@ from .uvar import UVar
 def find_mesh_names( nc ):
     """
     find all the meshes in an open netcCDF4.DataSet
-    
+
     :param nc: the netCDF4 Dataset object to look for mesh names in
 
     NOTE: checks for 2-d topology_dimension
@@ -28,16 +32,16 @@ def find_mesh_names( nc ):
     for varname in nc.variables.keys():
         if is_valid_mesh(nc, varname):
                     mesh_names.append(varname)
-    return mesh_names            
+    return mesh_names
 
 def is_valid_mesh(nc, varname):
     """
     determine if the given variable name is a valid mesh definition
-    
+
     :param nc: a netCDF4 Dataset to check
 
     :param varname: name of the candidate mesh variable
-    
+
     """
     try:
         mesh_var = nc.variables[varname]
@@ -72,7 +76,7 @@ grid_defs = [{'grid_attr':'faces', # attribute name in UGrid object
               },
 
              ]
-# defintions for various coordinate arrays
+# definitions for various coordinate arrays
 coord_defs = [ {'grid_attr':'nodes', # attribute name in UGrid object
                 'role': 'node_coordinates', # attribute name in mesh variable
                 'required': True, # is this required?
@@ -99,9 +103,10 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
     It will load the mesh specified, or look
     for the first one it finds if none is specified
 
-    :param filename: filename or OpenDAP url of dataset.
-    
-    :param grid: ther gird object to put the mesh and data into.
+    :param nc: netcdf Dataset to be loaded up
+    :type nc: netCDF4 Dataset object
+
+    :param grid: the grid object to put the mesh and data into.
     :type grid: UGrid object.
 
     :param mesh_name=None: name of the mesh to load
@@ -130,7 +135,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
     else:
         if not is_valid_mesh(nc, mesh_name):
             raise ValueError("Mesh: %s is not in %s"%(mesh_name, nc.filepath))
-    
+
     grid.mesh_name = mesh_name
 
     mesh_var = ncvars[mesh_name]
@@ -171,8 +176,8 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             elif standard_name == 'longitude':
                 nodes[:,0] = var[:]
             else:
-                raise ValueError('Node coordinates standard_name is neither "longitude" nor "latitude" ') 
-        
+                raise ValueError('Node coordinates standard_name is neither "longitude" nor "latitude" ')
+
         setattr(grid, defs['grid_attr'], nodes)
 
 
@@ -239,8 +244,8 @@ def load_grid_from_ncfilename(filename, grid, mesh_name=None, load_data=True):
     for the first one it finds if none is specified
 
     :param filename: filename or OpenDAP url of dataset.
-    
-    :param grid: ther gird object to put the mesh and data into.
+
+    :param grid: the grid object to put the mesh and data into.
     :type grid: UGrid object.
 
     :param mesh_name=None: name of the mesh to load
@@ -251,9 +256,6 @@ def load_grid_from_ncfilename(filename, grid, mesh_name=None, load_data=True):
                             only the mesh will be loaded. If True, then all the data
                             associated with the mesh will be loaded. This could be huge!
     :type load_data: boolean
-
-    NOTE: passing the UGrid object in to avoid circular references,
-    while keeping the netcdf reading code in its own file.
     """
 
     with netCDF4.Dataset(filename, 'r') as nc:
