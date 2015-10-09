@@ -8,8 +8,11 @@ A small wxPython utility app to visualize pyugrids, etc.
 
 from __future__ import (absolute_import, division, print_function)
 
-import wx
+# temporary:
+import load_fvcom
 
+import os
+import wx
 import pyugrid
 
 # Import the installed version.
@@ -126,7 +129,8 @@ class DrawFrame(wx.Frame):
         self.Canvas.ZoomToBB()
 
     def load_ugrid_file(self, filename):
-        grid = pyugrid.UGrid.from_ncfile(filename)
+        grid = load_fvcom.load_fvcom_gnome(filename)
+        #grid = pyugrid.UGrid.from_ncfile(filename)
         self.Draw_UGRID(grid)
 
     def OnMove(self, event):
@@ -144,6 +148,7 @@ class DrawFrame(wx.Frame):
                             '*.nc', wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
+            filename = os.path.abspath(filename)
             self.load_ugrid_file(filename)
         dlg.Destroy()
 
