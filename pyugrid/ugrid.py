@@ -360,7 +360,7 @@ class UGrid(object):
             raise ValueError(msg(uvar.location))
         self._data[uvar.name] = uvar
 
-    def find_data_sets(self, standard_name, location=None):
+    def find_uvars(self, standard_name, location=None):
         """
         Find all :py:class:`UVar`s that match the specified standard name
 
