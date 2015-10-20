@@ -133,7 +133,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
         mesh_name = meshes[0]
     else:
         if not is_valid_mesh(nc, mesh_name):
-            msg = "Mesh: %s is not in {}".format
+            msg = "Mesh: {} is not in {}".format
             raise ValueError(msg(mesh_name, nc.filepath))
 
     grid.mesh_name = mesh_name
