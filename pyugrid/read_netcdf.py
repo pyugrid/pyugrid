@@ -204,7 +204,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             if array.shape[0] == defs['num_ind']:
                 array = array.T
             try:
-                start_index = var.start_index
+                start_index = int(var.start_index)
             except AttributeError:
                 start_index = 0
             if start_index >= 1:
