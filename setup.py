@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 import os
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
 
@@ -32,6 +32,11 @@ def version():
 __version__ = version()
 
 
+with open('requirements.txt') as f:
+    require = f.readlines()
+install_requires = [r.strip() for r in require]
+
+
 def set_version(filename, new_string=__version__):
     with open(filename) as f:
         lines = f.readlines()
@@ -55,10 +60,7 @@ setup(
     keywords="unstructured numpy models",
     url="https://github.com/pyugrid/pyugrid",
     long_description=long_description,
-    install_requires=[
-        'numpy',
-        'netCDF4',
-        ],
+    install_requires=install_requires,
     tests_require=[
         'pytest>=2.3.2',
         ],
@@ -74,6 +76,8 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         ],
-    packages=["pyugrid", "test"],
-    scripts=["scripts/ugrid_wx.py"],
+    packages=find_packages(exclude=['test']),
+    entry_points=dict(gui_scripts=[
+        'ugrid_wx = pyugrid.ugrid_wx:main']
+    ),
     )
