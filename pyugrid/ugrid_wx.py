@@ -6,9 +6,16 @@ A small wxPython utility app to visualize pyugrids, etc.
 
 from __future__ import (absolute_import, division, print_function)
 
-import wx
+# temporary:
+import load_fvcom
 
+<<<<<<< HEAD:scripts/ugrid_wx.py
+import os
+import wx
+import pyugrid
+=======
 from . import UGrid
+>>>>>>> master:pyugrid/ugrid_wx.py
 
 # Import the installed version.
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas
@@ -56,6 +63,9 @@ class DrawFrame(wx.Frame):
 
         item = FileMenu.Append(wx.ID_ANY, text="&Open")
         self.Bind(wx.EVT_MENU, self.OnOpen, item)
+
+        item = FileMenu.Append(wx.ID_ANY, text="&Save Image")
+        self.Bind(wx.EVT_MENU, self.OnSaveImage, item)
 
         MenuBar.Append(FileMenu, "&File")
         self.SetMenuBar(MenuBar)
@@ -122,7 +132,12 @@ class DrawFrame(wx.Frame):
         self.Canvas.ZoomToBB()
 
     def load_ugrid_file(self, filename):
+<<<<<<< HEAD:scripts/ugrid_wx.py
+        grid = load_fvcom.load_fvcom_gnome(filename)
+        #grid = pyugrid.UGrid.from_ncfile(filename)
+=======
         grid = UGrid.from_ncfile(filename)
+>>>>>>> master:pyugrid/ugrid_wx.py
         self.Draw_UGRID(grid)
 
     def OnMove(self, event):
@@ -140,8 +155,19 @@ class DrawFrame(wx.Frame):
                             '*.nc', wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
+            filename = os.path.abspath(filename)
             self.load_ugrid_file(filename)
         dlg.Destroy()
+
+    def OnSaveImage(self, event):
+        dlg = wx.FileDialog(self, 'Save a PNG file', ".", '', '*.png', wx.SAVE)
+        if dlg.ShowModal() == wx.ID_OK:
+            filename = dlg.GetPath()
+            self.save_image(filename)
+        dlg.Destroy()
+
+    def save_image(self, filename):
+        self.Canvas.SaveAsImage(filename)
 
 
 def main():

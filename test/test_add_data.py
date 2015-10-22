@@ -11,7 +11,7 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 import pytest
 
-from pyugrid.ugrid import UGrid, DataSet
+from pyugrid.ugrid import UGrid, UVar
 from pyugrid.test_examples import two_triangles
 
 
@@ -24,15 +24,15 @@ def test_add_all_data():
     assert grid.data == {}
 
     with pytest.raises(AttributeError):
-        grid.data = {'depth': DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])}
+        grid.data = {'depth': UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])}
 
 
 def test_add_node_data():
 
     grid = two_triangles()
 
-    # create a dataset object for the depths:
-    depths = DataSet('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
+    # create a UVar object for the depths:
+    depths = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
     depths.attributes['units'] = 'm'
     depths.attributes["standard_name"] = "sea_floor_depth"
     depths.attributes["positive"] = "down"
@@ -48,8 +48,8 @@ def test_add_node_data_wrong():
 
     grid = two_triangles()
 
-    # create a dataset object for the depths:
-    depths = DataSet('depth', location='node', data=[1.0, 2.0, 3.0])
+    # create a UVar object for the depths:
+    depths = UVar('depth', location='node', data=[1.0, 2.0, 3.0])
 
     with pytest.raises(ValueError):
         grid.add_data(depths)
@@ -59,8 +59,8 @@ def test_add_face_data():
 
     grid = two_triangles()
 
-    # create a dataset object for velocity:
-    u_vel = DataSet('u', location='face', data=[1.0, 2.0])
+    # create a UVar object for velocity:
+    u_vel = UVar('u', location='face', data=[1.0, 2.0])
     u_vel.attributes['units'] = 'm/s'
     u_vel.attributes["standard_name"] = "eastward_sea_water_velocity"
 
@@ -75,8 +75,8 @@ def test_add_face_data_wrong():
 
     grid = two_triangles()
 
-    # create a dataset object for velocity:
-    u_vel = DataSet('u', location='face', data=[1.0])
+    # create a UVar object for velocity:
+    u_vel = UVar('u', location='face', data=[1.0])
 
     with pytest.raises(ValueError):
         grid.add_data(u_vel)
@@ -86,8 +86,8 @@ def test_add_edge_data():
 
     grid = two_triangles()
 
-    # create a dataset object for velocity:
-    bnds = DataSet('bounds', location='edge', data=[0, 1, 0, 0, 1])
+    # create a UVar object for velocity:
+    bnds = UVar('bounds', location='edge', data=[0, 1, 0, 0, 1])
     bnds.attributes["standard_name"] = "boundary type"
 
     grid.add_data(bnds)
@@ -100,9 +100,9 @@ def test_add_edge_data_wrong():
 
     grid = two_triangles()
 
-    # create a dataset object for velocity:
+    # create a UVar object for velocity:
     # a miss-matched set
-    bnds = DataSet('bounds', location='edge', data=[0, 1, 0, 0, 1, 3, 3])
+    bnds = UVar('bounds', location='edge', data=[0, 1, 0, 0, 1, 3, 3])
 
     with pytest.raises(ValueError):
         grid.add_data(bnds)
@@ -119,8 +119,8 @@ def test_add_boundary_data():
                        (1,3),
                        (2,3),
                       ]
-    # create a dataset object for boundary conditions:
-    bnds = DataSet('bounds', location='boundary', data=[0, 1, 0, 0, 1])
+    # create a UVar object for boundary conditions:
+    bnds = UVar('bounds', location='boundary', data=[0, 1, 0, 0, 1])
     bnds.attributes["long_name"] = "model boundary conditions"
 
     # wrong size for data
