@@ -594,24 +594,31 @@ class UGrid(object):
         # Create a new netcdf file.
         with ncDataset(filepath, mode="w", clobber=True) as nclocal:
 
-            nclocal.createDimension(mesh_name+'_num_node', len(self.nodes))
-            if self._edges is not None:
-                nclocal.createDimension(mesh_name+'_num_edge', len(self.edges))
-            if self._boundaries is not None:
-                nclocal.createDimension(mesh_name+'_num_boundary',
-                                        len(self.boundaries))
-            if self._faces is not None:
-                nclocal.createDimension(mesh_name+'_num_face', len(self.faces))
-                nclocal.createDimension(mesh_name+'_num_vertices',
-                                        self.faces.shape[1])
-            nclocal.createDimension('two', 2)
-
-            #mesh topology
+            #Varible to hold the mesh topology meta data
             mesh = nclocal.createVariable(mesh_name, IND_DT, (), )
             mesh.cf_role = "mesh_topology"
             mesh.long_name = "Topology data of 2D unstructured mesh"
             mesh.topology_dimension = 2
             mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)
+
+
+            nclocal.createDimension(mesh_name+'_num_node', len(self.nodes))
+            if self._edges is not None:
+                nclocal.createDimension(mesh_name+'_num_edge', len(self.edges))
+                nclocal.createDimension('two', 2) ## OK, as edges will always have two nodes
+                mesh.edge_dimension = 'two'
+            if self._boundaries is not None:
+                nclocal.createDimension(mesh_name+'_num_boundary',
+                                        len(self.boundaries))
+                if 'two' not in nclocal.dimensions: # might have been created above.
+                    nclocal.createDimension('two', 2) ## OK, as edges will always have two nodes
+                    mesh.edge_dimension = 'two'
+            if self._faces is not None:
+                nclocal.createDimension(mesh_name+'_num_face', len(self.faces))
+                nclocal.createDimension(mesh_name+'_num_vertices',
+                                        self.faces.shape[1])
+                mesh.face_dimension = mesh_name+'_num_face'
+
 
             if self.edges is not None:
                 # Attribute required if variables will be defined on edges.

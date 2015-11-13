@@ -12,7 +12,7 @@ class LonLatArray(np.ndarray):
         """
         custom new,  so that we can call the "array" functionaility
         """
-        arr = np.array(data, dtype=np.float64)
+        arr = np.asarray(data, dtype=np.float64)
         if arr.shape[1] != 2:
             raise ValueError("data must be Nx2 array")
 
