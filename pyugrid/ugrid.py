@@ -25,6 +25,7 @@ from . import read_netcdf
 # from py_geometry.cy_point_in_polygon import point_in_poly as point_in_tri.
 from .util import point_in_tri
 from .uvar import UVar
+from cell_tree2d import CellTree
 
 # datatype used for indexes -- might want to change for 64 bit some day.
 IND_DT = np.int32
@@ -121,6 +122,10 @@ class UGrid(object):
         # A kdtree is used to locate nodes.
         # It will be created if/when it is needed.
         self._kdtree = None
+        self._tree = None
+        if self.nodes is not None and self.faces is not None:
+            self._tree = CellTree(nodes, faces)
+
 
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None, load_data=False):
@@ -421,6 +426,48 @@ class UGrid(object):
             if point_in_tri(f, point):
                 return i
         return None
+
+    def locate_face(self, point):
+        """
+        Returns the index of the face that the point is in.
+
+        Returns `None` if the point is not in the mesh.
+
+        :param point:  the point that you want to locate -- (x, y).
+
+        This version utilizes the CellTree data structure.
+
+        """
+        if self._tree is None:
+            self.build_celltree()
+        return self._tree.find_poly(point)
+
+    def locate_face_multipoint(self, points):
+        """.
+        Returns a numpy array of face indices, one per point.
+
+        Nodes that are not in the mesh will have an index of -1
+
+        :param points:  a numpy array of points you want to locate (x,y)
+
+        This version utilizes the CellTree data structure.
+
+        """
+        if self._tree is None:
+            self.build_celltree()
+        indices = np.zeros((points.shape[0]), dtype=np.int)
+        self._tree.multi_locate(points.astype(np.double), indices)
+        return indices
+
+
+    def build_celltree(self):
+        """
+        Tries to build the celltree for the current UGrid. Will fail if nodes
+        or faces is not defined.
+        """
+        if self.nodes is None or self.faces is None:
+            raise RuntimeError("Nodes and faces must be defined in order to create and use CellTree")
+        self._tree = CellTree(self.nodes, self.faces)
 
     def build_face_face_connectivity(self):
         """
