@@ -25,7 +25,6 @@ from . import read_netcdf
 # from py_geometry.cy_point_in_polygon import point_in_poly as point_in_tri.
 from .util import point_in_tri
 from .uvar import UVar
-from cell_tree2d import CellTree
 
 # datatype used for indexes -- might want to change for 64 bit some day.
 IND_DT = np.int32
@@ -123,8 +122,6 @@ class UGrid(object):
         # It will be created if/when it is needed.
         self._kdtree = None
         self._tree = None
-        if self.nodes is not None and self.faces is not None:
-            self._tree = CellTree(nodes, faces)
 
 
     @classmethod
@@ -465,6 +462,7 @@ class UGrid(object):
         Tries to build the celltree for the current UGrid. Will fail if nodes
         or faces is not defined.
         """
+        from cell_tree2d import CellTree
         if self.nodes is None or self.faces is None:
             raise RuntimeError("Nodes and faces must be defined in order to create and use CellTree")
         self._tree = CellTree(self.nodes, self.faces)
