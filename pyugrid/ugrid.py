@@ -467,6 +467,30 @@ class UGrid(object):
             raise RuntimeError("Nodes and faces must be defined in order to create and use CellTree")
         self._tree = CellTree(self.nodes, self.faces)
 
+    def interpolation_alphas(self, points):
+        """
+        Given an array of points, this function will return the bilinear interpolation alphas
+        for each of the three nodes of the face that the point is located in.
+        :param points: Nx2 numpy array of lat/lon coordinates
+        :return: Nx3 numpy array of interpolation factors
+        """
+        indices = self.locate_face_multipoint(points)
+        node_positions = self.nodes[self.faces[indices]]
+
+        (lon1,lon2,lon3) = node_positions[:,:,0].T
+        (lat1,lat2,lat3) = node_positions[:,:,1].T
+
+        reflats = points[:,1]
+        reflons = points[:,0]
+
+        denoms = ((lat3 - lat1) * (lon2 - lon1) - (lon3 - lon1) * (lat2 - lat1))
+        # alphas should all add up to 1
+        alpha1s = (reflats - lat3) * (lon3 - lon2) - (reflons - lon3) * (lat3 - lat2)
+        alpha2s = (reflons - lon1) * (lat3 - lat1) - (reflats - lat1) * (lon3 - lon1)
+        alpha3s = (reflats - lat1) * (lon2 - lon1) - (reflons - lon1) * (lat2 - lat1)
+        return np.column_stack((alpha1s / denoms, alpha2s / denoms, alpha3s / denoms))
+
+
     def build_face_face_connectivity(self):
         """
         Builds the face_face_connectivity array:
