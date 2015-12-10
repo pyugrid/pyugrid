@@ -406,55 +406,43 @@ class UGrid(object):
         from scipy.spatial import cKDTree
         self._kdtree = cKDTree(self.nodes)
 
-    def locate_face_simple(self, point):
+    def locate_faces(self, points, simple=False):
         """
-        Returns the index of the face that the point is in.
+        Returns a the face indices, one per point.
 
-        Returns `None` if the point is not in the mesh.
+        Points that are not in the mesh will have an index of -1
 
-        :param point:  the point that you want to locate -- (x, y).
+        :param point:  the point that you want to locate -- (x, y). If the shape of point
+        is 1D, function will return a scalar index. If it is 2D, it will return a 1D array of indices
+        :type point: array-like containing one or more points
 
-        This is a very simple, look through all the faces search.
-        It is slow ( O(N) ), but should be robust
-
-        """
-        for i, face in enumerate(self._faces):
-            f = self._nodes[face]
-            if point_in_tri(f, point):
-                return i
-        return None
-
-    def locate_face(self, point):
-        """
-        Returns the index of the face that the point is in.
-
-        Returns `None` if the point is not in the mesh.
-
-        :param point:  the point that you want to locate -- (x, y).
+        :param simple: Uses a linear search instead of the CellTree. Expect a massive performance hit.
+        :type simple: Boolean
 
         This version utilizes the CellTree data structure.
 
         """
-        if self._tree is None:
-            self.build_celltree()
-        return self._tree.find_poly(point)
-
-    def locate_face_multipoint(self, points):
-        """.
-        Returns a numpy array of face indices, one per point.
-
-        Nodes that are not in the mesh will have an index of -1
-
-        :param points:  a numpy array of points you want to locate (x,y)
-
-        This version utilizes the CellTree data structure.
-
-        """
-        if self._tree is None:
-            self.build_celltree()
-        indices = np.zeros((points.shape[0]), dtype=np.int)
-        self._tree.multi_locate(points.astype(np.double), indices)
-        return indices
+        points = np.asarray(points, dtype=np.float64)
+        just_one = (len(points.shape) == 1)
+        points.shape = (-1,2)
+        if not simple:
+            if self._tree is None:
+                self.build_celltree()
+            indices = self._tree.multi_locate(points)
+        else:
+            indices = np.zeros((points.shape[0]), dtype=IND_DT)
+            for n, point in enumerate(points):
+                for i, face in enumerate(self._faces):
+                    f = self._nodes[face]
+                    if point_in_tri(f, point):
+                        indices[n] = i
+                        break
+                    else:
+                        indices[n] = -1
+        if just_one:
+            return indices[0]
+        else:
+            return indices
 
 
     def build_celltree(self):
