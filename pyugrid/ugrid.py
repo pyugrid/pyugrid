@@ -462,7 +462,7 @@ class UGrid(object):
         :param points: Nx2 numpy array of lat/lon coordinates
         :return: Nx3 numpy array of interpolation factors
         """
-        indices = self.locate_face_multipoint(points)
+        indices = self.locate_faces(points)
         node_positions = self.nodes[self.faces[indices]]
 
         (lon1,lon2,lon3) = node_positions[:,:,0].T
