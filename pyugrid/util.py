@@ -73,7 +73,7 @@ def asarraylike(obj):
 
     """
 
-    must_have = ['dtype', 'shape']
+    must_have = ['dtype', 'shape', 'ndim']
     for attr in must_have:
         if not hasattr(obj, attr):
             obj = np.array(obj)

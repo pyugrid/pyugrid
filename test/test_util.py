@@ -11,15 +11,13 @@ class DummyArrayLike():
     Class that will look like an array to this funciton, even
     though it won't work!
 
-    Just for tests.
+    Just for tests. All it does is add a few expected attributes
 
     This will need to be updated when the function is changed
     """
-    def dtype(self):
-        pass
-    def shape(self):
-        pass
-
+    dtype = None
+    shape = None
+    ndim = 1
 
 def test_asarraylike_list():
     """

@@ -1,31 +1,36 @@
 import numpy as np
-
+import pytest
 from pyugrid.test_examples import twenty_one_triangles
 
-def test_single_simple():
+
+# used to parametrize tests for both methods
+try:
+    import cell_tree2d
+    methods = ['simple', 'celltree']
+except:
+    # no cell tree -- only test simple
+    methods = ['simple']
+
+@pytest.mark.parametrize("method", methods)
+def test_single(method):
     ugrid = twenty_one_triangles()
-    face = ugrid.locate_faces((4,6.5),True)
+    face = ugrid.locate_faces((4,6.5), method)
     assert face == 6
 
-def test_multi_simple():
+@pytest.mark.parametrize("method", methods)
+def test_multi(method):
     ugrid = twenty_one_triangles()
-    face = ugrid.locate_faces(np.array(((4,6.5),(7,2))), True)
+    face = ugrid.locate_faces(np.array(((4,6.5),(7,2))), method)
     assert (face == np.array((6,0))).all()
 
-def test_single_celltree():
+@pytest.mark.parametrize("method", methods)
+def test_oob(method):
     ugrid = twenty_one_triangles()
-    face = ugrid.locate_faces((4,6.5))
-    assert face == 6
-
-def test_multi_celltree():
-    ugrid = twenty_one_triangles()
-    face = ugrid.locate_faces(np.array(((4,6.5),(7,2))))
-    assert (face == np.array((6,0))).all()
-
-def test_oob():
-    ugrid = twenty_one_triangles()
-    face = ugrid.locate_faces((0,0),True)
+    face = ugrid.locate_faces((0,0), method)
     assert face == -1
     face = 0
-    face = ugrid.locate_faces(np.array(((0,0),)))
-    assert face == np.array((-1))
+    face = ugrid.locate_faces(np.array(((0,0),)), method)
+    assert np.array_equal(face, np.array((-1, )))
+
+
+

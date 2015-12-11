@@ -406,30 +406,43 @@ class UGrid(object):
         from scipy.spatial import cKDTree
         self._kdtree = cKDTree(self.nodes)
 
-    def locate_faces(self, points, simple=False):
+    def locate_faces(self, points, method='celltree'):
         """
-        Returns a the face indices, one per point.
+        Returns the face indices, one per point.
 
         Points that are not in the mesh will have an index of -1
 
-        :param point:  the point that you want to locate -- (x, y). If the shape of point
-        is 1D, function will return a scalar index. If it is 2D, it will return a 1D array of indices
-        :type point: array-like containing one or more points
+        If a single point is passed in, a single index will be returned
+        If a sequence of points is passed in an array of indexes will be returned.
 
-        :param simple: Uses a linear search instead of the CellTree. Expect a massive performance hit.
-        :type simple: Boolean
+        :param points:  The points that you want to locate -- (lon, lat). If the shape of point
+                        is 1D, function will return a scalar index. If it is 2D, it will return
+                        a 1D array of indices
+        :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
+                     for more than one point.
+
+        :param method='celltree': method to use. Options are 'celltree', 'simple'. 
+                                  for 'celltree' the celltree2d pacakge must be installed:
+                                  https://github.com/NOAA-ORR-ERD/cell_tree2d/
+                                  'simple' is very, very slow for large grids.
+        :type simple: str
 
         This version utilizes the CellTree data structure.
 
         """
         points = np.asarray(points, dtype=np.float64)
-        just_one = (len(points.shape) == 1)
+        just_one = (points.ndim == 1)
         points.shape = (-1,2)
-        if not simple:
+        if method == 'celltree':
+            try:
+                import cell_tree2d
+            except ImportError:
+                raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
+                                  "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
             if self._tree is None:
                 self.build_celltree()
             indices = self._tree.multi_locate(points)
-        else:
+        elif method == 'simple':
             indices = np.zeros((points.shape[0]), dtype=IND_DT)
             for n, point in enumerate(points):
                 for i, face in enumerate(self._faces):
@@ -439,6 +452,8 @@ class UGrid(object):
                         break
                     else:
                         indices[n] = -1
+        else:
+            raise ValueError('"method" must be one of: "celltree", "simple"')
         if just_one:
             return indices[0]
         else:
@@ -452,7 +467,7 @@ class UGrid(object):
         """
         from cell_tree2d import CellTree
         if self.nodes is None or self.faces is None:
-            raise RuntimeError("Nodes and faces must be defined in order to create and use CellTree")
+            raise ValueError("Nodes and faces must be defined in order to create and use CellTree")
         self._tree = CellTree(self.nodes, self.faces)
 
     def interpolation_alphas(self, points):
