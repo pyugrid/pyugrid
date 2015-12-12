@@ -7,15 +7,11 @@ A small wxPython utility app to visualize pyugrids, etc.
 from __future__ import (absolute_import, division, print_function)
 
 # temporary:
-import load_fvcom
+#import load_fvcom
 
-<<<<<<< HEAD:scripts/ugrid_wx.py
 import os
 import wx
-import pyugrid
-=======
-from . import UGrid
->>>>>>> master:pyugrid/ugrid_wx.py
+from pyugrid.ugrid import UGrid
 
 # Import the installed version.
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas
@@ -132,12 +128,7 @@ class DrawFrame(wx.Frame):
         self.Canvas.ZoomToBB()
 
     def load_ugrid_file(self, filename):
-<<<<<<< HEAD:scripts/ugrid_wx.py
-        grid = load_fvcom.load_fvcom_gnome(filename)
-        #grid = pyugrid.UGrid.from_ncfile(filename)
-=======
         grid = UGrid.from_ncfile(filename)
->>>>>>> master:pyugrid/ugrid_wx.py
         self.Draw_UGRID(grid)
 
     def OnMove(self, event):
@@ -179,7 +170,7 @@ def main():
         filename = sys.argv[1]
         F.load_ugrid_file(filename)
     else:
-        from . import test_examples
+        from pyugrid import test_examples
         F.Draw_UGRID(test_examples.twenty_one_triangles())
 
     app.MainLoop()
