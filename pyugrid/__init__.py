@@ -9,6 +9,7 @@ from __future__ import (absolute_import, division, print_function)
 
 from .ugrid import UGrid
 from .uvar import UVar
+from .uvar import UMVar
 
 
 # pyugrid version PEP-0440

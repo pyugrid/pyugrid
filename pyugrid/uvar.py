@@ -8,7 +8,10 @@ from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
 
-from util import asarraylike
+try:
+    from .util import asarraylike, isarraylike
+except ValueError:
+    from util import asarraylike, isarraylike
 
 class UVar(object):
     """
@@ -95,6 +98,18 @@ class UMVar(object):
     TODO: Add attribues that all grouped variables have in common to the UMVar?
     """
     def __init__(self, name, location='none', data=None, attributes=None):
+        """
+        :param name: the name of the data (depth, u_velocity, etc.)
+        :type name: string
+
+        :param location: the type of grid element the data is associated with:
+                         'node', 'edge', or 'face' the data is assigned to
+
+        :param data: the data
+        :type data: list-like of data sources that satisfy the conditions of util.asarraylike. All data sources
+        must have the same shape.
+        Examples: netCDF Dataset, numpy array
+        """
         self.name = name
 
         if location not in ['node', 'edge', 'face', 'boundary', 'none']:
@@ -104,6 +119,9 @@ class UMVar(object):
 
         if len(data) == 1:
             raise ValueError("UMVar need at least 2 data sources of the same size and shape")
+
+        if not all([type(d) is UVar or isarraylike(d) for d in data]):
+            raise ValueError("Data must satisfy isarraylike or be a UVar")
 
         self.shape = data[0].shape
         if not all([d.shape == self.shape for d in data]):

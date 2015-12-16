@@ -470,14 +470,19 @@ class UGrid(object):
             raise ValueError("Nodes and faces must be defined in order to create and use CellTree")
         self._tree = CellTree(self.nodes, self.faces)
 
-    def interpolation_alphas(self, points):
+    def interpolation_alphas(self, points, indices=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the three nodes of the face that the point is located in.
         :param points: Nx2 numpy array of lat/lon coordinates
+
+        :param indices: If the face indices of the points is already known, it can be passed in to save
+        repeating the effort.
+
         :return: Nx3 numpy array of interpolation factors
         """
-        indices = self.locate_faces(points)
+        if indices is None:
+            indices = self.locate_faces(points)
         node_positions = self.nodes[self.faces[indices]]
 
         (lon1,lon2,lon3) = node_positions[:,:,0].T
