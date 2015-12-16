@@ -51,6 +51,10 @@ class UVar(object):
             self.update(attributes)
 
     def update(self, attr):
+        """
+
+        :param attr: Dict containing attributes to be added to the object
+        """
         for key,val in attr.items():
             setattr(self, key, val)
 
@@ -73,6 +77,9 @@ class UVar(object):
         return self.data.shape
 
     def __getitem__(self, item):
+        """
+        Transfers responsibility to the data's __getitem__
+        """
         return self.data.__getitem__(item)
 
     def __str__(self):
@@ -82,6 +89,11 @@ class UVar(object):
         return len(self.data)
 
 class UMVar(object):
+    """
+    A class to group multiple UVars (or other data sources) and retrieve common information. All the variables
+    grouped in this class must have the same shape, location, and unique names.
+    TODO: Add attribues that all grouped variables have in common to the UMVar?
+    """
     def __init__(self, name, location='none', data=None, attributes=None):
         self.name = name
 
@@ -102,12 +114,15 @@ class UMVar(object):
 
         self.variables = [d.name for d in data]
 
+    def dimensions(self):
+        self.__getattribute__(self.variables[0]).shape
+
     def __getitem__(self, item):
         return np.column_stack((self.__getattribute__(var).__getitem__(item) for var in self.variables))
 
 if __name__ == "__main__":
     import netCDF4 as ncdf
-    df = ncdf.Dataset('../../Experiments/vector_field/data/COOPSu_CREOFS24.nc')
+    df = ncdf.Dataset('../test/data/21_tri_mesh.nc')
     u = UVar('EW_water_velocity', 'node', df['u'])
     v = UVar('NS_water_velocity', 'node', df['v'])
     vels = UMVar('velocity', 'node', [u,v])
