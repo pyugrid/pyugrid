@@ -20,6 +20,13 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+.cache
+.ipynb_checkpoints
+
+#docs
+docs/_build
+
+
 
 # Installer logs
 pip-log.txt
