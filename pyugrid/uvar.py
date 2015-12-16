@@ -105,8 +105,8 @@ class UMVar(object):
         if len(data) == 1:
             raise ValueError("UMVar need at least 2 data sources of the same size and shape")
 
-        shape = data[0].shape
-        if not all([d.shape == shape for d in data]):
+        self.shape = data[0].shape
+        if not all([d.shape == self.shape for d in data]):
             raise ValueError("All data sources must be the same size and shape")
 
         for d in data:
@@ -114,16 +114,22 @@ class UMVar(object):
 
         self.variables = [d.name for d in data]
 
-    def dimensions(self):
-        self.__getattribute__(self.variables[0]).shape
+    def add_var(self, var):
+        if var.shape != self.shape:
+            raise ValueError('Variable {0} has incorrect shape {1}'.format(var.name, var.shape))
+        if var.name in self.variables:
+            raise ValueError('Variable {0} already exists in UMVar'.format(var.name))
+        self.variables.append(var.name)
+        setattr(self, var.name, var)
 
     def __getitem__(self, item):
         return np.column_stack((self.__getattribute__(var).__getitem__(item) for var in self.variables))
 
 if __name__ == "__main__":
     import netCDF4 as ncdf
-    df = ncdf.Dataset('../test/data/21_tri_mesh.nc')
+    df = ncdf.Dataset('../test/files/21_tri_mesh.nc')
     u = UVar('EW_water_velocity', 'node', df['u'])
     v = UVar('NS_water_velocity', 'node', df['v'])
     vels = UMVar('velocity', 'node', [u,v])
+    vels.add_var(u)
     pass
