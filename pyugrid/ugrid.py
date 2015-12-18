@@ -473,13 +473,16 @@ class UGrid(object):
     def interpolation_alphas(self, points, indices=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
-        for each of the three nodes of the face that the point is located in.
+        for each of the three nodes of the face that the point is located in. If the point is
+        not located on the grid, the alphas are set to 0
         :param points: Nx2 numpy array of lat/lon coordinates
 
         :param indices: If the face indices of the points is already known, it can be passed in to save
         repeating the effort.
 
         :return: Nx3 numpy array of interpolation factors
+
+        TODO: mask the indices that aren't on the grid properly.
         """
         if indices is None:
             indices = self.locate_faces(points)
@@ -496,7 +499,9 @@ class UGrid(object):
         alpha1s = (reflats - lat3) * (lon3 - lon2) - (reflons - lon3) * (lat3 - lat2)
         alpha2s = (reflons - lon1) * (lat3 - lat1) - (reflats - lat1) * (lon3 - lon1)
         alpha3s = (reflats - lat1) * (lon2 - lon1) - (reflons - lon1) * (lat2 - lat1)
-        return np.column_stack((alpha1s / denoms, alpha2s / denoms, alpha3s / denoms))
+        alphas = np.column_stack((alpha1s / denoms, alpha2s / denoms, alpha3s / denoms))
+        alphas[indices == -1] *= 0
+        return alphas
 
 
     def build_face_face_connectivity(self):
