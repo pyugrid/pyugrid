@@ -7,6 +7,7 @@ UVar object, used to hold variables that are associated with a ugrid
 from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
+from collections import OrderedDict
 
 try:
     from .util import asarraylike, isarraylike
@@ -53,6 +54,8 @@ class UVar(object):
         else:
             self.update(attributes)
 
+        self._cache = OrderedDict()
+
     def update(self, attr):
         """
 
@@ -72,18 +75,29 @@ class UVar(object):
         self._data = self._data = np.zeros((0,), dtype=np.float64)
 
     @property
-    def dimensions(self):
-        return zip(self.data.dimensions, self.data.shape)
-
-    @property
     def shape(self):
         return self.data.shape
+
+    @property
+    def max(self):
+        return np.max(self._data)
+
+    @property
+    def min(self):
+        return np.min(self._data)
 
     def __getitem__(self, item):
         """
         Transfers responsibility to the data's __getitem__
         """
-        return self.data.__getitem__(item)
+        if item in self._cache:
+            return self._cache[item]
+        else:
+            rv = self._data.__getitem__(item)
+            self._cache[item] = rv
+            if len(self._cache) > 3:
+                self._cache.popitem(last=False)
+            return rv
 
     def __str__(self):
         return "UVar object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)
@@ -131,6 +145,7 @@ class UMVar(object):
             setattr(self, d.name, d)
 
         self.variables = [d.name for d in data]
+        self._cache = OrderedDict()
 
     def add_var(self, var):
         if var.shape != self.shape:
@@ -141,7 +156,14 @@ class UMVar(object):
         setattr(self, var.name, var)
 
     def __getitem__(self, item):
-        return np.column_stack((self.__getattribute__(var).__getitem__(item) for var in self.variables))
+        if item in self._cache:
+            return self._cache[item]
+        else:
+            rv = np.ma.column_stack([self.__getattribute__(var).__getitem__(item) for var in self.variables])
+            self._cache[item] = rv
+            if len(self._cache) > 3:
+                self._cache.popitem(last=False)
+            return rv
 
 if __name__ == "__main__":
     import netCDF4 as ncdf
