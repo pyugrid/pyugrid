@@ -24,7 +24,7 @@ class UVar(object):
     attributes(attributes get stored in the netcdf file)
     """
 
-    def __init__(self, name, location='none', data=None, attributes=None):
+    def __init__(self, name, location='none', data=None, attributes=None, curvilinear=False):
         """
         create a UVar object
         :param name: the name of the data (depth, u_velocity, etc.)
@@ -53,7 +53,7 @@ class UVar(object):
             self.update(data.__dict__)
         else:
             self.update(attributes)
-
+        self.curvilinear=curvilinear
         self._cache = OrderedDict()
 
     def update(self, attr):
@@ -88,16 +88,27 @@ class UVar(object):
 
     def __getitem__(self, item):
         """
-        Transfers responsibility to the data's __getitem__
+        Transfers responsibility to the data's __getitem__ if not cached
+        If a grid is curvilinear, the data object is still loaded.
+        However, if the curvilinear flag is set, the lookup will treat the data as if it were a 1D flat array.
+        This is necessary because the grid and celltree depend on the 1D structure.
         """
-        if item in self._cache:
-            return self._cache[item]
+        rv=None
+        if str(item) in self._cache:
+            rv = self._cache[item]
         else:
-            rv = self._data.__getitem__(item)
-            self._cache[item] = rv
+            if self.curvilinear:
+                if type(item) is tuple:
+                    rv = self._data.__getitem__(item[0]).flatten()
+                    rv = rv[item[1:]]
+                else:
+                    rv = self._data.__getitem__(item).flatten()
+            else:
+                rv = self._data.__getitem__(item)
+            self._cache[str(item)] = rv
             if len(self._cache) > 3:
                 self._cache.popitem(last=False)
-            return rv
+        return rv
 
     def __str__(self):
         return "UVar object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)
@@ -156,11 +167,11 @@ class UMVar(object):
         setattr(self, var.name, var)
 
     def __getitem__(self, item):
-        if item in self._cache:
-            return self._cache[item]
+        if str(item) in self._cache:
+            return self._cache[str(item)]
         else:
             rv = np.ma.column_stack([self.__getattribute__(var).__getitem__(item) for var in self.variables])
-            self._cache[item] = rv
+            self._cache[str(item)] = rv
             if len(self._cache) > 3:
                 self._cache.popitem(last=False)
             return rv

@@ -50,6 +50,9 @@ class UGrid(object):
                  boundary_coordinates=None,
                  data=None,
                  mesh_name="mesh",
+                 curvilinear=False,
+                 curv_x=None,
+                 curv_y=None
                  ):
         """
         ugrid class -- holds, saves, etc. an unstructured grid
@@ -122,6 +125,9 @@ class UGrid(object):
         # It will be created if/when it is needed.
         self._kdtree = None
         self._tree = None
+        self.curvilinear = curvilinear
+        self.curv_x=None
+        self.curv_y=None
 
 
     @classmethod
@@ -503,6 +509,11 @@ class UGrid(object):
         alphas[indices == -1] *= 0
         return alphas
 
+    def bilinear_coeffs(self, points, indices=None):
+        if indices is None:
+            indices = self.locate_faces(points)
+        node_positions = self.nodes[self.faces[indices]]
+
 
     def build_face_face_connectivity(self):
         """
@@ -511,6 +522,16 @@ class UGrid(object):
 
         Note: arbitrary order and CW vs CCW may not be consistent.
         """
+        if self.curvilinear:
+            face_x = self.curv_x-1
+            face_y = self.curv_y-1
+            self._face_face_connectivity = np.array([(idx-1,idx-face_x,idx+1,idx+face_x) for idx in range(0,len(self.faces))])
+            self._face_face_connectivity[0:face_x,1] = -1
+            self._face_face_connectivity[0::face_x-1,0] = -1
+            self._face_face_connectivity[face_x-1::face_x,2] = -1
+            self._face_face_connectivity[face_x*(face_y-1):,3] = -1
+            return
+
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
@@ -545,6 +566,25 @@ class UGrid(object):
 
         NOTE: arbitrary order -- should the order be preserved?
         """
+        if self.curvilinear:
+            """
+            Creates row edges and col edges using numpy broadcasting to do the math quickly
+            rather than list comprehension or loops...
+            """
+            a = np.arange(0,self.curv_x-1).reshape(-1,1)
+            b = np.array((0,1)).reshape(1,2)
+            row = a + b # np.array( [(0,1),(1,2),(3,4),...] )
+            row_muls = np.arange(0,self.curv_y).reshape(-1,1)
+            all_rows = (row + self.curv_x * row_muls[:,np.newaxis]).reshape(-1,2)
+
+            a = np.arange(0,self.curv_y-1).reshape(-1,1)
+            col = (np.column_stack((a,a+1)) * self.curv_x)
+            b = np.arange(0,self.curv_x).reshape(-1,1)
+            all_cols = (col + b[:,np.newaxis]).reshape(-1,2)
+
+            self._edges = np.concatenate((all_rows, all_cols))
+            return
+
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
