@@ -14,6 +14,7 @@ try:
 except ValueError:
     from util import asarraylike, isarraylike
 
+
 class UVar(object):
     """
     A class to hold a variable associated with the UGrid. Data can be on the 
@@ -24,7 +25,7 @@ class UVar(object):
     attributes(attributes get stored in the netcdf file)
     """
 
-    def __init__(self, name, location='none', data=None, attributes=None, curvilinear=False):
+    def __init__(self, name, location='none', data=None, attributes=None):
         """
         create a UVar object
         :param name: the name of the data (depth, u_velocity, etc.)
@@ -40,20 +41,21 @@ class UVar(object):
         self.name = name
 
         if location not in ['node', 'edge', 'face', 'boundary', 'none']:
-            raise ValueError("location must be one of: 'node', 'edge', 'face', 'boundary', or 'none'")
- 
-        self.location = location 
+            raise ValueError(
+                "location must be one of: 'node', 'edge', 'face', 'boundary', or 'none'")
+
+        self.location = location
 
         if data is None:
-            self._data = np.zeros((0,), dtype=np.float64) # could be any data type
+            # could be any data type
+            self._data = np.zeros((0,), dtype=np.float64)
         else:
             self._data = asarraylike(data)
 
-        if attributes is None and data is not None and hasattr(data,'__dict__'):
+        if attributes is None and data is not None and hasattr(data, '__dict__'):
             self.update(data.__dict__)
         else:
             self.update(attributes)
-        self.curvilinear=curvilinear
         self._cache = OrderedDict()
 
     def update(self, attr):
@@ -61,15 +63,17 @@ class UVar(object):
 
         :param attr: Dict containing attributes to be added to the object
         """
-        for key,val in attr.items():
+        for key, val in attr.items():
             setattr(self, key, val)
 
     @property
     def data(self):
         return self._data
+
     @data.setter
     def data(self, data):
         self._data = asarraylike(data)
+
     @data.deleter
     def data(self):
         self._data = self._data = np.zeros((0,), dtype=np.float64)
@@ -86,25 +90,23 @@ class UVar(object):
     def min(self):
         return np.min(self._data)
 
+    @property
+    def dtype(self):
+        return self.data.dtype
+
+    @property
+    def ndim(self):
+        return self.data.ndim
+
     def __getitem__(self, item):
         """
         Transfers responsibility to the data's __getitem__ if not cached
-        If a grid is curvilinear, the data object is still loaded.
-        However, if the curvilinear flag is set, the lookup will treat the data as if it were a 1D flat array.
-        This is necessary because the grid and celltree depend on the 1D structure.
         """
-        rv=None
+        rv = None
         if str(item) in self._cache:
-            rv = self._cache[item]
+            rv = self._cache[str(item)]
         else:
-            if self.curvilinear:
-                if type(item) is tuple:
-                    rv = self._data.__getitem__(item[0]).flatten()
-                    rv = rv[item[1:]]
-                else:
-                    rv = self._data.__getitem__(item).flatten()
-            else:
-                rv = self._data.__getitem__(item)
+            rv = self._data.__getitem__(str(item))
             self._cache[str(item)] = rv
             if len(self._cache) > 3:
                 self._cache.popitem(last=False)
@@ -116,12 +118,14 @@ class UVar(object):
     def __len__(self):
         return len(self.data)
 
+
 class UMVar(object):
     """
     A class to group multiple UVars (or other data sources) and retrieve common information. All the variables
     grouped in this class must have the same shape, location, and unique names.
     TODO: Add attribues that all grouped variables have in common to the UMVar?
     """
+
     def __init__(self, name, location='none', data=None, attributes=None):
         """
         :param name: the name of the data (depth, u_velocity, etc.)
@@ -138,19 +142,22 @@ class UMVar(object):
         self.name = name
 
         if location not in ['node', 'edge', 'face', 'boundary', 'none']:
-            raise ValueError("location must be one of: 'node', 'edge', 'face', 'boundary', or 'none'")
+            raise ValueError(
+                "location must be one of: 'node', 'edge', 'face', 'boundary', or 'none'")
 
         self.location = location
 
         if len(data) == 1:
-            raise ValueError("UMVar need at least 2 data sources of the same size and shape")
+            raise ValueError(
+                "UMVar need at least 2 data sources of the same size and shape")
 
-        if not all([type(d) is UVar or isarraylike(d) for d in data]):
+        if not all([isarraylike(d) for d in data]):
             raise ValueError("Data must satisfy isarraylike or be a UVar")
 
         self.shape = data[0].shape
         if not all([d.shape == self.shape for d in data]):
-            raise ValueError("All data sources must be the same size and shape")
+            raise ValueError(
+                "All data sources must be the same size and shape")
 
         for d in data:
             setattr(self, d.name, d)
@@ -160,9 +167,11 @@ class UMVar(object):
 
     def add_var(self, var):
         if var.shape != self.shape:
-            raise ValueError('Variable {0} has incorrect shape {1}'.format(var.name, var.shape))
+            raise ValueError(
+                'Variable {0} has incorrect shape {1}'.format(var.name, var.shape))
         if var.name in self.variables:
-            raise ValueError('Variable {0} already exists in UMVar'.format(var.name))
+            raise ValueError(
+                'Variable {0} already exists in UMVar'.format(var.name))
         self.variables.append(var.name)
         setattr(self, var.name, var)
 
@@ -170,17 +179,19 @@ class UMVar(object):
         if str(item) in self._cache:
             return self._cache[str(item)]
         else:
-            rv = np.ma.column_stack([self.__getattribute__(var).__getitem__(item) for var in self.variables])
+            rv = np.ma.vstack(
+                [self.__getattribute__(var).__getitem__(item) for var in self.variables]).T
             self._cache[str(item)] = rv
             if len(self._cache) > 3:
                 self._cache.popitem(last=False)
             return rv
+
 
 if __name__ == "__main__":
     import netCDF4 as ncdf
     df = ncdf.Dataset('../test/files/21_tri_mesh.nc')
     u = UVar('EW_water_velocity', 'node', df['u'])
     v = UVar('NS_water_velocity', 'node', df['v'])
-    vels = UMVar('velocity', 'node', [u,v])
+    vels = UMVar('velocity', 'node', [u, v])
     vels.add_var(u)
     pass

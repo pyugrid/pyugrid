@@ -50,9 +50,6 @@ class UGrid(object):
                  boundary_coordinates=None,
                  data=None,
                  mesh_name="mesh",
-                 curvilinear=False,
-                 curv_x=None,
-                 curv_y=None
                  ):
         """
         ugrid class -- holds, saves, etc. an unstructured grid
@@ -125,10 +122,6 @@ class UGrid(object):
         # It will be created if/when it is needed.
         self._kdtree = None
         self._tree = None
-        self.curvilinear = curvilinear
-        self.curv_x=None
-        self.curv_y=None
-
 
     @classmethod
     def from_ncfile(klass, nc_url, mesh_name=None, load_data=False):
@@ -210,7 +203,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if nodes_coords is None:
-            self.nodes = np.zeros((0,2), dtype=NODE_DT)
+            self.nodes = np.zeros((0, 2), dtype=NODE_DT)
         else:
             self._nodes = np.asarray(nodes_coords, dtype=NODE_DT)
 
@@ -438,7 +431,7 @@ class UGrid(object):
         """
         points = np.asarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
-        points.shape = (-1,2)
+        points.shape = (-1, 2)
         if method == 'celltree':
             try:
                 import cell_tree2d
@@ -465,7 +458,6 @@ class UGrid(object):
         else:
             return indices
 
-
     def build_celltree(self):
         """
         Tries to build the celltree for the current UGrid. Will fail if nodes
@@ -473,7 +465,8 @@ class UGrid(object):
         """
         from cell_tree2d import CellTree
         if self.nodes is None or self.faces is None:
-            raise ValueError("Nodes and faces must be defined in order to create and use CellTree")
+            raise ValueError(
+                "Nodes and faces must be defined in order to create and use CellTree")
         self._tree = CellTree(self.nodes, self.faces)
 
     def interpolation_alphas(self, points, indices=None):
@@ -494,26 +487,42 @@ class UGrid(object):
             indices = self.locate_faces(points)
         node_positions = self.nodes[self.faces[indices]]
 
-        (lon1,lon2,lon3) = node_positions[:,:,0].T
-        (lat1,lat2,lat3) = node_positions[:,:,1].T
+        (lon1, lon2, lon3) = node_positions[:, :, 0].T
+        (lat1, lat2, lat3) = node_positions[:, :, 1].T
 
-        reflats = points[:,1]
-        reflons = points[:,0]
+        reflats = points[:, 1]
+        reflons = points[:, 0]
 
-        denoms = ((lat3 - lat1) * (lon2 - lon1) - (lon3 - lon1) * (lat2 - lat1))
+        denoms = (
+            (lat3 - lat1) * (lon2 - lon1) - (lon3 - lon1) * (lat2 - lat1))
         # alphas should all add up to 1
-        alpha1s = (reflats - lat3) * (lon3 - lon2) - (reflons - lon3) * (lat3 - lat2)
-        alpha2s = (reflons - lon1) * (lat3 - lat1) - (reflats - lat1) * (lon3 - lon1)
-        alpha3s = (reflats - lat1) * (lon2 - lon1) - (reflons - lon1) * (lat2 - lat1)
-        alphas = np.column_stack((alpha1s / denoms, alpha2s / denoms, alpha3s / denoms))
+        alpha1s = (reflats - lat3) * (lon3 - lon2) - \
+            (reflons - lon3) * (lat3 - lat2)
+        alpha2s = (reflons - lon1) * (lat3 - lat1) - \
+            (reflats - lat1) * (lon3 - lon1)
+        alpha3s = (reflats - lat1) * (lon2 - lon1) - \
+            (reflons - lon1) * (lat2 - lat1)
+        alphas = np.column_stack(
+            (alpha1s / denoms, alpha2s / denoms, alpha3s / denoms))
         alphas[indices == -1] *= 0
         return alphas
 
-    def bilinear_coeffs(self, points, indices=None):
-        if indices is None:
-            indices = self.locate_faces(points)
-        node_positions = self.nodes[self.faces[indices]]
-
+    def interpolate_var_to_points(self, points, var, location='nodes'):
+        if location not in ['nodes', 'faces']:
+            raise ValueError(
+                'location must be one of {0}'.format(['nodes', 'faces']))
+        if location == 'faces':
+            if var.shape != self.faces.shape:
+                raise ValueError(
+                    'variable does not have the same shape as grid faces')
+        if location == 'nodes':
+            if var.shape != self.nodes.shape:
+                raise ValueError(
+                    'variables does not have the same shape as grid nodes')
+        inds = self.locate_faces(points)
+        pos_alphas = self.interpolation_alphas(points, inds)
+        vals = var[self.faces[inds]]
+        return np.sum(vals * pos_alphas[:, :, np.newaxis], axis=1)
 
     def build_face_face_connectivity(self):
         """
@@ -522,15 +531,6 @@ class UGrid(object):
 
         Note: arbitrary order and CW vs CCW may not be consistent.
         """
-        if self.curvilinear:
-            face_x = self.curv_x-1
-            face_y = self.curv_y-1
-            self._face_face_connectivity = np.array([(idx-1,idx-face_x,idx+1,idx+face_x) for idx in range(0,len(self.faces))])
-            self._face_face_connectivity[0:face_x,1] = -1
-            self._face_face_connectivity[0::face_x-1,0] = -1
-            self._face_face_connectivity[face_x-1::face_x,2] = -1
-            self._face_face_connectivity[face_x*(face_y-1):,3] = -1
-            return
 
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
@@ -538,15 +538,15 @@ class UGrid(object):
         face_face += -1  # Fill with -1.
 
         # loop through all the triangles to find the matching edges:
-        edges = {} # dict to store the edges in
+        edges = {}  # dict to store the edges in
         for i, face in enumerate(self.faces):
             # Loop through edges of the triangle:
             for j in range(num_vertices):
-                if j < self.num_vertices-1:
-                    edge = (face[j], face[j+1])
+                if j < self.num_vertices - 1:
+                    edge = (face[j], face[j + 1])
                 else:
                     edge = (face[-1], face[0])
-                if edge[0] > edge[1]: # sort the node numbers
+                if edge[0] > edge[1]:  # sort the node numbers
                     edge = (edge[1], edge[0])
                 # see if it is already in there
                 prev_edge = edges.pop(edge, None)
@@ -566,24 +566,6 @@ class UGrid(object):
 
         NOTE: arbitrary order -- should the order be preserved?
         """
-        if self.curvilinear:
-            """
-            Creates row edges and col edges using numpy broadcasting to do the math quickly
-            rather than list comprehension or loops...
-            """
-            a = np.arange(0,self.curv_x-1).reshape(-1,1)
-            b = np.array((0,1)).reshape(1,2)
-            row = a + b # np.array( [(0,1),(1,2),(3,4),...] )
-            row_muls = np.arange(0,self.curv_y).reshape(-1,1)
-            all_rows = (row + self.curv_x * row_muls[:,np.newaxis]).reshape(-1,2)
-
-            a = np.arange(0,self.curv_y-1).reshape(-1,1)
-            col = (np.column_stack((a,a+1)) * self.curv_x)
-            b = np.arange(0,self.curv_x).reshape(-1,1)
-            all_cols = (col + b[:,np.newaxis]).reshape(-1,2)
-
-            self._edges = np.concatenate((all_rows, all_cols))
-            return
 
         num_vertices = self.num_vertices
         num_faces = self.faces.shape[0]
@@ -595,8 +577,8 @@ class UGrid(object):
         for i, face in enumerate(self.faces):
             # Loop through edges:
             for j in range(num_vertices):
-                edge = (face[j-1], face[j])
-                if edge[0] > edge[1]: # flip them
+                edge = (face[j - 1], face[j])
+                if edge[0] > edge[1]:  # flip them
                     edge = (edge[1], edge[0])
                 edges.add(edge)
         self._edges = np.array(list(edges), dtype=IND_DT)
@@ -616,10 +598,10 @@ class UGrid(object):
         for i, face in enumerate(self.face_face_connectivity):
             for j, neighbor in enumerate(face):
                 if neighbor == -1:
-                    if j == self.num_vertices-1:
+                    if j == self.num_vertices - 1:
                         bound = (self.faces[i, -1], self.faces[i, 0])
                     else:
-                        bound = ( self.faces[i,j], self.faces[i,j+1] )
+                        bound = (self.faces[i, j], self.faces[i, j + 1])
                     boundaries.append(bound)
         self.boundaries = boundaries
 
@@ -716,36 +698,40 @@ class UGrid(object):
         # Create a new netcdf file.
         with ncDataset(filepath, mode="w", clobber=True) as nclocal:
 
-            nclocal.createDimension(mesh_name+'_num_node', len(self.nodes))
+            nclocal.createDimension(mesh_name + '_num_node', len(self.nodes))
             if self._edges is not None:
-                nclocal.createDimension(mesh_name+'_num_edge', len(self.edges))
+                nclocal.createDimension(
+                    mesh_name + '_num_edge', len(self.edges))
             if self._boundaries is not None:
-                nclocal.createDimension(mesh_name+'_num_boundary',
+                nclocal.createDimension(mesh_name + '_num_boundary',
                                         len(self.boundaries))
             if self._faces is not None:
-                nclocal.createDimension(mesh_name+'_num_face', len(self.faces))
-                nclocal.createDimension(mesh_name+'_num_vertices',
+                nclocal.createDimension(
+                    mesh_name + '_num_face', len(self.faces))
+                nclocal.createDimension(mesh_name + '_num_vertices',
                                         self.faces.shape[1])
             nclocal.createDimension('two', 2)
 
-            #mesh topology
+            # mesh topology
             mesh = nclocal.createVariable(mesh_name, IND_DT, (), )
             mesh.cf_role = "mesh_topology"
             mesh.long_name = "Topology data of 2D unstructured mesh"
             mesh.topology_dimension = 2
-            mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)
+            mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(
+                mesh_name)
 
             if self.edges is not None:
                 # Attribute required if variables will be defined on edges.
-                mesh.edge_node_connectivity = mesh_name+"_edge_nodes"
+                mesh.edge_node_connectivity = mesh_name + "_edge_nodes"
                 if self.edge_coordinates is not None:
                     # Optional attribute (requires edge_node_connectivity).
                     coord = "{0}_edge_lon {0}_edge_lat".format
                     mesh.edge_coordinates = coord(mesh_name)
             if self.faces is not None:
-                mesh.face_node_connectivity = mesh_name+"_face_nodes"
+                mesh.face_node_connectivity = mesh_name + "_face_nodes"
                 if self.face_coordinates is not None:
-                    mesh.face_coordinates = "{0}_face_lon {0}_face_lat".format(mesh_name) ##  optional attribute
+                    mesh.face_coordinates = "{0}_face_lon {0}_face_lat".format(
+                        mesh_name)  # optional attribute
             if self.face_edge_connectivity is not None:
                 # Optional attribute (requires edge_node_connectivity).
                 mesh.face_edge_connectivity = mesh_name + "_face_edges"
@@ -753,7 +739,7 @@ class UGrid(object):
                 # Optional attribute.
                 mesh.face_face_connectivity = mesh_name + "_face_links"
             if self.boundaries is not None:
-                mesh.boundary_node_connectivity = mesh_name+"_boundary_nodes"
+                mesh.boundary_node_connectivity = mesh_name + "_boundary_nodes"
 
             # FIXME: This could be re-factored to be more generic, rather than
             # separate for each type of data see the coordinates example below.
@@ -814,9 +800,9 @@ class UGrid(object):
                         var.long_name = name(var.standard_name, location)
 
             # The node data.
-            node_lon = nclocal.createVariable(mesh_name+'_node_lon',
+            node_lon = nclocal.createVariable(mesh_name + '_node_lon',
                                               self._nodes.dtype,
-                                              (mesh_name+'_num_node',),
+                                              (mesh_name + '_num_node',),
                                               chunksizes=(len(self.nodes), ),
                                               # zlib=False,
                                               # complevel=0,
@@ -826,9 +812,9 @@ class UGrid(object):
             node_lon.long_name = "Longitude of 2D mesh nodes."
             node_lon.units = "degrees_east"
 
-            node_lat = nclocal.createVariable(mesh_name+'_node_lat',
+            node_lat = nclocal.createVariable(mesh_name + '_node_lat',
                                               self._nodes.dtype,
-                                              (mesh_name+'_num_node',),
+                                              (mesh_name + '_num_node',),
                                               chunksizes=(len(self.nodes), ),
                                               # zlib=False,
                                               # complevel=0,
