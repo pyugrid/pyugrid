@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 """
-Tests for finding a given UVar by standard name
+Tests for finding a given UVar by standard name.
 
 This could use some more testing and cleaning up -- no need for all
-this reading and writting -- that is tested elsewhere
+this reading and writing -- that is tested elsewhere.
 
-designed to be run with pytest
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -14,7 +13,7 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from pyugrid.ugrid import UGrid, UVar
-from pyugrid.test_examples import *
+from pyugrid.test_examples import two_triangles, twenty_one_triangles
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -32,15 +31,19 @@ def two_triangles_with_depths():
 
     return grid
 
+
 def find_depths(grid):
     found = grid.find_uvars('sea_floor_depth_below_geoid')
     if found:
         return found.pop()
     return None
 
+
 def test_no_std_name():
     """
-    tests to make sure it doesn' crash if a UVar does not have a standard_name
+    Tests to make sure it doesn't crash if a `UVar` does not have a
+    `standard_name`.
+
     """
     grid = two_triangles_with_depths()
 
@@ -58,53 +61,54 @@ def test_two_triangles():
 
     grid.save_as_netcdf('2_triangles.nc')
 
-    # read it back in and check it out
+    # Read it back in and check it out.
     ug = UGrid.from_ncfile('2_triangles.nc', load_data=True)
 
-    assert ug.nodes.shape == (4,2)
+    assert ug.nodes.shape == (4, 2)
     assert ug.nodes.shape == grid.nodes.shape
 
-    # not ideal to pull specific values out, but how else to test?
-    assert np.array_equal(ug.nodes[0,:], (0.1, 0.1))
-    assert np.array_equal(ug.nodes[-1,:], (3.1, 2.1))
+    # Not ideal to pull specific values out, but how else to test?
+    assert np.array_equal(ug.nodes[0, :], (0.1, 0.1))
+    assert np.array_equal(ug.nodes[-1, :], (3.1, 2.1))
     assert np.array_equal(ug.nodes, grid.nodes)
 
     depths = find_depths(ug)
     assert depths.data.shape == (4,)
     assert depths.data[0] == 1
-    assert depths.attributes['units'] == "unknown"
+    assert depths.attributes['units'] == 'unknown'
+
 
 def twenty_one_triangles_with_depths():
-    """
-    returns a basic triangle grid with 21 triangles, a hole and a "tail"
-    """
+    """Returns a basic triangle grid with 21 triangles, a hole and a tail."""
     grid = twenty_one_triangles()
 
-    depths = UVar('depth', location='node', data=range(1, 21))
+    depths = UVar('depth', location='node', data=list(range(1, 21)))
     depths.attributes['units'] = 'unknown'
-    depths.attributes['standard_name'] = "sea_floor_depth_below_geoid"
-    depths.attributes['positive'] = "down"
+    depths.attributes['standard_name'] = 'sea_floor_depth_below_geoid'
+    depths.attributes['positive'] = 'down'
     grid.add_data(depths)
 
     return grid
+
 
 def test_21_triangles():
     grid = twenty_one_triangles_with_depths()
 
     grid.save_as_netcdf('21_triangles.nc')
 
-    # read it back in and check it out
+    # Read it back in and check it out.
     ug = UGrid.from_ncfile('21_triangles.nc', load_data=True)
 
     assert ug.nodes.shape == grid.nodes.shape
 
-    # not ideal to pull specific values out, but how else to test?
+    # Not ideal to pull specific values out, but how else to test?
     assert np.array_equal(ug.nodes, grid.nodes)
 
     depths = find_depths(ug)
     assert depths.data.shape == (20,)
     assert depths.data[0] == 1
-    assert depths.attributes['units'] == "unknown"
+    assert depths.attributes['units'] == 'unknown'
+
 
 def test_two_triangles_without_faces():
     grid = two_triangles_with_depths()
@@ -112,27 +116,28 @@ def test_two_triangles_without_faces():
 
     grid.save_as_netcdf('2_triangles_without_faces.nc')
 
-    # read it back in and check it out
+    # Read it back in and check it out.
     ug = UGrid.from_ncfile('2_triangles_without_faces.nc', load_data=True)
 
-    assert ug.nodes.shape == (4,2)
+    assert ug.nodes.shape == (4, 2)
     assert ug.nodes.shape == grid.nodes.shape
 
-    # not ideal to pull specific values out, but how else to test?
-    assert np.array_equal(ug.nodes[0,:], (0.1, 0.1))
-    assert np.array_equal(ug.nodes[-1,:], (3.1, 2.1))
+    # Not ideal to pull specific values out, but how else to test?
+    assert np.array_equal(ug.nodes[0, :], (0.1, 0.1))
+    assert np.array_equal(ug.nodes[-1, :], (3.1, 2.1))
     assert np.array_equal(ug.nodes, grid.nodes)
 
     assert ug.faces is None
 
     assert ug.edges.shape == grid.edges.shape
-    assert np.array_equal(ug.edges[0,:], (0, 1))
-    assert np.array_equal(ug.edges[3,:], (2, 0))
+    assert np.array_equal(ug.edges[0, :], (0, 1))
+    assert np.array_equal(ug.edges[3, :], (2, 0))
 
     depths = find_depths(ug)
     assert depths.data.shape == (4,)
     assert depths.data[0] == 1
-    assert depths.attributes['units'] == "unknown"
+    assert depths.attributes['units'] == 'unknown'
+
 
 def test_two_triangles_without_edges():
     grid = two_triangles_with_depths()
@@ -140,15 +145,15 @@ def test_two_triangles_without_edges():
 
     grid.save_as_netcdf('2_triangles_without_edges.nc')
 
-    # read it back in and check it out
+    # Read it back in and check it out.
     ug = UGrid.from_ncfile('2_triangles_without_edges.nc', load_data=True)
 
-    assert ug.nodes.shape == (4,2)
+    assert ug.nodes.shape == (4, 2)
     assert ug.nodes.shape == grid.nodes.shape
 
-    # not ideal to pull specific values out, but how else to test?
-    assert np.array_equal(ug.nodes[0,:], (0.1, 0.1))
-    assert np.array_equal(ug.nodes[-1,:], (3.1, 2.1))
+    # Not ideal to pull specific values out, but how else to test?
+    assert np.array_equal(ug.nodes[0, :], (0.1, 0.1))
+    assert np.array_equal(ug.nodes[-1, :], (3.1, 2.1))
     assert np.array_equal(ug.nodes, grid.nodes)
 
     assert ug.faces.shape == grid.faces.shape
@@ -158,10 +163,10 @@ def test_two_triangles_without_edges():
     depths = find_depths(ug)
     assert depths.data.shape == (4,)
     assert depths.data[0] == 1
-    assert depths.attributes['units'] == "unknown"
+    assert depths.attributes['units'] == 'unknown'
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_two_triangles()
     test_21_triangles()
     test_two_triangles_without_faces()

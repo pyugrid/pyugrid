@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 import os
+import sys
 from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
@@ -10,15 +11,16 @@ long_description = open(os.path.join(rootpath, 'README.rst')).read()
 
 
 class PyTest(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = []
 
     def run_tests(self):
+        # Import here, cause outside the eggs aren't loaded.
         import pytest
-        errno = pytest.main(self.test_args)
-        import sys
+        errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
 

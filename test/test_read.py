@@ -10,7 +10,6 @@ We really need a LOT more sample data files....
 from __future__ import (absolute_import, division, print_function)
 
 import os
-import contextlib
 import pytest
 
 from .utilities import chdir
@@ -26,24 +25,20 @@ UGrid = ugrid.UGrid
 files = os.path.join(os.path.split(__file__)[0], 'files')
 file11 = 'ElevenPoints_UGRIDv0.9.nc'
 
+
 def test_simple_read():
-    """
-    Can it be read at all?
-    """
-
+    """Can it be read at all?"""
     with chdir(files):
-        ug = UGrid.from_ncfile(file11)
-
+        UGrid.from_ncfile(file11)
     assert True
 
 
 def test_get_mesh_names():
     """
     Check that it can find the mesh variable.
+    NOTE: this really should check for more than one mesh.
 
-    NOTE: this really should check for more than one mesh..
     """
-
     with chdir(files):
         nc = netCDF4.Dataset(file11)
     names = read_netcdf.find_mesh_names(nc)
@@ -52,19 +47,14 @@ def test_get_mesh_names():
 
 
 def test_mesh_not_there():
-    """
-    Test raising Value error with incorrect mesh name.
-    """
-
+    """Test raising Value error with incorrect mesh name."""
     with pytest.raises(ValueError):
         with chdir(files):
-            ug = UGrid.from_ncfile(file11, mesh_name='garbage')
+            UGrid.from_ncfile(file11, mesh_name='garbage')
+
 
 def test_load_grid_from_nc():
-    """
-    Test reading a fairly full example file.
-    """
-
+    """Test reading a fairly full example file."""
     with chdir(files):
         grid = UGrid.from_ncfile(file11)
 
@@ -75,28 +65,22 @@ def test_load_grid_from_nc():
     assert grid.face_face_connectivity.shape == (13, 3)
     assert grid.boundaries.shape == (9, 2)
 
-    assert grid.edges is None    # no edges in this data
+    assert grid.edges is None  # No edges in this data.
 
 
 def test_read_nodes():
-    """
-    Do we get the right nodes array?
-    """
-
+    """Do we get the right nodes array?"""
     with chdir(files):
         ug = UGrid.from_ncfile(file11)
-
     assert ug.nodes.shape == (11, 2)
 
-    # not ideal to pull specific values out, but how else to test?
-    assert np.array_equal(ug.nodes[0, :],     (-62.242, 12.774999))
-    assert np.array_equal(ug.nodes[-1, :],    (-34.911235, 29.29379))
+    # Not ideal to pull specific values out, but how else to test?
+    assert np.array_equal(ug.nodes[0, :], (-62.242, 12.774999))
+    assert np.array_equal(ug.nodes[-1, :], (-34.911235, 29.29379))
 
 
 def test_read_edges():
-    """
-    Do we get the right edge array?
-    """
+    """Do we get the right edge array?"""
 
     with chdir(files):
         ug = UGrid.from_ncfile(file11)
@@ -105,9 +89,7 @@ def test_read_edges():
 
 
 def test_read_faces():
-    """
-    Do we get the right faces array?
-    """
+    """Do we get the right faces array?"""
 
     with chdir(files):
         ug = UGrid.from_ncfile(file11)
@@ -115,29 +97,25 @@ def test_read_faces():
     assert ug.faces.shape == (13, 3)
 
     # not ideal to pull specific values out, but how else to test?
-    assert np.array_equal(ug.faces[0, :],     (2, 3, 10))
-    assert np.array_equal(ug.faces[-1, :],    (10, 5, 6))
+    assert np.array_equal(ug.faces[0, :], (2, 3, 10))
+    assert np.array_equal(ug.faces[-1, :], (10, 5, 6))
 
 
 def test_read_face_face():
-    """
-    Do we get the right face_face_connectivity array?
-    """
+    """Do we get the right face_face_connectivity array?"""
 
     with chdir(files):
         ug = UGrid.from_ncfile(file11)
 
     assert ug.face_face_connectivity.shape == (13, 3)
 
-    # not ideal to pull specific values out, but how else to test?
-    assert np.array_equal(ug.face_face_connectivity[0, :],     (11, 5, -1))
-    assert np.array_equal(ug.face_face_connectivity[-1, :],    (-1, 5, 11))
+    # Not ideal to pull specific values out, but how else to test?
+    assert np.array_equal(ug.face_face_connectivity[0, :], (11, 5, -1))
+    assert np.array_equal(ug.face_face_connectivity[-1, :], (-1, 5, 11))
 
 
 def test_read_boundaries():
-    """
-    Do we get the right boundaries array?
-    """
+    """Do we get the right boundaries array?"""
 
     with chdir(files):
         grid = UGrid.from_ncfile(file11)
@@ -159,9 +137,7 @@ def test_read_boundaries():
 
 
 def test_read_face_coordinates():
-    """
-    Do we get the right face_coordinates array?
-    """
+    """Do we get the right face_coordinates array?"""
 
     with chdir(files):
         grid = UGrid.from_ncfile(file11)
@@ -176,36 +152,30 @@ def test_read_face_coordinates():
 
 
 def test_read_edge_coordinates():
-    """
-    Do we get the right edge_coordinates array?
-    """
-
+    """Do we get the right edge_coordinates array?"""
     with chdir(files):
         grid = UGrid.from_ncfile(file11)
 
-    # not in this sample file
+    # Not in this sample file.
     assert grid.edge_coordinates is None
 
 
 def test_read_boundary_coordinates():
-    """
-    Do we get the right boundary_coordinates array?
-    """
-
+    """Do we get the right boundary_coordinates array?"""
     with chdir(files):
         grid = UGrid.from_ncfile(file11)
 
-    # not in this sample file
+    # Not in this sample file.
     assert grid.boundary_coordinates is None
 
-def test_read_longitude_no_standard_name():
 
+def test_read_longitude_no_standard_name():
     with chdir(files):
         ug = UGrid.from_ncfile('no_stand_name_long.nc')
 
     assert ug.nodes.shape == (11, 2)
 
-    # not ideal to pull specific values out, but how else to test?
+    # Not ideal to pull specific values out, but how else to test?
     assert np.array_equal(ug.nodes[0, :],     (-62.242, 12.774999))
     assert np.array_equal(ug.nodes[-1, :],    (-34.911235, 29.29379))
 
@@ -213,8 +183,8 @@ def test_read_longitude_no_standard_name():
 def test_read_data1():
     """
     Sample file has depths on the nodes -- the key should get read in.
-    """
 
+    """
     with chdir(files):
         grid = UGrid.from_ncfile(file11, load_data=True)
 
@@ -226,12 +196,12 @@ def test_read_data1():
 def test_read_data2():
     """
     Sample file has depths on the nodes -- the data should get read in.
-    """
 
+    """
     with chdir(files):
         grid = UGrid.from_ncfile(file11, load_data=True)
 
-    # assert grid.data['depth'] is not None
+    # Assert grid.data['depth'] is not None.
     depth_data11 = [1, 1, 1, 102, 1, 1, 60, 1, 1, 97, 1]
     assert np.array_equal(grid.data['depth'].data, depth_data11)
     depth_attributes11 = {'standard_name': "sea_floor_depth_below_geoid",
@@ -240,14 +210,17 @@ def test_read_data2():
                           }
     assert grid.data['depth'].attributes == depth_attributes11
 
+
 def test_read_from_nc_dataset():
     """
-    minimal test, but makes sure you can read from an already open netCDF4.Dataset
+    Minimal test, but makes sure you can read from an already
+    open netCDF4.Dataset.
+
     """
     with chdir(files):
         with netCDF4.Dataset(file11) as nc:
             grid = UGrid.from_nc_dataset(nc)
-    
+
     assert grid.mesh_name == 'Mesh2'
     assert grid.nodes.shape == (11, 2)
     assert grid.faces.shape == (13, 3)

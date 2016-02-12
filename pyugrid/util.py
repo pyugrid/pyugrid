@@ -1,5 +1,6 @@
 """
-Miscellaneous util functions.
+
+Miscellaneous utilities functions.
 
 """
 
@@ -58,9 +59,10 @@ def _signed_area_tri(points):
 
     return(((x1-x3)*(y2-y3)-(x2-x3)*(y1-y3))/2)
 
+
 def asarraylike(obj):
     """
-    tests if obj acts enough like an array to be used in pyugrid. 
+    tests if obj acts enough like an array to be used in pyugrid.
 
     If it does the object is returned as is. If not, then numpy's
     array() will be called on it.
@@ -80,5 +82,3 @@ def asarraylike(obj):
             break
 
     return obj
-
-

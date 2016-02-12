@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Some example UGRIDs to test, etc with
+Some example UGRIDs to test, etc.
 
 """
 
