@@ -10,14 +10,12 @@ We really need a LOT more sample data files....
 from __future__ import (absolute_import, division, print_function)
 
 import os
-import contextlib
+
 import pytest
-
-from .utilities import chdir
-
 import numpy as np
 import netCDF4
 
+from .utilities import chdir
 from pyugrid import ugrid
 from pyugrid import read_netcdf
 
@@ -218,9 +216,9 @@ def test_read_data1():
     with chdir(files):
         grid = UGrid.from_ncfile(file11, load_data=True)
 
-    assert sorted(grid.data.keys()) == [u'boundary_count',
-                                        u'boundary_types',
-                                        u'depth']
+    assert sorted(grid.data.keys()) == [u'Mesh2_boundary_count',
+                                        u'Mesh2_boundary_types',
+                                        u'Mesh2_depth']
 
 
 def test_read_data2():
@@ -233,12 +231,13 @@ def test_read_data2():
 
     # assert grid.data['depth'] is not None
     depth_data11 = [1, 1, 1, 102, 1, 1, 60, 1, 1, 97, 1]
-    assert np.array_equal(grid.data['depth'].data, depth_data11)
+    depth_name = 'Mesh2_depth'
+    assert np.array_equal(grid.data[depth_name].data, depth_data11)
     depth_attributes11 = {'standard_name': "sea_floor_depth_below_geoid",
                           'units': "m",
                           'positive': "down",
                           }
-    assert grid.data['depth'].attributes == depth_attributes11
+    assert grid.data[depth_name].attributes == depth_attributes11
 
 def test_read_from_nc_dataset():
     """

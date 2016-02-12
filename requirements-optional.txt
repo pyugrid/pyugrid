@@ -1,0 +1,11 @@
+numpy
+scipy
+netcdf4
+matplotlib
+
+# Optional requirements for flexible mesh:
+shapely
+fiona
+libgdal <2
+mpi4py
+rtree

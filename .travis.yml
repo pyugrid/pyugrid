@@ -16,12 +16,26 @@ before_install:
     - source activate test
     - travis_retry conda install --yes pytest
 
+    # Create test environment for optional tests.
+    - conda config --add channels ioos
+    - travis_retry conda create --yes -n test-optional $CONDA --file requirements-optional.txt
+    - source activate test-optional
+    - travis_retry conda install --yes pytest
+
 
 install:
     - mkdir files
 
 script:
+    # Run tests ignoring test files using optional dependencies.
+    - source activate test
+    - py.test --ignore=notebook_examples --ignore=test/test_flexible_mesh
+
+    # Run full test suite including optional dependencies.
+    - source activate test-optional
     - py.test --ignore=notebook_examples
+    # Run MPI tests.
+    - mpiexec -n 2 py.test -m mpi4py --ignore=notebook_examples
 
 notifications:
     irc: "chat.freenode.net#renci"

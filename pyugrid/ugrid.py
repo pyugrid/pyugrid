@@ -38,6 +38,9 @@ class UGrid(object):
     The internal structure mirrors the netcdf data standard.
     """
 
+    # When reading from netCDF, check for Fortran v. C ordering.
+    check_array_order = True
+
     def __init__(self,
                  nodes=None,
                  faces=None,
@@ -587,6 +590,8 @@ class UGrid(object):
         http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model
 
         """
+        # TODO (bekozi): add convention global attribute?
+        # TODO (bekozi): how to handle file compression?
         mesh_name = self.mesh_name
 
         # FIXME: Why not use netCDF4.Dataset instead of renaming?
@@ -643,8 +648,7 @@ class UGrid(object):
                 face_nodes[:] = self.faces
 
                 face_nodes.cf_role = "face_node_connectivity"
-                face_nodes.long_name = ("Maps every triangular face to "
-                                        "its three corner nodes.")
+                face_nodes.long_name = "Maps every face to its corner nodes."
                 face_nodes.start_index = 0
 
             if self.edges is not None:

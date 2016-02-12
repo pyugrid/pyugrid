@@ -7,9 +7,12 @@ testing of code to find nodes:
 """
 
 import numpy as np
+import pytest
 
-from pyugrid.test_examples import two_triangles, twenty_one_triangles
+from pyugrid.test_examples import twenty_one_triangles
 
+
+@pytest.mark.slow
 def test_locate_node():
     """
     test finding a single node

@@ -13,8 +13,8 @@ This code is called by the UGrid class to load into a UGRID object.
 
 from __future__ import (absolute_import, division, print_function)
 
-import numpy as np
 import netCDF4
+import numpy as np
 
 from .uvar import UVar
 
@@ -152,9 +152,11 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
                 raise ValueError(msg(defs['role']))
             continue
         except KeyError:
-            msg = ("File must include {} variables for {} "
-                   "named in mesh variable.").format
-            raise ValueError(msg(coord_names, defs['role']))
+            if defs['required']:
+                msg = ("File must include {} variables for {} "
+                       "named in mesh variable.").format
+                raise ValueError(msg(coord_names, defs['role']))
+            continue
 
         coord_vars = [nc.variables[name] for name in coord_names]
         num_node = len(coord_vars[0])
@@ -201,7 +203,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             array = var[:, :]
             # Fortran order, instead of C order, transpose the array
             # logic below will fail for 3 node or two edge grids.
-            if array.shape[0] == defs['num_ind']:
+            if grid.check_array_order and array.shape[0] == defs['num_ind']:
                 array = array.T
             try:
                 start_index = int(var.start_index)
@@ -239,8 +241,6 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             attributes = {n: var.getncattr(n) for n in var.ncattrs()
                           if n not in ('location', 'coordinates', 'mesh')}
 
-            # Trick with the name: FIXME: Is this a good idea?
-            name = name.lstrip(mesh_name).lstrip('_')
             uvar = UVar(name, data=var[:],
                       location=location, attributes=attributes)
             grid.add_data(uvar)

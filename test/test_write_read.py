@@ -10,14 +10,12 @@ This is, of course, totally incomplete, but a start
 
 from __future__ import (absolute_import, division, print_function)
 
-import pytest
-
-from .utilities import chdir
-
 import numpy as np
 
 from pyugrid.ugrid import UGrid, UVar
 from pyugrid.test_examples import two_triangles
+from test.utilities import chdir
+
 
 def test_with_faces():
     """
@@ -86,9 +84,6 @@ def test_with_just_nodes_and_depths():
 
     assert np.array_equal( grid2.data['depth'].data, depth_array )     
     assert grid2.data['depth'].attributes == depth.attributes     
-
-
-
 
 
 if __name__ == "__main__":

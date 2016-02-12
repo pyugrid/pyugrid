@@ -13,6 +13,10 @@ def chdir(dirname=None):
     curdir = os.getcwd()
     try:
         if dirname is not None:
+            if dirname == 'files':
+                import test
+                dirname = os.path.split(test.__file__)[0]
+                dirname = os.path.join(dirname, 'files')
             os.chdir(dirname)
         yield
     finally:

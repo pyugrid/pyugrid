@@ -11,12 +11,13 @@ designed to be run with pytest
 
 from __future__ import (absolute_import, division, print_function)
 
+import logging
+
 import numpy as np
 
 from pyugrid.ugrid import UGrid, UVar
 from pyugrid.test_examples import *
 
-import logging
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('pyugrid').setLevel(logging.DEBUG)
 
