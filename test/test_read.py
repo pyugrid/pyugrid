@@ -12,11 +12,11 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import pytest
 
-from .utilities import chdir
 
 import numpy as np
 import netCDF4
 
+from utilities import chdir
 from pyugrid import ugrid
 from pyugrid import read_netcdf
 

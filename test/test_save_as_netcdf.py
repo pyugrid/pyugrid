@@ -13,7 +13,7 @@ import numpy as np
 import netCDF4
 
 from pyugrid.ugrid import UGrid, UVar
-from pyugrid.test_examples import two_triangles, twenty_one_triangles
+from test_examples import two_triangles, twenty_one_triangles
 
 
 # Code to check netcdf files for stuff.

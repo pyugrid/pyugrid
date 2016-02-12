@@ -9,7 +9,7 @@ Currently only nearest neighbor
 from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
-from pyugrid.test_examples import twenty_one_triangles
+from test_examples import twenty_one_triangles
 
 
 def test_locate_node():

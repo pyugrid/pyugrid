@@ -11,12 +11,12 @@ This is, of course, totally incomplete, but a it is start.
 
 from __future__ import (absolute_import, division, print_function)
 
-from .utilities import chdir
 
 import numpy as np
 
+from utilities import chdir
 from pyugrid.ugrid import UGrid, UVar
-from pyugrid.test_examples import two_triangles
+from test_examples import two_triangles
 
 
 def test_with_faces():
