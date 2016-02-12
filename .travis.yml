@@ -1,5 +1,6 @@
-sudo: false
 language: python
+
+sudo: false
 
 env:
     - CONDA="python=2.7"
@@ -17,11 +18,12 @@ before_install:
     - travis_retry conda install --yes --file requirements-dev.txt
 
 install:
+    # FIXME: The tests should create and delete this directory.
     - mkdir files
 
 script:
-    - py.test --ignore=notebook_examples
-    - find . -type f -name "*.py" ! -name 'conf.py' | xargs flake8 --max-line-length=100
+    - python setup.py test -a "--verbose"
+    - find . -type f -name "*.py" ! -name 'conf.py' ! -name 'ugrid_wx.py' | xargs flake8 --max-line-length=100
 
 notifications:
     irc: "chat.freenode.net#renci"
