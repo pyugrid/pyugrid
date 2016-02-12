@@ -341,19 +341,19 @@ class UGrid(object):
         # Size check:
         if uvar.location == 'node':
             if len(uvar.data) != len(self.nodes):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of nodes")
         elif uvar.location == 'edge':
             if len(uvar.data) != len(self.edges):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of edges")
         elif uvar.location == 'face':
             if len(uvar.data) != len(self.faces):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of faces")
         elif uvar.location == 'boundary':
             if len(uvar.data) != len(self.boundaries):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of boundaries")
         else:
             msg = "Can't add data associated with '{}'".format
