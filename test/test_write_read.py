@@ -12,9 +12,6 @@ This is, of course, totally incomplete, but a it is start.
 from __future__ import (absolute_import, division, print_function)
 
 import os
-import pytest
-import numpy as np
-
 import numpy as np
 
 from utilities import chdir
@@ -22,9 +19,10 @@ from pyugrid.ugrid import UGrid, UVar
 from test_examples import two_triangles
 
 
-# find this dir 
+# find this dir
 test_dir = os.path.split(__file__)[0]
 test_files = os.path.join(test_dir, 'files')
+
 
 def test_with_faces():
     """
