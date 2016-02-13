@@ -1,5 +1,6 @@
 """
-assorted utilities useful for the tests
+Assorted utilities useful for the tests.
+
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -18,7 +19,7 @@ def chdir(dirname=None):
     finally:
         os.chdir(curdir)
 
-def get_test_file_path(file_path):
-    """translates a file path to be relative to the test files directory"""
-    return os.path.join(os.path.dirname(__file__), 'files', file_path)
 
+def get_test_file_path(file_path):
+    """Translates a file path to be relative to the test files directory."""
+    return os.path.join(os.path.dirname(__file__), 'files', file_path)

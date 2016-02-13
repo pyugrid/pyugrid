@@ -7,9 +7,9 @@ import numpy as np
 def test_point_in_tri():
     test_datasets = [
         {
-            'triangle': np.array([[0., 0.],[1.,0.],[0.,1.]]),
-            'points_inside': [np.array([0.1,0.1]), np.array([0.3,0.3])],
-            'points_outside': [np.array([5.,5.])],
+            'triangle': np.array([[0., 0.], [1., 0.], [0., 1.]]),
+            'points_inside': [np.array([0.1, 0.1]), np.array([0.3, 0.3])],
+            'points_outside': [np.array([5., 5.])],
         },
     ]
 

@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
 """
-Some example UGRIDs to test, etc with
+Some example UGRIDs to test, etc.
 
 """
 
 from __future__ import (absolute_import, division, print_function)
 
+import pytest
+
 from pyugrid import ugrid
 
 
+@pytest.fixture
 def two_triangles():
     """
     returns about the simplest triangle grid possible
@@ -33,6 +36,7 @@ def two_triangles():
     return ugrid.UGrid(nodes, faces, edges)
 
 
+@pytest.fixture
 def twenty_one_triangles():
     """
     returns a basic triangle grid with 21 triangles, a hole and a "tail"
@@ -104,6 +108,7 @@ def twenty_one_triangles():
     grid = ugrid.UGrid(nodes, faces, boundaries=boundaries)
     grid.build_edges()
     return grid
+
 
 if __name__ == "__main__":
     grid = twenty_one_triangles()

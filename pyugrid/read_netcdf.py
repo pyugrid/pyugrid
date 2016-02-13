@@ -9,6 +9,7 @@ This code is called by the UGrid class to load into a UGRID object.
 
     NOTE: passing the UGrid object in to avoid circular references,
     while keeping the netcdf reading code in its own file.
+
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -32,6 +33,7 @@ def find_mesh_names(nc):
         if is_valid_mesh(nc, varname):
                     mesh_names.append(varname)
     return mesh_names
+
 
 def is_valid_mesh(nc, varname):
     """
@@ -74,9 +76,9 @@ grid_defs = [{'grid_attr': 'faces',  # Name in UGrid object.
               },
              ]
 # definitions for various coordinate arrays
-coord_defs = [ {'grid_attr':'nodes', # attribute name in UGrid object
-                'role': 'node_coordinates', # attribute name in mesh variable
-                'required': True, # is this required?
+coord_defs = [{'grid_attr': 'nodes',  # Attribute name in UGrid object.
+               'role': 'node_coordinates',  # Attribute name in mesh variable.
+               'required': True,  # Is this required?
                },
               {'grid_attr': 'face_coordinates',  # Name in UGrid object.
                'role': 'face_coordinates',  # Name in mesh variable.
@@ -242,7 +244,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
             # Trick with the name: FIXME: Is this a good idea?
             name = name.lstrip(mesh_name).lstrip('_')
             uvar = UVar(name, data=var[:],
-                      location=location, attributes=attributes)
+                        location=location, attributes=attributes)
             grid.add_data(uvar)
 
 
