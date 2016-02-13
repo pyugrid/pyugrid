@@ -2,11 +2,15 @@
 
 """
 utilities to help with io
+
+NOTE: this isn't used yet, but should be useful for laoding non UGRID-compliant files
+
 """
 
 from __future__ import (absolute_import, division, print_function)
 
-def load_from_varnames(filename, names_mapping):
+
+def load_from_varnames(filename, names_mapping, attribute_check=None):
     """
     load a UGrid from a netcdf file where the roles are defined by the names of the variables
 
@@ -14,18 +18,32 @@ def load_from_varnames(filename, names_mapping):
 
     :param names_mapping: dict that maps the variable names to the UGRid components
 
-    """
+    :param attribute_check=None: list of global attributes that are expected
+    :type attribute_check: list of tuples to check. Example:
+                           [('grid_type','triangular'),] will check if the
+                           grid_type attribute is set to "triangular"
 
-    nc = netCDF4.Dataset("small_trigrid_example.nc")
+    The names_mapping dict has to contain at least:
+
+    'nodes_lon', 'nodes_lat'
+
+    Optionally (and mostly required), it can contain:
+
+    'faces', 'face_face_connectivity', 'face_coordinates_lon', 'face_coordinates_lat'
+    
+
+    """
+    attribute_check  = {} if attribute_check is None else attribute_check
+
+    # open the file
+    nc = netCDF4.Dataset(filename)
 
     # check if it's the file type we are looking for
-    try:
-        name, value = names_mapping['attribute_check']
+    
+    for name, value in attribute_check:
         if nc.getncattr(name).lower() != value:
-            raise ValueError('This does not appear to be a valid triangular grid file:\nIt does not have the "grid_type"="Triangular" global attribute')
-    except KeyError:
-        pass
-
+            raise ValueError('This does not appear to be a valid file:\n'
+                             'It does not have the "{}"="{}" global attribute set'.format(name, value))
     # create an empty UGrid:
     ug = pyugrid.UGrid()
 
@@ -70,15 +88,13 @@ def load_from_varnames(filename, names_mapping):
 
 
     # load the center points of the faces: optional
-    if 'face_coordinates_lon' in names_mapping and 'face_coordinates_lon' in names_mapping:
+    if 'face_coordinates_lon' in names_mapping and 'face_coordinates_lat' in names_mapping:
         ug.face_coordinates = np.zeros((len(ug.faces), 2), dtype=lon.dtype)
         ug.face_coordinates[:,0] = nc.variables[names_mapping['face_coordinates_lon']][:]
         ug.face_coordinates[:,1] = nc.variables[names_mapping['face_coordinates_lat']][:]
 
 
-    print "checking bounds"
     if 'boundaries' in names_mapping: # optional
-        print "loading boundaries"
         ## fixme --  this one is weird and non-conforming....
         boundaries = nc.variables[names_mapping['boundaries']][:,:2]
         if one_indexed:
@@ -105,7 +121,7 @@ if __name__ == "__main__":
 
     ug = load_from_varnames("small_trigrid_example.nc", names_mapping)
 
-    print ug
+    print(ug)
 
 
 

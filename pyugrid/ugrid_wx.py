@@ -1,21 +1,20 @@
+#!/usr/bin/env pythonw
+
 """
 ugid_wx.py:
 
 A small wxPython utility app to visualize pyugrids, etc.
+
+This is the real code -- but to invoke it, use the script in the scripts dir.
+
 """
 
 from __future__ import (absolute_import, division, print_function)
 
-# temporary:
-import load_fvcom
-
-<<<<<<< HEAD:scripts/ugrid_wx.py
 import os
 import wx
-import pyugrid
-=======
-from . import UGrid
->>>>>>> master:pyugrid/ugrid_wx.py
+
+from .ugrid import UGrid
 
 # Import the installed version.
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas
@@ -132,12 +131,7 @@ class DrawFrame(wx.Frame):
         self.Canvas.ZoomToBB()
 
     def load_ugrid_file(self, filename):
-<<<<<<< HEAD:scripts/ugrid_wx.py
-        grid = load_fvcom.load_fvcom_gnome(filename)
-        #grid = pyugrid.UGrid.from_ncfile(filename)
-=======
         grid = UGrid.from_ncfile(filename)
->>>>>>> master:pyugrid/ugrid_wx.py
         self.Draw_UGRID(grid)
 
     def OnMove(self, event):

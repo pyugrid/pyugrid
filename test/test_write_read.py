@@ -10,21 +10,24 @@ This is, of course, totally incomplete, but a start
 
 from __future__ import (absolute_import, division, print_function)
 
+import os
 import pytest
-
-from .utilities import chdir
-
 import numpy as np
 
+from .utilities import chdir
 from pyugrid.ugrid import UGrid, UVar
 from pyugrid.test_examples import two_triangles
+
+# find this dir 
+test_dir = os.path.split(__file__)[0]
+test_files = os.path.join(test_dir, 'files')
 
 def test_with_faces():
     """
     test with faces, edges, but no face_coordintates or edge_coordinates
     """
 
-    with chdir('files'):
+    with chdir(test_files):
         grid = two_triangles()
 
         grid.save_as_netcdf('2_triangles.nc')
@@ -45,7 +48,7 @@ def test_without_faces():
     del grid.faces
     assert grid.faces is None
 
-    with chdir('files'):
+    with chdir(test_files):
         grid.save_as_netcdf('2_triangles.nc')
 
         # read it back in and check it out
@@ -74,7 +77,7 @@ def test_with_just_nodes_and_depths():
 
     grid.add_data(depth)
 
-    with chdir('files'):
+    with chdir(test_files):
         grid.save_as_netcdf(filename)
 
         # read it back in and check it out
