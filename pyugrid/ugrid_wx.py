@@ -12,7 +12,14 @@ This is the real code -- but to invoke it, use the script in the scripts dir.
 from __future__ import (absolute_import, division, print_function)
 
 import os
-import wx
+try:
+    import wx
+except ImportError as err:
+    raise ImportError("\n This script needs the wxPython package."
+                      "\n You can try installing it with: conda install wxpython"
+                      "\n or find it at wxpython.org"
+                     )
+    raise
 
 from .ugrid import UGrid
 
