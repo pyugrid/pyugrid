@@ -20,7 +20,6 @@ def test_build_face_face_connectivity():
     face_face = ugrid.face_face_connectivity
 
     # Order matters!
-    print(ugrid.faces)
     assert np.array_equal(face_face[0], [-1, 1, -1])
     assert np.array_equal(face_face[1], [-1, -1, 0])
 
@@ -49,7 +48,6 @@ def test_build_edges():
     edges = ugrid.edges
 
     edges.sort(axis=0)
-    print(edges)
     assert np.array_equal(edges, [[0, 1],
                                   [0, 2],
                                   [1, 2],
@@ -71,8 +69,6 @@ def test_build_edge_coordinates():
     grid = two_triangles()
     grid.build_edge_coordinates()
     coords = grid.edge_coordinates
-    # nodes = grid.nodes  # FIXME: Assigned but unused!
-    print(coords)
 
     assert coords.shape == (5, 2)
     assert np.allclose(coords, [[1.1, 0.1],
@@ -92,7 +88,6 @@ def test_build_boundary_coordinates():
     grid.build_boundary_coordinates()
     coords = grid.boundary_coordinates
     # nodes = grid.nodes  # FIXME: Assigned but unused.
-    print(coords)
 
     assert coords.shape == (4, 2)
     assert np.allclose(coords, [[1.1, 0.1],
