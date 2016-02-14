@@ -19,6 +19,8 @@ before_install:
 install:
     # FIXME: The tests should create and delete this directory.
     - mkdir files
+    # Test source distribution.
+    - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install pyugrid-${version}.tar.gz && popd
 
 script:
     - python setup.py test -a "--verbose"
