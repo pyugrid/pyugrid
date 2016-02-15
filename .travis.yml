@@ -2,17 +2,21 @@ language: python
 
 sudo: false
 
+python:
+    - 2.7
+    - 3.4
+    - 3.5
+
 env:
-    - CONDA="python=2.7"
-    - CONDA="python=3.4"
-    - CONDA="python=3.5"
+  - TEST_TARGET=default
+  - TEST_TARGET=coding
 
 before_install:
     - wget http://bit.ly/miniconda -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --all --yes
-    - travis_retry conda create --yes -n TEST $CONDA --file requirements.txt
+    - travis_retry conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION --file requirements.txt
     - source activate TEST
     - travis_retry conda install --yes --file requirements-dev.txt
 
@@ -21,8 +25,12 @@ install:
     - mkdir files
 
 script:
-    - python setup.py test -a "--verbose"
-    - find . -type f -name "*.py" ! -name 'conf.py' ! -name 'ugrid_wx.py' | xargs flake8 --max-line-length=100
+    - if [[ $TEST_TARGET == 'default' ]]; then
+        python setup.py test -a "--verbose";
+      fi
+    - if [[ $TEST_TARGET == 'coding' ]]; then
+        find . -type f -name "*.py" ! -name 'conf.py' ! -name 'ugrid_wx.py' | xargs flake8 --max-line-length=100;
+      fi
 
 notifications:
     irc: "chat.freenode.net#renci"
