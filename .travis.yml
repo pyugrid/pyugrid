@@ -29,7 +29,7 @@ script:
         python setup.py test -a "--verbose";
       fi
     - if [[ $TEST_TARGET == 'coding' ]]; then
-        find . -type f -name "*.py" ! -name 'conf.py' ! -name 'ugrid_wx.py' | xargs flake8 --max-line-length=100;
+        find . -type f -name "*.py" ! -name 'conf.py' | xargs flake8 --max-line-length=100;
       fi
 
 notifications:
