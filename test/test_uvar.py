@@ -48,7 +48,7 @@ def test_delete_data():
     assert np.array_equal(d.data, [])
 
 
-def test_str():
+def test_test_str():
     d = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
     assert str(d) == ("UVar object: depth, on the nodes, and 4 data points\n"
                       "Attributes: {}")
