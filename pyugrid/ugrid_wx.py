@@ -18,7 +18,7 @@ except ImportError as err:
     raise ImportError("\n This script needs the wxPython package."
                       "\n You can try installing it with: conda install wxpython"
                       "\n or find it at wxpython.org"
-                     )
+                      )
     raise
 
 from .ugrid import UGrid
