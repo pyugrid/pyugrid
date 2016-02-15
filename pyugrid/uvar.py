@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-UVar object, used to hold variables that are associated with a UGrid.
+UVar class is used to hold variables that are associated with a UGrid.
 
 """
 
@@ -10,6 +10,8 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from .util import asarraylike
+
+__all__ = ['UVar']
 
 
 class UVar(object):

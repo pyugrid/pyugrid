@@ -1,35 +1,28 @@
 #!/usr/bin/env python
 
 """
-ugrid classes
+UGrid base class.
 
-Set of classes for working with unstructured model grids
-
-The "ugrid" class is the base class: it stores everything in memory
-
-It can read from and write to netcdf files in the UGRID format.
-
-It may be able to reference a netcdf file at some point, rather than storing
-directly in memory.
-
-NOTE: only support for triangular mesh grids at the moment.
+NOTE: Supports only triangular mesh grids at the moment.
 
 """
 
 from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
+from netCDF4 import Dataset
 
-from . import read_netcdf
+from .read_netcdf import find_mesh_names, is_valid_mesh, grid_defs, coord_defs
 from .util import point_in_tri
 from .uvar import UVar
 
-__all__ = ['UGrid',
-           'UVar']
 
-# datatype used for indexes -- might want to change for 64 bit some day.
+__all__ = ['UGrid',
+           'load_grid']
+
+# Data type used for indexes. Might want to change for 64 bit some day.
 IND_DT = np.int32
-NODE_DT = np.float64  # datatype used for node coordinates.
+NODE_DT = np.float64  # Data type used for node coordinates.
 
 
 class UGrid(object):
@@ -116,68 +109,175 @@ class UGrid(object):
 
         self.mesh_name = mesh_name
 
-        # the data associated with the grid
-        # should be a dict of UVar objects
-        self._data = {}  # The data associated with the grid.
+        # The data associated with the grid should be a dict of UVar objects.
+        self._data = {}
         if data is not None:
             for dataset in data.values():
                 self.add_data(dataset)
 
-        # A kdtree is used to locate nodes.
-        # It will be created if/when it is needed.
         self._kdtree = None
 
     @classmethod
-    def from_ncfile(klass, nc_url, mesh_name=None, load_data=False):
+    def load_grid(klass, nc, mesh_name=None, load_data=False):
         """
-        create a UGrid object from a netcdf file name (or opendap url)
+        Loads UGrid object from a `netCDF4.Dataset` object or file name/URL,
+        adding the data to the passed-in grid object.
 
-        :param nc_url: the filename or OpenDap url you want to load
+        It will load the mesh specified, or look for the first one it finds if
+        none is specified.
 
-        :param mesh_name=None: the name of the mesh you want. If None, then
-                               you'll get the only mesh in the file. If there
-                               is more than one mesh in the file, a ValueError
-                               Will be raised
+        :param nc: The grid data to be loaded up.
+        :type nc: `netCDF4.Dataset` object or netCDF/URL string
+
+        :param mesh_name=None: name of the mesh to load.
+        :type mesh_name: string
+
         :param load_data=False: flag to indicate whether you want to load the
-                                associated data or not.  The mesh will be
-                                loaded in any case.  If False, only the mesh
-                                will be loaded.  If True, then all the data
-                                associated with the mesh will be loaded.
+                                associated data or not. The mesh will be loaded
+                                in any case. If False, only the mesh will be
+                                loaded. If True, then all the data associated
+                                with the mesh will be loaded.
                                 This could be huge!
         :type load_data: boolean
 
         """
-        grid = klass()
-        read_netcdf.load_grid_from_ncfilename(nc_url, grid,
-                                              mesh_name, load_data)
-        return grid
+        ugrid = klass()
 
-    @classmethod
-    def from_nc_dataset(klass, nc, mesh_name=None, load_data=False):
-        """
-        create a UGrid object from a netcdf file (or opendap url)
+        if isinstance(nc, Dataset):
+            pass
+        else:
+            nc = Dataset(nc, 'r')
 
-        :param nc: An already open Dataset object
-        :type nc: netCDF4.DataSet
+        # FIXME: factor this code out in a compliance-checker function/module.
+        # Get the mesh_name.
+        if mesh_name is None:
+            # Find the mesh.
+            meshes = find_mesh_names(nc)
+            if len(meshes) == 0:
+                msg = "There are no standard-conforming meshes in {}".format
+                # FIXME: The use of `nc.filepath`
+                # fails in a non-cythonized install of netCDF4-python!
+                raise ValueError(msg(nc.filepath))
+            if len(meshes) > 1:
+                msg = "There is more than one mesh in the file: {!r}".format
+                raise ValueError(msg(meshes))
+            mesh_name = meshes[0]
+        else:
+            if not is_valid_mesh(nc, mesh_name):
+                msg = "Mesh: {} is not in {}".format
+                raise ValueError(msg(mesh_name, nc.filepath))
 
-        :param mesh_name=None: the name of the mesh you want. If None, then
-                               you'll get the only mesh in the file. If there
-                               is more than one mesh in the file, a ValueError
-                               Will be raised
+        ugrid.mesh_name = mesh_name
+        mesh_var = nc[mesh_name]
 
-        :param load_data=False: flag to indicate whether you want to load the
-                                associated data or not.  The mesh will be
-                                loaded in any case.  If False, only the mesh
-                                will be loaded.  If True, then all the data
-                                associated with the mesh will be loaded.
-                                This could be huge!
+        # Load the coordinate variables.
+        for defs in coord_defs:
+            try:
+                coord_names = mesh_var.getncattr(defs['role']).strip().split()
+                coord_vars = [nc.variables[name] for name in coord_names]
+            except AttributeError:
+                if defs['required']:
+                    msg = "Mesh variable must include {} attribute.".format
+                    raise ValueError(msg(defs['role']))
+                continue
+            except KeyError:
+                msg = ("File must include {} variables for {} "
+                       "named in mesh variable.").format
+                raise ValueError(msg(coord_names, defs['role']))
 
-        :type load_data: boolean
+            coord_vars = [nc.variables[name] for name in coord_names]
+            num_node = len(coord_vars[0])
+            nodes = np.empty((num_node, 2), dtype=np.float64)
+            for var in coord_vars:
+                # CF does not require a standard_name.
+                try:
+                    standard_name = var.standard_name
+                except AttributeError:
+                    # Look for units.
+                    try:
+                        units = var.units
+                    except AttributeError:
+                        msg = ("The {} variable doesn't contain units "
+                               "attribute: required by CF").format
+                        raise ValueError(msg(var))
+                    # CF accepted units attributes for longitude.
+                    if units in ('degrees_east', 'degree_east', 'degree_E',
+                                 'degrees_E', 'degreeE', 'degreesE'):
+                            standard_name = 'longitude'
+                    # CF accepted units attributes for longitude.
+                    elif units in ('degrees_north', 'degree_north', 'degree_N',
+                                   'degrees_N', 'degreeN', 'degreesN'):
+                            standard_name = 'latitude'
+                    else:
+                        msg = ("{} variable's units value ({}) doesn't look "
+                               "like latitude or longitude").format
+                        raise ValueError(msg(var, units))
+                # FIXME: `nodes_lon` and `nodes_lat`? We will be compatible
+                # with other libraries and we can just pass the netCDF4-python
+                # var without the slicing.
+                # (Getting a deferred lazy load for free.)
+                if standard_name == 'latitude':
+                    nodes[:, 1] = var[:]
+                elif standard_name == 'longitude':
+                    nodes[:, 0] = var[:]
+                else:
+                    raise ValueError('Node coordinates standard_name is '
+                                     'neither "longitude" nor "latitude".')
+            setattr(ugrid, defs['grid_attr'], nodes)
 
-        """
-        grid = klass()
-        read_netcdf.load_grid_from_nc_dataset(nc, grid, mesh_name, load_data)
-        return grid
+        # Load assorted connectivity arrays.
+        for defs in grid_defs:
+            try:
+                try:
+                    var = nc.variables[mesh_var.getncattr(defs['role'])]
+                except AttributeError:  # This connectivity array isn't there.
+                    continue
+                array = var[:, :]
+                # Fortran order, instead of C order, transpose the array
+                # logic below will fail for 3 node or two edge grids.
+                if array.shape[0] == defs['num_ind']:
+                    array = array.T
+                try:
+                    start_index = int(var.start_index)
+                except AttributeError:
+                    start_index = 0
+                if start_index >= 1:
+                    array -= start_index
+                    # Check for flag value.
+                    try:
+                        # FIXME: This won't work for more than one flag value.
+                        flag_value = var.flag_values
+                        array[array == flag_value-start_index] = flag_value
+                    except AttributeError:
+                        pass
+                setattr(ugrid, defs['grid_attr'], array)
+            except KeyError:
+                pass  # OK not to have this...
+
+        # Load the associated data:
+        if load_data:
+            # Look for data arrays -- they should have a "location" attribute.
+            for name, var in nc.variables.items():
+                # Data Arrays should have "location" and "mesh" attributes.
+                try:
+                    location = var.location
+                    # The mesh attribute should match the mesh we're loading:
+                    if var.mesh != mesh_name:
+                        continue
+                except AttributeError:
+                    continue
+
+                # Get the attributes.
+                # FIXME: Is there a way to get the attributes directly?
+                attributes = {n: var.getncattr(n) for n in var.ncattrs()
+                              if n not in ('location', 'coordinates', 'mesh')}
+
+                # Trick with the name: FIXME: Is this a good idea?
+                name = name.lstrip(mesh_name).lstrip('_')
+                uvar = UVar(name, data=var[:],
+                            location=location, attributes=attributes)
+                ugrid.add_data(uvar)
+        return ugrid
 
     def check_consistent(self):
         """
@@ -189,10 +289,7 @@ class UGrid(object):
 
     @property
     def num_vertices(self):
-        """
-        Number of vertices in a face.
-
-        """
+        """Number of vertices in a face."""
         if self._faces is None:
             return None
         else:
@@ -204,8 +301,6 @@ class UGrid(object):
 
     @nodes.setter
     def nodes(self, nodes_coords):
-        # Room here to do consistency checking, etc.
-        # For now -- simply make sure it's a numpy array.
         if nodes_coords is None:
             self.nodes = np.zeros((0, 2), dtype=NODE_DT)
         else:
@@ -213,7 +308,6 @@ class UGrid(object):
 
     @nodes.deleter
     def nodes(self):
-        # If there are no nodes, there can't be anything else.
         self._nodes = np.zeros((0, 2), dtype=NODE_DT)
         self._edges = None
         self._faces = None
@@ -225,8 +319,6 @@ class UGrid(object):
 
     @faces.setter
     def faces(self, faces_indexes):
-        # Room here to do consistency checking, etc.
-        # For now -- simply make sure it's a numpy array.
         if faces_indexes is not None:
             self._faces = np.asarray(faces_indexes, dtype=IND_DT)
         else:
@@ -250,8 +342,6 @@ class UGrid(object):
 
     @edges.setter
     def edges(self, edges_indexes):
-        # Room here to do consistency checking, etc.
-        # For now -- simply make sure it's a numpy array.
         if edges_indexes is not None:
             self._edges = np.asarray(edges_indexes, dtype=IND_DT)
         else:
@@ -270,8 +360,6 @@ class UGrid(object):
 
     @boundaries.setter
     def boundaries(self, boundaries_indexes):
-        # Room here to do consistency checking, etc.
-        # For now -- simply make sure it's a numpy array.
         if boundaries_indexes is not None:
             self._boundaries = np.asarray(boundaries_indexes, dtype=IND_DT)
         else:
@@ -288,6 +376,7 @@ class UGrid(object):
 
     @face_face_connectivity.setter
     def face_face_connectivity(self, face_face_connectivity):
+        """TODO: Write docstrings."""
         # Add more checking?
         if face_face_connectivity is not None:
             face_face_connectivity = np.asarray(face_face_connectivity,
@@ -309,6 +398,7 @@ class UGrid(object):
 
     @face_edge_connectivity.setter
     def face_edge_connectivity(self, face_edge_connectivity):
+        """TODO: Write docstrings."""
         # Add more checking?
         if face_edge_connectivity is not None:
             face_edge_connectivity = np.asarray(face_edge_connectivity,
@@ -408,7 +498,6 @@ class UGrid(object):
         return node_inds
 
     def _build_kdtree(self):
-        # Only import if it's used.
         from scipy.spatial import cKDTree
         self._kdtree = cKDTree(self.nodes)
 
@@ -599,11 +688,8 @@ class UGrid(object):
         """
         mesh_name = self.mesh_name
 
-        # FIXME: Why not use netCDF4.Dataset instead of renaming?
-        from netCDF4 import Dataset as ncDataset
         # Create a new netcdf file.
-        with ncDataset(filepath, mode="w", clobber=True) as nclocal:
-
+        with Dataset(filepath, mode='w', clobber=True) as nclocal:
             nclocal.createDimension(mesh_name+'_num_node', len(self.nodes))
             if self._edges is not None:
                 nclocal.createDimension(mesh_name+'_num_edge', len(self.edges))
@@ -770,3 +856,34 @@ class UGrid(object):
                 for att_name, att_value in dataset.attributes.items():
                     setattr(data_var, att_name, att_value)
             nclocal.sync()
+
+
+def load_grid(nc, mesh_name=None, load_data=False):
+    """
+    Loads UGrid object from a `netCDF4.Dataset` object or file name/URL,
+    adding the data to the passed-in grid object.
+
+    It will load the mesh specified, or look for the first one it finds if
+    none is specified.
+
+    :param nc: The grid data to be loaded up.
+    :type nc: `netCDF4.Dataset` object or netCDF/URL string
+
+    :param mesh_name=None: name of the mesh to load.
+    :type mesh_name: string
+
+    :param load_data=False: flag to indicate whether you want to load the
+                            associated data or not. The mesh will be loaded
+                            in any case. If False, only the mesh will be
+                            loaded. If True, then all the data associated
+                            with the mesh will be loaded.
+                            This could be huge!
+    :type load_data: boolean
+
+    """
+    if isinstance(nc, Dataset):
+        pass
+    else:
+        nc = Dataset(nc, 'r')
+
+    return UGrid.load_grid(nc, mesh_name=None, load_data=True)
