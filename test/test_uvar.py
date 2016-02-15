@@ -57,7 +57,7 @@ def test_str():
                       "Attributes: {}")
 
 
-def add_attributes():
+def test_add_attributes():
     d = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
 
     d.attributes = {"standard_name": "sea_floor_depth_below_geoid",
@@ -65,4 +65,4 @@ def add_attributes():
                     "positive": "down"}
 
     assert d.attributes['units'] == 'm'
-    assert d.attributes['posative'] == 'down'
+    assert d.attributes['positive'] == 'down'
