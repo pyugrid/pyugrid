@@ -13,13 +13,11 @@ from pyugrid.ugrid import UVar
 
 
 def test_init():
-    # Create a UVar object for the depths:
     d = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
 
     assert d.name == 'depth'
     assert np.array_equal(d.data, [1.0, 2.0, 3.0, 4.0])
     assert d.location == 'node'
-
     assert d.attributes == {}
 
     with pytest.raises(ValueError):
@@ -41,25 +39,22 @@ def test_add_data():
 
 
 def test_delete_data():
-    # Create a UVar object for the depths:
     d = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
 
     del d.data
     assert np.array_equal(d.data, [])
 
 
-def test_test_str():
+def test_str():
     d = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
-    assert str(d) == ("UVar object: depth, on the nodes, and 4 data points\n"
-                      "Attributes: {}")
+    assert str(d) == ('UVar object: depth, on the nodes, and 4 data points\n'
+                      'Attributes: {}')
 
 
 def test_add_attributes():
     d = UVar('depth', location='node', data=[1.0, 2.0, 3.0, 4.0])
-
-    d.attributes = {"standard_name": "sea_floor_depth_below_geoid",
-                    "units": "m",
-                    "positive": "down"}
-
+    d.attributes = {'standard_name': 'sea_floor_depth_below_geoid',
+                    'units': 'm',
+                    'positive': 'down'}
     assert d.attributes['units'] == 'm'
     assert d.attributes['positive'] == 'down'

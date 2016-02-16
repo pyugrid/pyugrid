@@ -2,14 +2,16 @@
 
 """
 Testing of code to find nodes.
-Currently only nearest neighbor
+
+Currently only nearest neighbor.
 
 """
 
 from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
-from test_examples import twenty_one_triangles
+
+from utilities import twenty_one_triangles
 
 
 def test_locate_node():

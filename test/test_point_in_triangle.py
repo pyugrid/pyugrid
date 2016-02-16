@@ -1,7 +1,8 @@
 from __future__ import (absolute_import, division, print_function)
 
-from pyugrid.util import point_in_tri
 import numpy as np
+
+from pyugrid.util import point_in_tri
 
 
 def test_point_in_tri():
