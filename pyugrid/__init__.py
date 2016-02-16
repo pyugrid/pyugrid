@@ -9,7 +9,8 @@ from __future__ import (absolute_import, division, print_function)
 
 from .ugrid import UGrid
 from .uvar import UVar
+from . import grid_io
 
 __version__ = '0.1.7'
 
-__all__ = ['UGrid', 'UVar']
+__all__ = ['UGrid', 'UVar', 'grid_io']
