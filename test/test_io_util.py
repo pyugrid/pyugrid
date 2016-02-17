@@ -9,5 +9,5 @@ from __future__ import (absolute_import, division, print_function)
 
 
 def test_import():
-    """ just to have something to run"""
+    """Just to have something to run."""
     assert True

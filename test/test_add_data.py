@@ -111,7 +111,6 @@ def test_add_edge_data_wrong():
 
 def test_add_boundary_data():
     grid = two_triangles()
-    print(grid.boundaries)
 
     # Add the boundary definitions:
     grid.boundaries = [(0, 1),

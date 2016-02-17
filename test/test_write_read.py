@@ -38,7 +38,6 @@ def test_with_faces():
 
     assert np.array_equal(grid.nodes, grid2.nodes)
     assert np.array_equal(grid.faces, grid2.faces)
-    print(grid2.edges)
     assert np.array_equal(grid.edges, grid2.edges)
 
 

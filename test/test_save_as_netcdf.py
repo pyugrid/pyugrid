@@ -30,7 +30,7 @@ def nc_has_variable(ds, var_name):
     if var_name in ds.variables:
         return True
     else:
-        print(var_name, " is not a variable in the Dataset")
+        print('{} is not a variable in the Dataset'.format(var_name))
         return False
 
 
@@ -46,7 +46,6 @@ def nc_has_dimension(ds, dim_name):
     if dim_name in ds.dimensions:
         return True
     else:
-        print(dim_name, " is not a dimension in the Dataset")
         return False
 
 
@@ -62,7 +61,6 @@ def nc_var_has_attr(ds, var_name, att_name):
         getattr(ds.variables[var_name], att_name)
         return True
     except AttributeError:
-        print(att_name, "is not in the var:", var_name)
         return False
 
 
@@ -78,12 +76,8 @@ def nc_var_has_attr_vals(ds, var_name, att_dict):
     for key, val in att_dict.items():
         try:
             if val != getattr(ds.variables[var_name], key):
-                print("attribute:", key)
-                print("expected val:", val)
-                print("val in file:", repr(getattr(ds.variables[var_name], key)))  # noqa
                 return False
         except AttributeError:
-            print(key, "is not an attribute of var:", var_name)
             return False
     return True
 
@@ -364,8 +358,6 @@ def test_write_everything():
     # maybe some grid comparison functions?
 
     assert grid.mesh_name == 'mesh'
-
-    print("grid data:", grid.data)
     assert len(grid.nodes) == 20
 
     depth = grid.data['depth']

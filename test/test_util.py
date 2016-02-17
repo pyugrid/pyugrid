@@ -33,7 +33,6 @@ def test_asarraylike_list():
     """
     lst = [1, 2, 3, 4]
     result = util.asarraylike(lst)
-    print(result)
     assert isinstance(result, np.ndarray)
     assert np.array_equal(result, lst)
 
