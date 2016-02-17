@@ -18,7 +18,7 @@ before_install:
     - conda update --all --yes
     - travis_retry conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION --file requirements.txt
     - source activate TEST
-    - travis_retry conda install --yes --file requirements-dev.txt
+    - travis_retry pip install -r requirements-dev.txt
 
 install:
     # FIXME: The tests should create and delete this directory.
@@ -28,7 +28,7 @@ install:
 
 script:
     - if [[ $TEST_TARGET == 'default' ]]; then
-        python setup.py test -a "--verbose";
+        python setup.py test -a '--verbose --cov=pyugrid';
       fi
     - if [[ $TEST_TARGET == 'coding' ]]; then
         find . -type f -name "*.py" ! -name 'conf.py' | xargs flake8 --max-line-length=100;
