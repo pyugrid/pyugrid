@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
 """
-Tests for writing and reading back in via netcdf-format
-
-i.e. making sure round trip works.
-
-This is, of course, totally incomplete, but a it is start.
+Tests for writing and reading UGRID compliant netCDF.
 
 """
 
@@ -14,74 +10,74 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import numpy as np
 
-from utilities import chdir
 from pyugrid.ugrid import UGrid, UVar
-from test_examples import two_triangles
+
+from utilities import chdir, two_triangles
 
 
-# find this dir
-test_dir = os.path.split(__file__)[0]
-test_files = os.path.join(test_dir, 'files')
+test_files = os.path.join(os.path.dirname(__file__), 'files')
 
 
 def test_with_faces():
     """
-    Test with faces, edges, but no `face_coordintates` or `edge_coordinates`.
+    Test with faces, edges, but no `face_coordinates` or `edge_coordinates`.
 
     """
 
-    with chdir(test_files):
-        grid = two_triangles()
-        grid.save_as_netcdf('2_triangles.nc')
-        # Read it back in and check it out.
-        grid2 = UGrid.from_ncfile('2_triangles.nc')
+    expected = two_triangles()
 
-    assert np.array_equal(grid.nodes, grid2.nodes)
-    assert np.array_equal(grid.faces, grid2.faces)
-    assert np.array_equal(grid.edges, grid2.edges)
+    fname = '2_triangles.nc'
+    with chdir(test_files):
+        expected.save_as_netcdf(fname)
+        grid = UGrid.from_ncfile(fname)
+        os.remove(fname)
+
+    assert np.array_equal(expected.nodes, grid.nodes)
+    assert np.array_equal(expected.faces, grid.faces)
+    assert np.array_equal(expected.edges, grid.edges)
 
 
 def test_without_faces():
-    grid = two_triangles()
-    del grid.faces
-    assert grid.faces is None
+    expected = two_triangles()
+    del expected.faces
+    assert expected.faces is None
 
+    fname = '2_triangles.nc'
     with chdir(test_files):
-        grid.save_as_netcdf('2_triangles.nc')
-        # Read it back in and check it out.
-        grid2 = UGrid.from_ncfile('2_triangles.nc')
+        expected.save_as_netcdf(fname)
+        grid = UGrid.from_ncfile(fname)
+        os.remove(fname)
 
-    assert grid2.faces is None
-    assert np.array_equal(grid.faces, grid2.faces)
-    assert np.array_equal(grid.edges, grid2.edges)
+    assert grid.faces is None
+    assert np.array_equal(expected.faces, grid.faces)
+    assert np.array_equal(expected.edges, grid.edges)
 
 
 def test_with_just_nodes_and_depths():
-    filename = '2_triangles_depth.nc'
-    grid = two_triangles()
-    del grid.faces
-    del grid.edges
+    expected = two_triangles()
+    del expected.faces
+    del expected.edges
 
-    depth_array = [1.0, 2.0, 3.0, 4.0]
     depth = UVar('depth',
                  'node',
                  np.array([1.0, 2.0, 3.0, 4.0]),
                  {'units': 'm',
                   'positive': 'down',
                   'standard_name': 'sea_floor_depth_below_geoid'})
-    grid.add_data(depth)
+    expected.add_data(depth)
 
+    fname = '2_triangles_depth.nc'
     with chdir(test_files):
-        grid.save_as_netcdf(filename)
-        # Read it back in and check it out.
-        grid2 = UGrid.from_ncfile(filename, load_data=True)
+        expected.save_as_netcdf(fname)
+        grid = UGrid.from_ncfile(fname, load_data=True)
+        os.remove(fname)
 
-    assert grid2.faces is None
-    assert grid2.edges is None
-    assert np.array_equal(grid2.nodes, grid.nodes)
+    assert grid.faces is None
+    assert grid.edges is None
+    assert np.array_equal(expected.nodes, grid.nodes)
 
-    assert np.array_equal(grid2.data['depth'].data, depth_array)
-    assert grid2.data['depth'].attributes == depth.attributes
+    assert np.array_equal(expected.data['depth'].data, grid.data['depth'].data)
+    assert expected.data['depth'].attributes == grid.data['depth'].attributes
 
 
 if __name__ == "__main__":
