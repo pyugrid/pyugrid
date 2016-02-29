@@ -1,27 +1,35 @@
-sudo: false
 language: python
 
+sudo: false
+
+python:
+    - 2.7
+    - 3.4
+    - 3.5
+
 env:
-    - CONDA="python=2.7"
-    - CONDA="python=3.3"
-    - CONDA="python=3.4"
-    - CONDA="python=3.5"
+  - TEST_TARGET=default
+  - TEST_TARGET=coding
 
 before_install:
     - wget http://bit.ly/miniconda -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --all --yes
-    - travis_retry conda create --yes -n test $CONDA --file requirements.txt
-    - source activate test
-    - travis_retry conda install --yes pytest
-
+    - travis_retry conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION --file requirements.txt
+    - source activate TEST
+    - travis_retry pip install -r requirements-dev.txt
 
 install:
-    - mkdir files
+    - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install pyugrid-${version}.tar.gz && popd
 
 script:
-    - py.test --ignore=notebook_examples
+    - if [[ $TEST_TARGET == 'default' ]]; then
+        python setup.py test -a '--verbose --cov=pyugrid';
+      fi
+    - if [[ $TEST_TARGET == 'coding' ]]; then
+        find . -type f -name "*.py" ! -name 'conf.py' | xargs flake8 --max-line-length=100;
+      fi
 
 notifications:
     irc: "chat.freenode.net#renci"

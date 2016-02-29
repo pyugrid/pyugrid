@@ -21,10 +21,11 @@ from __future__ import (absolute_import, division, print_function)
 import numpy as np
 
 from . import read_netcdf
-# Used for simple locate_face test.
-# from py_geometry.cy_point_in_polygon import point_in_poly as point_in_tri.
 from .util import point_in_tri
 from .uvar import UVar
+
+__all__ = ['UGrid',
+           'UVar']
 
 # datatype used for indexes -- might want to change for 64 bit some day.
 IND_DT = np.int32
@@ -57,15 +58,17 @@ class UGrid(object):
         :param nodes=None : the coordinates of the nodes
         :type nodes: (NX2) array of floats
 
-        :param faces=None : the faces of the grid -- indexes into the nodes array
+        :param faces=None : the faces of the grid. Indexes for the nodes array.
         :type faces: (NX3) array of integers
 
-        :param edges=None : the edges of the grid --  of indexes into the nodes array
+        :param edges=None : the edges of the grid. Indexes for the nodes array.
         :type edges: (NX2) array of integers
 
-        :param boundaries=None: specification of the boundaries -- are usually a subset of edges
-                                where boundary condition information, etc is stored.
-                                (NX2) integer array of indexes into the nodes array
+        :param boundaries=None: specification of the boundaries are usually a
+                                subset of edges where boundary condition
+                                information, etc is stored.
+                                (NX2) integer array of indexes for the nodes
+                                array.
         :type boundaries: numpy array of integers
 
         :param face_face_connectivity=None: connectivity arrays.
@@ -79,11 +82,13 @@ class UGrid(object):
         :param edge_coordinates=None: representative coordinate of the edges
         :type edge_coordinates: (NX2) array of floats
 
-        :param face_coordinates=None: representative coordinate of the faces (NX2) float array
+        :param face_coordinates=None: representative coordinate of the faces
+                                      (NX2) float array
         :type face_coordinates: (NX2) array of floats
 
 
-        :param boundary_coordinates=None: representative coordinate of the boundaries
+        :param boundary_coordinates=None: representative coordinate of the
+                                          boundaries
         :type boundary_coordinates: (NX2) array of floats
 
 
@@ -333,7 +338,8 @@ class UGrid(object):
         """
         Add a UVar to the data dict
 
-        :param uvar: the UVar object to add. its name will be the key in the data dict.
+        :param uvar: the UVar object to add.
+                     Its name will be the key in the data dict.
         :type uvar: a ugrid.UVar object
 
         Some sanity checking is done to make sure array sizes are correct.
@@ -342,19 +348,19 @@ class UGrid(object):
         # Size check:
         if uvar.location == 'node':
             if len(uvar.data) != len(self.nodes):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of nodes")
         elif uvar.location == 'edge':
             if len(uvar.data) != len(self.edges):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of edges")
         elif uvar.location == 'face':
             if len(uvar.data) != len(self.faces):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of faces")
         elif uvar.location == 'boundary':
             if len(uvar.data) != len(self.boundaries):
-                raise ValueError("length of data array must match"
+                raise ValueError("length of data array must match "
                                  "the number of boundaries")
         else:
             msg = "Can't add data associated with '{}'".format
@@ -365,12 +371,14 @@ class UGrid(object):
         """
         Find all :py:class:`UVar`s that match the specified standard name
 
-        :param str standard_name: the standard name attribute (based on the UGRID conventions)
+        :param str standard_name: the standard name attribute.
+                                  Based on the UGRID conventions.
 
         :keyword location: optional attribute location to narrow the returned
-                           :py:class:`UVar`s (one of 'node', 'edge', 'face', or 'boundary').
+        :py:class : `UVar`s (one of 'node', 'edge', 'face', or 'boundary').
 
         :return: set of matching :py:class:`UVar`s
+
         """
         found = set()
         for ds in self._data.values():
@@ -537,8 +545,8 @@ class UGrid(object):
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
         face_face += -1  # Fill with -1.
 
-        # loop through all the triangles to find the matching edges:
-        edges = {}  # dict to store the edges in
+        # Loop through all the triangles to find the matching edges:
+        edges = {}  # dict to store the edges.
         for i, face in enumerate(self.faces):
             # Loop through edges of the triangle:
             for j in range(num_vertices):
@@ -546,7 +554,7 @@ class UGrid(object):
                     edge = (face[j], face[j + 1])
                 else:
                     edge = (face[-1], face[0])
-                if edge[0] > edge[1]:  # sort the node numbers
+                if edge[0] > edge[1]:  # Sort the node numbers.
                     edge = (edge[1], edge[0])
                 # see if it is already in there
                 prev_edge = edges.pop(edge, None)
@@ -578,7 +586,7 @@ class UGrid(object):
             # Loop through edges:
             for j in range(num_vertices):
                 edge = (face[j - 1], face[j])
-                if edge[0] > edge[1]:  # flip them
+                if edge[0] > edge[1]:  # Flip them
                     edge = (edge[1], edge[0])
                 edges.add(edge)
         self._edges = np.array(list(edges), dtype=IND_DT)
@@ -717,8 +725,7 @@ class UGrid(object):
             mesh.cf_role = "mesh_topology"
             mesh.long_name = "Topology data of 2D unstructured mesh"
             mesh.topology_dimension = 2
-            mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(
-                mesh_name)
+            mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)  # noqa
 
             if self.edges is not None:
                 # Attribute required if variables will be defined on edges.
@@ -730,8 +737,9 @@ class UGrid(object):
             if self.faces is not None:
                 mesh.face_node_connectivity = mesh_name + "_face_nodes"
                 if self.face_coordinates is not None:
-                    mesh.face_coordinates = "{0}_face_lon {0}_face_lat".format(
-                        mesh_name)  # optional attribute
+                    # Optional attribute.
+                    coord = "{0}_face_lon {0}_face_lat".format
+                    mesh.face_coordinates = coord(mesh_name)
             if self.face_edge_connectivity is not None:
                 # Optional attribute (requires edge_node_connectivity).
                 mesh.face_edge_connectivity = mesh_name + "_face_edges"

@@ -6,12 +6,17 @@ A small wxPython utility app to visualize pyugrids, etc.
 
 from __future__ import (absolute_import, division, print_function)
 
-# temporary:
-#import load_fvcom
-
 import os
-import wx
-from pyugrid.ugrid import UGrid
+try:
+    import wx
+except ImportError as err:
+    raise ImportError("\n This script needs the wxPython package."
+                      "\n You can try installing it with: conda install wxpython"
+                      "\n or find it at wxpython.org"
+                      )
+    raise
+
+from .ugrid import UGrid
 
 # Import the installed version.
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas

@@ -1,94 +1,83 @@
 #!/usr/bin/env python
 
 """
-tests for writing and reading back in via netcdf-format
+Tests for writing and reading UGRID compliant netCDF.
 
-i.e. making sure round trip works
-
-This is, of course, totally incomplete, but a start
 """
 
 from __future__ import (absolute_import, division, print_function)
 
-import pytest
-
-from .utilities import chdir
-
+import os
 import numpy as np
 
 from pyugrid.ugrid import UGrid, UVar
-from pyugrid.test_examples import two_triangles
+
+from utilities import chdir, two_triangles
+
+
+test_files = os.path.join(os.path.dirname(__file__), 'files')
+
 
 def test_with_faces():
     """
-    test with faces, edges, but no face_coordintates or edge_coordinates
+    Test with faces, edges, but no `face_coordinates` or `edge_coordinates`.
+
     """
 
-    with chdir('files'):
-        grid = two_triangles()
+    expected = two_triangles()
 
-        grid.save_as_netcdf('2_triangles.nc')
+    fname = '2_triangles.nc'
+    with chdir(test_files):
+        expected.save_as_netcdf(fname)
+        grid = UGrid.from_ncfile(fname)
+        os.remove(fname)
 
-        # read it back in and check it out
-        grid2 = UGrid.from_ncfile('2_triangles.nc')
-
-    assert np.array_equal(grid.nodes, grid2.nodes)
-    assert np.array_equal(grid.faces, grid2.faces)
-
-    print(grid2.edges)
-
-    assert np.array_equal(grid.edges, grid2.edges)
+    assert np.array_equal(expected.nodes, grid.nodes)
+    assert np.array_equal(expected.faces, grid.faces)
+    assert np.array_equal(expected.edges, grid.edges)
 
 
 def test_without_faces():
-    grid = two_triangles()
-    del grid.faces
+    expected = two_triangles()
+    del expected.faces
+    assert expected.faces is None
+
+    fname = '2_triangles.nc'
+    with chdir(test_files):
+        expected.save_as_netcdf(fname)
+        grid = UGrid.from_ncfile(fname)
+        os.remove(fname)
+
     assert grid.faces is None
+    assert np.array_equal(expected.faces, grid.faces)
+    assert np.array_equal(expected.edges, grid.edges)
 
-    with chdir('files'):
-        grid.save_as_netcdf('2_triangles.nc')
-
-        # read it back in and check it out
-        grid2 = UGrid.from_ncfile('2_triangles.nc')
-
-    assert grid2.faces is None
-    assert np.array_equal(grid.faces, grid2.faces)
-    assert np.array_equal(grid.edges, grid2.edges)
 
 def test_with_just_nodes_and_depths():
-
-    filename = '2_triangles_depth.nc'
-    grid = two_triangles()
-    del grid.faces
-    del grid.edges
-
-    depth_array = [1.0, 2.0, 3.0, 4.0]
+    expected = two_triangles()
+    del expected.faces
+    del expected.edges
 
     depth = UVar('depth',
-                    'node',
-                    np.array([1.0, 2.0, 3.0, 4.0]),
-                    {'units':'m',
-                     'positive':'down',
-                     'standard_name' : "sea_floor_depth_below_geoid",
-                     })
+                 'node',
+                 np.array([1.0, 2.0, 3.0, 4.0]),
+                 {'units': 'm',
+                  'positive': 'down',
+                  'standard_name': 'sea_floor_depth_below_geoid'})
+    expected.add_data(depth)
 
-    grid.add_data(depth)
+    fname = '2_triangles_depth.nc'
+    with chdir(test_files):
+        expected.save_as_netcdf(fname)
+        grid = UGrid.from_ncfile(fname, load_data=True)
+        os.remove(fname)
 
-    with chdir('files'):
-        grid.save_as_netcdf(filename)
+    assert grid.faces is None
+    assert grid.edges is None
+    assert np.array_equal(expected.nodes, grid.nodes)
 
-        # read it back in and check it out
-        grid2 = UGrid.from_ncfile(filename, load_data=True)
-
-    assert grid2.faces is None
-    assert grid2.edges is None
-    assert np.array_equal( grid2.nodes, grid.nodes )
-
-    assert np.array_equal( grid2.data['depth'].data, depth_array )     
-    assert grid2.data['depth'].attributes == depth.attributes     
-
-
-
+    assert np.array_equal(expected.data['depth'].data, grid.data['depth'].data)
+    assert expected.data['depth'].attributes == grid.data['depth'].attributes
 
 
 if __name__ == "__main__":

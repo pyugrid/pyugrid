@@ -40,18 +40,17 @@ class UVar(object):
         """
         self.name = name
 
-        if location not in ['node', 'edge', 'face', 'boundary', 'none']:
-            raise ValueError(
-                "location must be one of: 'node', 'edge', 'face', 'boundary', or 'none'")
+        if location not in ['node', 'edge', 'face', 'boundary']:
+            raise ValueError("location must be one of: "
+                             "'node', 'edge', 'face', 'boundary'")
 
         self.location = location
 
         if data is None:
-            # could be any data type
+            # Could be any data type.
             self._data = np.zeros((0,), dtype=np.float64)
         else:
             self._data = asarraylike(data)
-
         if attributes is None and data is not None and hasattr(data, '__dict__'):
             self.update(data.__dict__)
         else:
@@ -113,11 +112,13 @@ class UVar(object):
         return rv
 
     def __str__(self):
-        return "UVar object: {0:s}, on the {1:s}s, and {2:d} data points\nAttributes: {3}".format(self.name, self.location, len(self.data), self.attributes)
+        print("in __str__, data is:", self.data)
+        msg = ("UVar object: {0:s}, on the {1:s}s, and {2:d} data "
+               "points\nAttributes: {3}").format
+        return msg(self.name, self.location, len(self.data), self.attributes)
 
     def __len__(self):
         return len(self.data)
-
 
 class UMVar(object):
     """
