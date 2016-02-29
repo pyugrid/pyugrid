@@ -106,7 +106,7 @@ class UVar(object):
         if str(item) in self._cache:
             rv = self._cache[str(item)]
         else:
-            rv = self._data.__getitem__(str(item))
+            rv = self._data.__getitem__(item)
             self._cache[str(item)] = rv
             if len(self._cache) > 3:
                 self._cache.popitem(last=False)
@@ -179,8 +179,8 @@ class UMVar(object):
         if str(item) in self._cache:
             return self._cache[str(item)]
         else:
-            rv = np.ma.vstack(
-                [self.__getattribute__(var).__getitem__(item) for var in self.variables]).T
+            rv = np.ma.column_stack(
+                [self.__getattribute__(var).__getitem__(item) for var in self.variables])
             self._cache[str(item)] = rv
             if len(self._cache) > 3:
                 self._cache.popitem(last=False)
