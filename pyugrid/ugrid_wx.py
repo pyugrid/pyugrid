@@ -138,7 +138,7 @@ class DrawFrame(wx.Frame):
         self.Canvas.ZoomToBB()
 
     def load_ugrid_file(self, filename):
-        grid = UGrid.from_ncfile(filename)
+        grid = UGrid.load_grid(filename)
         self.Draw_UGRID(grid)
 
     def OnMove(self, event):
