@@ -2,6 +2,10 @@
 
 """
 UVar object, used to hold variables that are associated with a ugrid
+
+FixMe: should we enable direct attribute acces via python's attribute access?
+       i.e. like netcdf variables -- would use overloading __setattr__ and __getattr__
+
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -17,26 +21,27 @@ except ValueError:
 
 class UVar(object):
     """
-    A class to hold a variable associated with the UGrid. Data can be on the 
+    A class to hold a variable associated with the UGrid. Data can be on the
     nodes, edges, etc. -- "UGrid Variable"
 
     It holds an array of the data, as well as the attributes associated
-    with that data  -- this is mapped to a netcdf variable with 
+    with that data  -- this is mapped to a netcdf variable with
     attributes(attributes get stored in the netcdf file)
     """
 
-    def __init__(self, name, location='none', data=None, attributes=None):
+    def __init__(self, name, location, data=None, attributes=None):
         """
         create a UVar object
-        :param name: the name of the data (depth, u_velocity, etc.)
+        :param name: the name of the variable (depth, u_velocity, etc.)
         :type name: string
 
         :param location: the type of grid element the data is associated with:
-                         'node', 'edge', or 'face' the data is assigned to
+                         'node', 'edge', or 'face'
 
-        :param data: the data
+        :param data: The data itself
         :type data: 1-d numpy array or array-like object ().
-                    IF you have a list or tuple, it should be converted or something compatible (list, etc.)        
+                    If you have a list or tuple, it should be something that can be
+                    converted to a numpy array (list, etc.)
         """
         self.name = name
 
@@ -47,23 +52,31 @@ class UVar(object):
         self.location = location
 
         if data is None:
-            # Could be any data type.
+            # Could be any data type, but we'll default to float
             self._data = np.zeros((0,), dtype=np.float64)
         else:
             self._data = asarraylike(data)
-        if attributes is None and data is not None and hasattr(data, '__dict__'):
-            self.update(data.__dict__)
-        else:
-            self.update(attributes)
+
+        # FixMe: we need a separate attribute dict -- we really do'nt want all this
+        #        getting mixed up with the python object attributes
+        self.attributes = {} if attributes is None else attributes
+        # if the data is a netcdf variable, pull the attributes from there
+        try:
+            for attr in data.ncattrs():
+                self.attributes[attr] = data.getncattr(attr)
+        except AttributeError:  # must not be a netcdf variable
+            pass
+
         self._cache = OrderedDict()
 
-    def update(self, attr):
-        """
+    # def update_attrs(self, attrs):
+    #     """
+    #     update the attributes of the UVar object
 
-        :param attr: Dict containing attributes to be added to the object
-        """
-        for key, val in attr.items():
-            setattr(self, key, val)
+    #     :param attr: Dict containing attributes to be added to the object
+    #     """
+    #     for key, val in attrs.items():
+    #         setattr(self, key, val)
 
     @property
     def data(self):
@@ -120,10 +133,13 @@ class UVar(object):
     def __len__(self):
         return len(self.data)
 
+
 class UMVar(object):
     """
-    A class to group multiple UVars (or other data sources) and retrieve common information. All the variables
-    grouped in this class must have the same shape, location, and unique names.
+    A class to group multiple UVars (or other data sources) and retrieve common information.
+    All the variables grouped in this class must have the same shape, location, and unique
+    names.
+
     TODO: Add attribues that all grouped variables have in common to the UMVar?
     """
 

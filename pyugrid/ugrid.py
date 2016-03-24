@@ -516,17 +516,23 @@ class UGrid(object):
         return alphas
 
     def interpolate_var_to_points(self, points, var, location='nodes'):
+        """
+        interpolates teh passed-in variable to the points in points
+
+        used linear interpolation from the nodes.
+        """
+        points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
+        # FixMe: should it get location from variable object?
         if location not in ['nodes', 'faces']:
-            raise ValueError(
-                'location must be one of {0}'.format(['nodes', 'faces']))
+            raise ValueError("location must be one of ['nodes', 'faces']")
         if location == 'faces':
-            if var.shape != self.faces.shape:
-                raise ValueError(
-                    'variable does not have the same shape as grid faces')
+            if var.shape != self.faces.shape[:1]:
+                raise ValueError('variable does not have the same shape as grid faces')
+            raise NotImplementedError("Currently does not support interpolation of a "
+                                      "variable defined on the faces")
         if location == 'nodes':
-            if var.shape != self.nodes.shape:
-                raise ValueError(
-                    'variables does not have the same shape as grid nodes')
+            if var.shape != self.nodes.shape[:1]:
+                raise ValueError('variable is not the same size as the grid nodes')
         inds = self.locate_faces(points)
         pos_alphas = self.interpolation_alphas(points, inds)
         vals = var[self.faces[inds]]
@@ -534,8 +540,7 @@ class UGrid(object):
 
     def build_face_face_connectivity(self):
         """
-        Builds the face_face_connectivity array:
-        essentially giving the neighbors of each triangle.
+        Builds the face_face_connectivity array: giving the neighbors of each triangle.
 
         Note: arbitrary order and CW vs CCW may not be consistent.
         """
