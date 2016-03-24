@@ -58,3 +58,29 @@ def test_add_attributes():
                     'positive': 'down'}
     assert d.attributes['units'] == 'm'
     assert d.attributes['positive'] == 'down'
+
+
+def test_nc_variable():
+    """
+    test that it works with a netcdf variable object
+    """
+    import netCDF4
+
+    # make a variable
+    ds = netCDF4.Dataset('junk.nc', mode='w')
+    dim = ds.createDimension('dim', (10))
+    var = ds.createVariable('a_var', float, ('dim'))
+    var[:] = np.arange(10)
+    # give it some attributes
+    var.attr_1 = 'some value'
+    var.attr_2 = 'another value'
+
+    # make a UVar from it
+    uvar = UVar("a_var", 'node', data=var)
+
+    assert uvar._data is var # preserved the netcdf variable
+    print(uvar.attributes)
+    assert uvar.attributes == {'attr_1': 'some value',
+                               'attr_2': 'another value'}
+    # access the data
+    assert np.array_equal(uvar[3:5], [3.0, 4.0])
