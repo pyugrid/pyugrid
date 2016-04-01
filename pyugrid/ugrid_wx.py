@@ -1,12 +1,7 @@
-#!/usr/bin/env pythonw
-
 """
 ugid_wx.py:
 
 A small wxPython utility app to visualize pyugrids, etc.
-
-This is the real code -- but to invoke it, use the script in the scripts dir.
-
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -180,7 +175,7 @@ def main():
         filename = sys.argv[1]
         F.load_ugrid_file(filename)
     else:
-        from . import test_examples
+        from pyugrid import test_examples
         F.Draw_UGRID(test_examples.twenty_one_triangles())
 
     app.MainLoop()

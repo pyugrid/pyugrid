@@ -9,21 +9,33 @@ import numpy as np
 from pyugrid import util
 
 
-class DummyArrayLike():
+class DummyArrayLike(object):
     """
     Class that will look like an array to this function, even
     though it won't work!
 
-    Just for tests.
+    Just for tests. All it does is add a few expected attributes
 
     This will need to be updated when the function is changed.
 
     """
-    def dtype(self):
-        pass
+    must_have = ['dtype', 'shape', 'ndim', '__len__', '__getitem__', '__getattribute__']
 
-    def shape(self):
-        pass
+    # pretty kludgy way to do this..
+    def __new__(cls):
+        print ("in new"), cls
+        obj = object.__new__(cls)
+        for attr in cls.must_have:
+            setattr(obj, attr, None)
+        return obj
+
+
+def test_dummy_array_like():
+    dum = DummyArrayLike()
+    print(dum)
+    print(dum.dtype)
+    for attr in DummyArrayLike.must_have:
+        assert hasattr(dum, attr)
 
 
 def test_asarraylike_list():
