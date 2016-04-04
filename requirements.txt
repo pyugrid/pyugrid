@@ -2,4 +2,3 @@ numpy
 scipy
 netcdf4
 matplotlib
-cell_tree2d
