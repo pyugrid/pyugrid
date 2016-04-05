@@ -536,7 +536,7 @@ class UGrid(object):
         inds = self.locate_faces(points)
         pos_alphas = self.interpolation_alphas(points, inds)
         vals = var[self.faces[inds]]
-        return np.sum(vals * pos_alphas[:, :, np.newaxis], axis=1)
+        return np.sum(vals * pos_alphas, axis=1)
 
     def build_face_face_connectivity(self):
         """
