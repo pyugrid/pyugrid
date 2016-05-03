@@ -100,18 +100,42 @@ def test_multi_dimensional():
                      [6.0, 7.0, 1.0, 5.0],
                      ])
 
-    print(data.shape())
+    print(data.shape)
 
     t = UVar('temp',
              location='node',
              data=data,
-             dimensions=('time', 'nodes')
+             dimensions=('time', 'nodes'),
+             grid_dim = 'nodes',
              )
 
     assert t.name == 'temp'
     assert t.dimensions == ('time', 'nodes')
+    assert t.grid_dim == 1
 
-    assert False
+def test_multi_dimensional_set_grid_dim_index():
+    """
+    tests that you can store multi-dimenional variables in a UVar
+    """
+    # scalar value at the nodes, changing over time
+    # 4 nodes
+    # 3 timesteps
+    data = np.array([[1.0, 2.0, 3.0, 4.0],
+                     [3.0, 5.0, 2.0, 7.0],
+                     [6.0, 7.0, 1.0, 5.0],
+                     ])
+
+    print(data.shape)
+
+    t = UVar('temp',
+             location='node',
+             data=data,
+             dimensions=('time', 'nodes'),
+             grid_dim = 1,
+             )
+
+    assert t.name == 'temp'
+    assert t.grid_dim == 1
 
 
 

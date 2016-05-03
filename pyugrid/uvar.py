@@ -29,7 +29,13 @@ class UVar(object):
     attributes(attributes get stored in the netcdf file)
     """
 
-    def __init__(self, name, location, data=None, attributes=None, dimensions=None):
+    def __init__(self,
+                 name,
+                 location,
+                 data=None,
+                 attributes=None,
+                 dimensions=None,
+                 grid_dim=None):
         """
         create a UVar object
         :param name: the name of the variable (depth, u_velocity, etc.)
@@ -52,6 +58,13 @@ class UVar(object):
                            If None, they will be pulled from the data array if it is a
                            netcdf variable
         :type dimensions: tuple of strings
+
+        :param grid_dim: The dimension that is used to key to the grid variable:
+                          the node, or face, or edge, or...
+                        It can be either a named dimension, if they are provided,
+                        or an integer dimension number (zero-based). if None, it
+                        is assumed to be the zeroth dimension.
+        :type grid_dim: string or int
 
         """
         self.name = name
@@ -84,6 +97,18 @@ class UVar(object):
                 self.dimensions = tuple((u"dim_%i" % i for i in range(len(self._data.shape))))
         else:
             self.dimensions = dimensions
+
+        if grid_dim is None:
+            self.grid_dim = 0
+        else:
+            if isinstance(grid_dim, int):
+                self.grid_dim = grid_dim
+            else:
+                try:
+                    self.grid_dim = self.dimensions.index(grid_dim)
+                except ValueError:
+                    raise ValueError('grid_dim not in dimensions')
+
 
         self._cache = OrderedDict()
 
