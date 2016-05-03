@@ -19,6 +19,7 @@ def test_init():
     assert np.array_equal(d.data, [1.0, 2.0, 3.0, 4.0])
     assert d.location == 'node'
     assert d.attributes == {}
+    assert d.dimensions == (u'dim_0',)
 
     with pytest.raises(ValueError):
         d = UVar('depth', location='nodes')
@@ -60,6 +61,7 @@ def test_add_attributes():
     assert d.attributes['positive'] == 'down'
 
 
+
 def test_nc_variable():
     """
     test that it works with a netcdf variable object
@@ -78,9 +80,38 @@ def test_nc_variable():
     # make a UVar from it
     uvar = UVar("a_var", 'node', data=var)
 
-    assert uvar._data is var # preserved the netcdf variable
-    print(uvar.attributes)
+    assert uvar._data is var  # preserved the netcdf variable
     assert uvar.attributes == {'attr_1': 'some value',
                                'attr_2': 'another value'}
+    assert uvar.dimensions == ('dim',)
     # access the data
     assert np.array_equal(uvar[3:5], [3.0, 4.0])
+
+
+def test_multi_dimensional():
+    """
+    tests that you can store multi-dimenional variables in a UVar
+    """
+    # scalar value at the nodes, changing over time
+    # 4 nodes
+    # 3 timesteps
+    data = np.array([[1.0, 2.0, 3.0, 4.0],
+                     [3.0, 5.0, 2.0, 7.0],
+                     [6.0, 7.0, 1.0, 5.0],
+                     ])
+
+    print(data.shape())
+
+    t = UVar('temp',
+             location='node',
+             data=data,
+             dimensions=('time', 'nodes')
+             )
+
+    assert t.name == 'temp'
+    assert t.dimensions == ('time', 'nodes')
+
+    assert False
+
+
+

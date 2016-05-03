@@ -29,7 +29,7 @@ class UVar(object):
     attributes(attributes get stored in the netcdf file)
     """
 
-    def __init__(self, name, location, data=None, attributes=None):
+    def __init__(self, name, location, data=None, attributes=None, dimensions=None):
         """
         create a UVar object
         :param name: the name of the variable (depth, u_velocity, etc.)
@@ -42,6 +42,17 @@ class UVar(object):
         :type data: 1-d numpy array or array-like object ().
                     If you have a list or tuple, it should be something that can be
                     converted to a numpy array (list, etc.)
+        :param attributes=None: any attributes attached to the variable
+                                 -- same as netCDF variable attributes.
+                                 if None, attributes will be pulled from the data object,
+                                 if it has them (i.e. it is a netcdf variable)
+        :type attributes: dict mapping attributye names to values (str to str)
+
+        :param dimensions: The names dimensions of the data array.
+                           If None, they will be pulled from the data array if it is a
+                           netcdf variable
+        :type dimensions: tuple of strings
+
         """
         self.name = name
 
@@ -57,8 +68,6 @@ class UVar(object):
         else:
             self._data = asarraylike(data)
 
-        # FixMe: we need a separate attribute dict -- we really do'nt want all this
-        #        getting mixed up with the python object attributes
         self.attributes = {} if attributes is None else attributes
         # if the data is a netcdf variable, pull the attributes from there
         try:
@@ -67,16 +76,16 @@ class UVar(object):
         except AttributeError:  # must not be a netcdf variable
             pass
 
+        if dimensions is None:
+            try:  # try to pull from the data variable:
+                self.dimensions = data.dimensions
+            except AttributeError:  # must not be a netcdf variable
+                # create a fake set:
+                self.dimensions = tuple((u"dim_%i" % i for i in range(len(self._data.shape))))
+        else:
+            self.dimensions = dimensions
+
         self._cache = OrderedDict()
-
-    # def update_attrs(self, attrs):
-    #     """
-    #     update the attributes of the UVar object
-
-    #     :param attr: Dict containing attributes to be added to the object
-    #     """
-    #     for key, val in attrs.items():
-    #         setattr(self, key, val)
 
     @property
     def data(self):
