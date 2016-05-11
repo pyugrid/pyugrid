@@ -526,12 +526,12 @@ class UGrid(object):
         if location not in ['nodes', 'faces']:
             raise ValueError("location must be one of ['nodes', 'faces']")
         if location == 'faces':
-            if var.shape != self.faces.shape[:1]:
+            if var.shape[-1] != self.faces.shape[0]:
                 raise ValueError('variable does not have the same shape as grid faces')
             raise NotImplementedError("Currently does not support interpolation of a "
                                       "variable defined on the faces")
         if location == 'nodes':
-            if var.shape != self.nodes.shape[:1]:
+            if var.shape[-1] != self.nodes.shape[0]:
                 raise ValueError('variable is not the same size as the grid nodes')
         inds = self.locate_faces(points)
         pos_alphas = self.interpolation_alphas(points, inds)
@@ -570,6 +570,9 @@ class UGrid(object):
                 else:
                     edges[edge] = (i, j)  # face num, edge_num.
         self._face_face_connectivity = face_face
+
+    def get_lines(self):
+        return self.nodes[self.edges]
 
     def build_edges(self):
         """
