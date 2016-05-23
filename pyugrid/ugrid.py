@@ -351,6 +351,20 @@ class UGrid(object):
         """
         return self._data
 
+    def infer_location(self, data):
+        """
+        :param data:
+
+        Returns 'nodes' if data will fit to the nodes, 'faces' if the data will fit to the faces,
+        and None otherwise.
+        """
+        size = data.shape[-1]
+        if size == self.nodes.shape[0]:
+            return 'nodes'
+        if size == self.nodes.faces[0]:
+            return 'faces'
+        return None
+
     def add_data(self, uvar):
         """
         Add a UVar to the data dict
@@ -532,28 +546,38 @@ class UGrid(object):
         alphas[indices == -1] *= 0
         return alphas
 
-    def interpolate_var_to_points(self, points, var, location='nodes'):
+    def interpolate_var_to_points(self,
+                                  points,
+                                  variable,
+                                  indices=None,
+                                  grid=None,
+                                  alphas=None,
+                                  mask=None,
+                                  slices=None,
+                                  memo=False,
+                                  slice_grid=True,
+                                  _translated_indices=None,
+                                  _hash=None):
         """
         interpolates teh passed-in variable to the points in points
 
         used linear interpolation from the nodes.
         """
         points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
+        loc = self.infer_location(variable)
         # FixMe: should it get location from variable object?
-        if location not in ['nodes', 'faces']:
-            raise ValueError("location must be one of ['nodes', 'faces']")
-        if location == 'faces':
-            if var.shape[-1] != self.faces.shape[0]:
-                raise ValueError('variable does not have the same shape as grid faces')
-            raise NotImplementedError("Currently does not support interpolation of a "
-                                      "variable defined on the faces")
-        if location == 'nodes':
-            if var.shape[-1] != self.nodes.shape[0]:
-                raise ValueError('variable is not the same size as the grid nodes')
+        if location is None:
+            raise ValueError("Data is incompatible with grid nodes or faces")
         inds = self.locate_faces(points)
-        pos_alphas = self.interpolation_alphas(points, inds)
-        vals = var[self.faces[inds]]
-        return np.sum(vals * pos_alphas, axis=1)
+        if location == 'faces':
+            return variable[inds]
+#             raise NotImplementedError("Currently does not support interpolation of a "
+#                                       "variable defined on the faces")
+        if location == 'nodes':
+            pos_alphas = self.interpolation_alphas(points, inds)
+            vals = variable[self.faces[inds]]
+            return np.sum(vals * pos_alphas, axis=1)
+        return None
 
     def build_face_face_connectivity(self):
         """
@@ -589,6 +613,8 @@ class UGrid(object):
         self._face_face_connectivity = face_face
 
     def get_lines(self):
+        if self.edges is None:
+            self.build_edges()
         return self.nodes[self.edges]
 
     def build_edges(self):
