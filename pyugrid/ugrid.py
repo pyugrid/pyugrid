@@ -568,6 +568,9 @@ class UGrid(object):
         # FixMe: should it get location from variable object?
         if location is None:
             raise ValueError("Data is incompatible with grid nodes or faces")
+
+        if slices is not None:
+            variable = variable[slices]
         inds = self.locate_faces(points)
         if location == 'faces':
             return variable[inds]
