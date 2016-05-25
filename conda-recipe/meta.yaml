@@ -1,12 +1,11 @@
 # Conda recipe example.
 package:
     name: pyugrid
-    version: "0.1.5"
+    version: "0.2.0"
 
 source:
-    fn: pyugrid-0.1.5.tar.gz
-    url: https://pypi.python.org/packages/source/p/pyugrid/pyugrid-0.1.5.tar.gz
-    md5: d8d69f117a6ef4179bdd5a2cc1eb1b6c
+    fn: pyugrid-0.2.0.zip
+    url:  https://github.com/pyugrid/pyugrid/archive/develop.zip
 
 build:
     number: 0
