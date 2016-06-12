@@ -137,5 +137,3 @@ def test_multi_dimensional_set_grid_dim_index():
     assert t.name == 'temp'
     assert t.grid_dim == 1
 
-
-

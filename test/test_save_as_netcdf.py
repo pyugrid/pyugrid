@@ -399,6 +399,44 @@ def test_write_everything():
 
         os.remove(fname)
 
+def test_write_with_multi_dim_data():
+    """Tests writing a netcdf file with multi-dimensional data"""
+
+    grid = two_triangles()
+    grid.mesh_name = 'mesh1'
+
+    # Create a UVar object with multiple dimensions
+    data = np.array([[1.0, 2.0, 3.0, 4.0],
+                     [3.0, 5.0, 2.0, 7.0],
+                     [6.0, 7.0, 1.0, 5.0],
+                     ])
+    temp = UVar('temp',
+                location='node',
+                data=data,
+                dimensions=('time', 'nodes'),
+                grid_dim=1,
+                )
+    temp.attributes['units'] = 'C'
+    temp.attributes['standard_name'] = 'sea_surface_temperature'
+
+
+    grid.add_data(temp)
+
+    fname = 'temp.nc'
+    with chdir(test_files):
+        grid.save_as_netcdf(fname)
+        with netCDF4.Dataset(fname) as ds:
+            os.remove(fname)
+
+            assert nc_has_variable(ds, 'mesh1')
+            assert nc_has_variable(ds, 'temp')
+            # assert nc_var_has_attr_vals(ds, 'depth', {
+            #     'coordinates': 'mesh1_node_lon mesh1_node_lat',
+            #     'location': 'node',
+            #     'mesh': 'mesh1'})
+            assert False
+
+
 
 if __name__ == "__main__":
     test_simple_write()
