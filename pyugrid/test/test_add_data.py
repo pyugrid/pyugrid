@@ -12,7 +12,7 @@ import pytest
 
 from pyugrid import UVar
 
-from utilities import two_triangles
+from .utilities import two_triangles
 
 
 def test_add_all_data():

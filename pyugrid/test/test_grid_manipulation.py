@@ -9,7 +9,7 @@ from __future__ import (absolute_import, division, print_function)
 
 import numpy as np
 
-from utilities import two_triangles, twenty_one_triangles
+from .utilities import two_triangles, twenty_one_triangles
 
 
 def test_build_face_face_connectivity_small():

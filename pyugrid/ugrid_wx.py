@@ -37,7 +37,7 @@ class DrawFrame(wx.Frame):
     """
 
     # Some parameters for drawing:
-    background_color = (200, 200, 200)  # Grey
+    background_color = (238, 235, 225)  # cream
 
     label_size = 16
     label_color = 'black'
@@ -175,8 +175,8 @@ def main():
         filename = sys.argv[1]
         F.load_ugrid_file(filename)
     else:
-        from pyugrid import test_examples
-        F.Draw_UGRID(test_examples.twenty_one_triangles())
+        from pyugrid.test import utilities
+        F.Draw_UGRID(utilities.twenty_one_triangles())
 
     app.MainLoop()
 

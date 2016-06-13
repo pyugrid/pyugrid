@@ -1,5 +1,4 @@
+# core requirements for pyugrid
 numpy
 scipy
 netcdf4
-matplotlib
-cell_tree2d

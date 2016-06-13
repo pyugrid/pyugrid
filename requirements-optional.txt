@@ -1,0 +1,7 @@
+# requiremetns for optional features
+
+# for MPL plot routines
+matplotlib
+
+# for fast cell location
+cell_tree2d
