@@ -14,7 +14,7 @@ from . import grid_io
 
 __version__ = '0.1.8'
 
-__all__ = ['UGrid', 'UVar', 'UMVar', 'grid_io']
+__all__ = ['UGrid', 'UVar', 'UMVar', 'grid_io', 'load']
 
 
 def load(filename):

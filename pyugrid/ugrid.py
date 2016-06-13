@@ -32,25 +32,6 @@ IND_DT = np.int32
 NODE_DT = np.float64  # datatype used for node coordinates.
 
 
-def load_grid(filename):
-    """
-    load a UGRid object from one of:
-
-    - open netCDF4 Dataset object
-    - filename
-    - OpenDAP url
-   
-    :param filename: name of file, or URL or open netCDF4 Dataset object
-
-    :returns: The loaded UGrid object
-    """
-    import netCDF4
-
-    if isinstance(filename, netCDF4.Dataset):
-        return UGrid.from_nc_dataset(filename)
-    else:
-        return UGrid.from_ncfile(filename)
-
 
 class UGrid(object):
     """
@@ -201,6 +182,24 @@ class UGrid(object):
         grid = klass()
         read_netcdf.load_grid_from_nc_dataset(nc, grid, mesh_name, load_data)
         return grid
+
+    @property
+    def info(self):
+        """
+        summary of information about the grid
+        """
+        msg = ["UGrid object:"]
+
+        msg.append("Number of nodes: %i" % len(self.nodes))
+        msg.append("Number of faces: %i with %i vertices per face" %
+                   (len(self.faces), self.num_vertices))
+        if self.boundaries is not None:
+            msg.append("Number of boundaries: %i" % len(self.boundaries))
+
+        if self._data:
+            msg.append("Variables: " + ", ".join([str(v) for v in self._data.keys()]))
+
+        return "\n".join(msg)
 
     def check_consistent(self):
         """

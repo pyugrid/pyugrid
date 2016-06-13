@@ -31,6 +31,13 @@ def test_simple_read():
         grid = UGrid.from_ncfile('ElevenPoints_UGRIDv0.9.nc')
     assert isinstance(grid, UGrid)
 
+def test_read_and_info():
+    """is the info right?"""
+    with chdir(files):
+        grid = UGrid.from_ncfile('ElevenPoints_UGRIDv0.9.nc', load_data=True)
+    info = grid.info
+
+    assert "Variables: boundary_count, depth, boundary_types" in info
 
 def test_get_mesh_names():
     """

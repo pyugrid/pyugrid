@@ -63,3 +63,23 @@ def test_full_set():
     assert grid.faces.shape[1] == 3
     assert grid.edges.shape[1] == 2
     assert grid.boundaries.shape[1] == 2
+
+def test_info():
+    """tests the infomation given by the info property"""
+
+    # fixme: this needs more tests!
+    # and info more features...
+
+    grid = UGrid(nodes=nodes,
+                 faces=faces,
+                 edges=edges,
+                 boundaries=boundaries,
+                 )
+
+    info = grid.info
+    print(info)
+
+    assert "Number of nodes: 4" in info
+    assert "Number of faces: 2" in info
+    assert "Number of boundaries: 4" in info
+    assert "3 vertices per face" in info
