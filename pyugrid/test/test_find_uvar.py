@@ -17,7 +17,7 @@ import numpy as np
 
 from pyugrid.ugrid import UGrid, UVar
 
-from utilities import chdir, two_triangles, twenty_one_triangles
+from .utilities import chdir, two_triangles, twenty_one_triangles
 
 test_files = os.path.join(os.path.dirname(__file__), 'files')
 
