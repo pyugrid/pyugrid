@@ -32,9 +32,31 @@ IND_DT = np.int32
 NODE_DT = np.float64  # datatype used for node coordinates.
 
 
+def load_grid(filename):
+    """
+    load a UGRid object from one of:
+
+    - open netCDF4 Dataset object
+    - filename
+    - OpenDAP url
+   
+    :param filename: name of file, or URL or open netCDF4 Dataset object
+
+    :returns: The loaded UGrid object
+    """
+    import netCDF4
+
+    if isinstance(filename, netCDF4.Dataset):
+        return UGrid.from_nc_dataset(filename)
+    else:
+        return UGrid.from_ncfile(filename)
+
+
 class UGrid(object):
     """
-    A basic class to hold an unstructured grid (triangular mesh).
+    A class to hold an unstructured grid (triangular mesh only for now).
+
+    Also some logic for workign with the grid, and data on the grid.
 
     The internal structure mirrors the netcdf data standard.
     """

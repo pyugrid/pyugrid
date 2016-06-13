@@ -3,8 +3,9 @@
 """
 Utilities to help with grid io
 
-NOTE: this isn't used yet, but should be useful for loading non
-UGRID-compliant files.
+functions:
+
+load_from_varnames: will load a non-comliant file by mapping the variable names to the roles the variable plays.
 
 """
 
@@ -18,8 +19,10 @@ from ..ugrid import UGrid
 
 def load_from_varnames(filename, names_mapping, attribute_check=None):
     """
-    Load a UGrid from a netcdf file where the roles are defined by the
+    Load a UGrid from a netcdf file where the grid roles are defined by the
     names of the variables.
+
+    Data on the grid needs to be loaded by hand.
 
     :param filename: names of the file to load (or OPeNDAP URL).
 
@@ -32,8 +35,13 @@ def load_from_varnames(filename, names_mapping, attribute_check=None):
 
     The names_mapping dict has to contain at least: 'nodes_lon', 'nodes_lat'
 
-    Optionally (and mostly required), it can contain: face_face_connectivity',
-    'face_coordinates_lon', 'face_coordinates_lat', and 'faces'
+    Optionally (and mostly required), it can contain:
+            'face_face_connectivity',
+            'face_coordinates_lon',
+            'face_coordinates_lat',
+            'faces',
+
+    :returns: A UGRid object with the data
 
     """
     ug = UGrid()
