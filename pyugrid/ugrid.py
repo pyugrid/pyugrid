@@ -120,8 +120,8 @@ class UGrid(object):
         # should be a dict of UVar objects
         self._data = {}  # The data associated with the grid.
         if data is not None:
-            for dataset in data.values():
-                self.add_data(dataset)
+            for uvar in data.values():
+                self.add_data(uvar)
 
         # A kdtree is used to locate nodes.
         # It will be created if/when it is needed.
@@ -338,28 +338,29 @@ class UGrid(object):
         """
         Add a UVar to the data dict
 
-        :param uvar: the UVar object to add.
-                     Its name will be the key in the data dict.
+        :param uvar: The UVar object to add.
+                     its name will be the key in the data dict.
         :type uvar: a ugrid.UVar object
 
         Some sanity checking is done to make sure array sizes are correct.
 
         """
         # Size check:
+        grid_dim = uvar.data.shape[uvar.grid_dim]
         if uvar.location == 'node':
-            if len(uvar.data) != len(self.nodes):
+            if grid_dim != len(self.nodes):
                 raise ValueError("length of data array must match "
                                  "the number of nodes")
         elif uvar.location == 'edge':
-            if len(uvar.data) != len(self.edges):
+            if grid_dim != len(self.edges):
                 raise ValueError("length of data array must match "
                                  "the number of edges")
         elif uvar.location == 'face':
-            if len(uvar.data) != len(self.faces):
+            if grid_dim != len(self.faces):
                 raise ValueError("length of data array must match "
                                  "the number of faces")
         elif uvar.location == 'boundary':
-            if len(uvar.data) != len(self.boundaries):
+            if grid_dim != len(self.boundaries):
                 raise ValueError("length of data array must match "
                                  "the number of boundaries")
         else:
@@ -706,10 +707,9 @@ class UGrid(object):
         """
         mesh_name = self.mesh_name
 
-        # FIXME: Why not use netCDF4.Dataset instead of renaming?
-        from netCDF4 import Dataset as ncDataset
+        import netCDF4
         # Create a new netcdf file.
-        with ncDataset(filepath, mode="w", clobber=True) as nclocal:
+        with netCDF4.Dataset(filepath, mode="w", clobber=True) as nclocal:
 
             nclocal.createDimension(mesh_name + '_num_node', len(self.nodes))
             if self._edges is not None:
@@ -838,44 +838,50 @@ class UGrid(object):
             node_lat.units = "degrees_north"
 
             # Write the associated data.
-            for dataset in self.data.values():
-                if dataset.location == 'node':
-                    shape = (mesh_name + '_num_node',)
+            for uvar in self.data.values():
+                # create any dimensions that might be needed:
+                # make sure dimension name for grid_dim is right
+                grid_dim = uvar.grid_dim
+                dim_names = list(uvar.dimensions)
+                dim_names[grid_dim] = "{}_num_{}".format(mesh_name, uvar.location)
+                shape = []
+                for i, dim in enumerate(dim_names):
+                    if dim not in nclocal.dimensions:
+                        nclocal.createDimension(dim, uvar.shape[i])
+                    shape.append(dim)
+                chunksizes = [1] * len(uvar.shape)
+                chunksizes[grid_dim] = uvar.shape[grid_dim]
+
+                if uvar.location == 'node':
                     coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)
-                    chunksizes = (len(self.nodes), )
-                elif dataset.location == 'face':
-                    shape = (mesh_name + '_num_face',)
+
+                elif uvar.location == 'face':
                     coord = "{0}_face_lon {0}_face_lat".format
                     coordinates = (coord(mesh_name) if self.face_coordinates
                                    is not None else None)
-                    chunksizes = (len(self.faces), )
-                elif dataset.location == 'edge':
-                    shape = (mesh_name + '_num_edge',)
+                elif uvar.location == 'edge':
                     coord = "{0}_edge_lon {0}_edge_lat".format
                     coordinates = (coord(mesh_name) if self.edge_coordinates
                                    is not None else None)
-                    chunksizes = (len(self.edges), )
-                elif dataset.location == 'boundary':
-                    shape = (mesh_name + '_num_boundary',)
+                elif uvar.location == 'boundary':
                     coord = "{0}_boundary_lon {0}_boundary_lat".format
                     bcoord = self.boundary_coordinates
-                    coordinates = (coord(mesh_name) if bcoord
-                                   is not None else None)
-                    chunksizes = (len(self.boundaries), )
-                data_var = nclocal.createVariable(dataset.name,
-                                                  dataset.data.dtype,
+                    coordinates = coord(mesh_name) if bcoord is not None else None
+
+                data_var = nclocal.createVariable(uvar.name,
+                                                  uvar.data.dtype,
                                                   shape,
                                                   chunksizes=chunksizes,
                                                   # zlib=False,
                                                   # complevel=0,
                                                   )
-                data_var[:] = dataset.data
+                data_var[:] = uvar.data
                 # Add the standard attributes:
-                data_var.location = dataset.location
+                data_var.location = uvar.location
                 data_var.mesh = mesh_name
                 if coordinates is not None:
                     data_var.coordinates = coordinates
                 # Add the extra attributes.
-                for att_name, att_value in dataset.attributes.items():
+                for att_name, att_value in uvar.attributes.items():
                     setattr(data_var, att_name, att_value)
             nclocal.sync()

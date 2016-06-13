@@ -6,6 +6,9 @@ UVar object, used to hold variables that are associated with a ugrid
 FixMe: should we enable direct attribute acces via python's attribute access?
        i.e. like netcdf variables -- would use overloading __setattr__ and __getattr__
 
+       chb: I think not -- I thikn that's a broken API with netCDF4 variables -- not all valid
+       attribute names are valid python identifiers, and you could accidentally override
+       a python attribute.
 """
 
 from __future__ import (absolute_import, division, print_function)
@@ -25,8 +28,8 @@ class UVar(object):
     nodes, edges, etc. -- "UGrid Variable"
 
     It holds an array of the data, as well as the attributes associated
-    with that data  -- this is mapped to a netcdf variable with
-    attributes(attributes get stored in the netcdf file)
+    with that data  -- this is analogous to a netcdf variable with
+    attributes (attributes are read from / written to netcdf variables)
     """
 
     def __init__(self,
