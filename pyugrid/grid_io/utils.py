@@ -114,4 +114,8 @@ def load_from_varnames(filename, names_mapping, attribute_check=None):
             boundaries -= 1
         ug.boundaries = boundaries
 
+    # load the global attributes:
+    ug.attributes = {attr : nc.getncattr(attr) for attr in nc.ncattrs()}
+
+
     return ug

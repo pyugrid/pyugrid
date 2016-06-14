@@ -17,7 +17,7 @@ __version__ = '0.1.8'
 __all__ = ['UGrid', 'UVar', 'UMVar', 'grid_io', 'load']
 
 
-def load(filename):
+def load(filename, load_data=False):
     """
     load a UGRid object from one of:
 
@@ -32,6 +32,6 @@ def load(filename):
     import netCDF4
 
     if isinstance(filename, netCDF4.Dataset):
-        return UGrid.from_nc_dataset(filename)
+        return UGrid.from_nc_dataset(filename, load_data=load_data)
     else:
-        return UGrid.from_ncfile(filename)
+        return UGrid.from_ncfile(filename, load_data=load_data)

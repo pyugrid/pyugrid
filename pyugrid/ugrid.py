@@ -54,6 +54,7 @@ class UGrid(object):
                  boundary_coordinates=None,
                  data=None,
                  mesh_name="mesh",
+                 attributes=None,
                  ):
         """
         ugrid class -- holds, saves, etc. an unstructured grid
@@ -101,6 +102,9 @@ class UGrid(object):
         :param mesh_name = "mesh": optional name for the mesh
         :type mesh_name: string
 
+        :param attributes = None: any global attributes for the whole dataset
+        :type attributes: dict
+
         Often this is too much data to pass in as literals -- so usually
         specialized constructors will be used instead (load from file, etc).
         """
@@ -119,6 +123,7 @@ class UGrid(object):
 
         self.mesh_name = mesh_name
 
+        self.attributes = {} if attributes is None else attributes
         # the data associated with the grid
         # should be a dict of UVar objects
         self._data = {}  # The data associated with the grid.
@@ -450,13 +455,11 @@ class UGrid(object):
         :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
                      for more than one point.
 
-        :param method='celltree': method to use. Options are 'celltree', 'simple'. 
-                                  for 'celltree' the celltree2d pacakge must be installed:
+        :param method='celltree': method to use. Options are 'celltree', 'simple'.
+                                  for 'celltree' the celltree2d package must be installed:
                                   https://github.com/NOAA-ORR-ERD/cell_tree2d/
                                   'simple' is very, very slow for large grids.
         :type simple: str
-
-        This version utilizes the CellTree data structure.
 
         """
         points = np.asarray(points, dtype=np.float64)
@@ -539,26 +542,27 @@ class UGrid(object):
 
     def interpolate_var_to_points(self, points, var, location='nodes'):
         """
-        interpolates teh passed-in variable to the points in points
+        interpolates the passed-in variable to the points in points
 
-        used linear interpolation from the nodes.
+        uses linear interpolation from the nodes.
         """
         points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
         # FixMe: should it get location from variable object?
         if location not in ['nodes', 'faces']:
             raise ValueError("location must be one of ['nodes', 'faces']")
         if location == 'faces':
-            if var.shape != self.faces.shape[:1]:
-                raise ValueError('variable does not have the same shape as grid faces')
             raise NotImplementedError("Currently does not support interpolation of a "
                                       "variable defined on the faces")
+            if var.shape != self.faces.shape[:1]:
+                raise ValueError('variable does not have the same shape as grid faces')
         if location == 'nodes':
             if var.shape != self.nodes.shape[:1]:
                 raise ValueError('variable is not the same size as the grid nodes')
         inds = self.locate_faces(points)
         pos_alphas = self.interpolation_alphas(points, inds)
         vals = var[self.faces[inds]]
-        return np.sum(vals * pos_alphas[:, :, np.newaxis], axis=1)
+        # return np.sum(vals * pos_alphas[:, :, np.newaxis], axis=1)
+        return np.sum(vals * pos_alphas, axis=1)
 
     def build_face_face_connectivity(self):
         """
@@ -889,10 +893,12 @@ class UGrid(object):
                     bcoord = self.boundary_coordinates
                     coordinates = coord(mesh_name) if bcoord is not None else None
 
+                fill_val = uvar.attributes.pop('_FillValue', None)
                 data_var = nclocal.createVariable(uvar.name,
                                                   uvar.data.dtype,
                                                   shape,
                                                   chunksizes=chunksizes,
+                                                  fill_value=fill_val,
                                                   # zlib=False,
                                                   # complevel=0,
                                                   )
@@ -905,4 +911,8 @@ class UGrid(object):
                 # Add the extra attributes.
                 for att_name, att_value in uvar.attributes.items():
                     setattr(data_var, att_name, att_value)
+
+            # write the global attributes
+            print("writing global attrs", self.attributes)
+            nclocal.setncatts(self.attributes)
             nclocal.sync()

@@ -247,6 +247,9 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
                         location=location, attributes=attributes)
             grid.add_data(uvar)
 
+    # load the global attributes:
+    grid.attributes = {attr: nc.getncattr(attr) for attr in nc.ncattrs()}
+
 
 def load_grid_from_ncfilename(filename, grid, mesh_name=None, load_data=True):
     """
