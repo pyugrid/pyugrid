@@ -14,7 +14,7 @@ from __future__ import (absolute_import, division, print_function)
 import netCDF4
 import numpy as np
 
-from ..ugrid import UGrid
+from ..ugrid import UGrid, UVar
 
 
 def load_from_varnames(filename, names_mapping, attribute_check=None):
@@ -115,7 +115,32 @@ def load_from_varnames(filename, names_mapping, attribute_check=None):
         ug.boundaries = boundaries
 
     # load the global attributes:
-    ug.attributes = {attr : nc.getncattr(attr) for attr in nc.ncattrs()}
+    ug.attributes = {attr: nc.getncattr(attr) for attr in nc.ncattrs()}
 
 
     return ug
+
+def add_variables_from_nc(ug, nc, variables, location='node'):
+    """
+    read the names variables from the given open netCDF4 Dataset and add them
+    as UVars to the UGrid object
+
+    :param ug: the UGRid object to use 
+
+    :param nc: the netCDF4 Dataset to read from 
+
+    :param variables: list of variable names to load
+
+    :param location='node': where on the grid the variables are located
+    """
+    for varname in variables:
+        var = nc.variables[varname]
+        attrs = {}
+        for attr in var.ncattrs():
+            attrs[attr] = var.getncattr(attr)
+        data = np.squeeze(var[:])  # remove the extra dimension
+        uvar = UVar(varname,
+                    location,
+                    data=data,
+                    attributes=attrs)
+        ug.add_data(uvar)
