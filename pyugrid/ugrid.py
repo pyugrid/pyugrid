@@ -18,6 +18,9 @@ NOTE: only support for triangular mesh grids at the moment.
 
 from __future__ import (absolute_import, division, print_function)
 
+import hashlib
+from collections import OrderedDict
+
 import numpy as np
 
 from . import read_netcdf
@@ -444,7 +447,40 @@ class UGrid(object):
         from scipy.spatial import cKDTree
         self._kdtree = cKDTree(self.nodes)
 
-    def locate_faces(self, points, method='celltree'):
+    def _hash_of_pts(self, points):
+        """
+        Returns a SHA1 hash of the array of points passed in
+        """
+        return hashlib.sha1(points.tobytes()).hexdigest()
+
+    def _add_memo(self, points, item, D, _copy=False, _hash=None):
+        """
+        :param points: List of points to be hashed.
+        :param item: Result of computation to be stored.
+        :param location: Name of grid on which computation was done.
+        :param D: Dict that will store hash -> item mapping.
+        :param _hash: If hash is already computed it may be passed in here.
+        """
+        if _copy:
+            item = item.copy()
+        item.setflags(write=False)
+        if _hash is None:
+            _hash = self._hash_of_pts(points)
+        if D is not None:
+            D[_hash] = item
+            if len(D.keys()) > 6:
+                D.popitem(last=False)
+            D[_hash].setflags(write=False)
+
+    def _get_memoed(self, points, D, _copy=False, _hash=None):
+        if _hash is None:
+            _hash = self._hash_of_pts(points)
+        if (D is not None and _hash in D):
+            return D[_hash].copy() if _copy else D[_hash]
+        else:
+            return None
+
+    def locate_faces(self, points, method='celltree', _copy=False, _memo=True, _hash=None):
         """
         Returns the face indices, one per point.
 
@@ -471,6 +507,16 @@ class UGrid(object):
         points = np.asarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
         points.shape = (-1, 2)
+        if not hasattr(self, '_ind_memo_dict'):
+            self._ind_memo_dict = OrderedDict()
+
+        if _memo:
+            if _hash is None:
+                _hash = self._hash_of_pts(points)
+            result = self._get_memoed(points, self._ind_memo_dict, _copy, _hash)
+            if result is not None:
+                return result
+
         if method == 'celltree':
             try:
                 import cell_tree2d
@@ -492,6 +538,10 @@ class UGrid(object):
                         indices[n] = -1
         else:
             raise ValueError('"method" must be one of: "celltree", "simple"')
+
+        if _memo:
+            self._add_memo(points, indices, self._ind_memo_dict, _copy, _hash)
+
         if just_one:
             return indices[0]
         else:
@@ -508,7 +558,7 @@ class UGrid(object):
                 "Nodes and faces must be defined in order to create and use CellTree")
         self._tree = CellTree(self.nodes, self.faces)
 
-    def interpolation_alphas(self, points, indices=None):
+    def interpolation_alphas(self, points, indices=None, _copy=False, _memo=True, _hash=None):
         """
         Given an array of points, this function will return the bilinear interpolation alphas
         for each of the three nodes of the face that the point is located in. If the point is
@@ -522,8 +572,19 @@ class UGrid(object):
 
         TODO: mask the indices that aren't on the grid properly.
         """
+
+        if not hasattr(self, '_alpha_memo_dict'):
+            self._alpha_memo_dict = OrderedDict()
+
+        if _memo:
+            if _hash is None:
+                _hash = self._hash_of_pts(points)
+            result = self._get_memoed(points, self._alpha_memo_dict, _copy, _hash)
+            if result is not None:
+                return result
+
         if indices is None:
-            indices = self.locate_faces(points)
+            indices = self.locate_faces(points, 'celltree', _copy, _memo, _hash)
         node_positions = self.nodes[self.faces[indices]]
 
         (lon1, lon2, lon3) = node_positions[:, :, 0].T
@@ -544,6 +605,10 @@ class UGrid(object):
         alphas = np.column_stack(
             (alpha1s / denoms, alpha2s / denoms, alpha3s / denoms))
         alphas[indices == -1] *= 0
+
+        if _memo:
+            self._add_memo(points, alphas, self._alpha_memo_dict, _copy, _hash)
+
         return alphas
 
     def interpolate_var_to_points(self,
@@ -554,9 +619,9 @@ class UGrid(object):
                                   alphas=None,
                                   mask=None,
                                   slices=None,
-                                  memo=False,
                                   slice_grid=True,
-                                  _translated_indices=None,
+                                  _copy=False,
+                                  _memo=True,
                                   _hash=None):
         """
         interpolates teh passed-in variable to the points in points
@@ -564,20 +629,25 @@ class UGrid(object):
         used linear interpolation from the nodes.
         """
         points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
-        loc = self.infer_location(variable)
+        location = self.infer_location(variable)
         # FixMe: should it get location from variable object?
         if location is None:
             raise ValueError("Data is incompatible with grid nodes or faces")
 
         if slices is not None:
+            if len(slices) == 1:
+                slices = slices[0]
             variable = variable[slices]
-        inds = self.locate_faces(points)
+
+        _hash = self._hash_of_pts(points)
+
+        inds = self.locate_faces(points,'celltree', _copy, _memo, _hash)
         if location == 'faces':
             return variable[inds]
 #             raise NotImplementedError("Currently does not support interpolation of a "
 #                                       "variable defined on the faces")
         if location == 'nodes':
-            pos_alphas = self.interpolation_alphas(points, inds)
+            pos_alphas = self.interpolation_alphas(points, inds, _copy, _memo, _hash)
             vals = variable[self.faces[inds]]
             return np.sum(vals * pos_alphas, axis=1)
         return None
