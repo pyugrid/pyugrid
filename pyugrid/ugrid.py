@@ -44,8 +44,8 @@ class UGrid(object):
 
     def __init__(self,
                  nodes=None,
-                 nodes_lon=None,
-                 nodes_lat=None,
+                 node_lon=None,
+                 node_lat=None,
                  faces=None,
                  edges=None,
                  boundaries=None,
@@ -110,8 +110,6 @@ class UGrid(object):
         if nodes is None:
             if node_lon is not None and node_lat is not None:
                 nodes = np.ma.column_stack((node_lon, node_lat))
-            else:
-                raise ValueError("Must provide Nx2 coordinates in nodes or node_lon and node_lat")
         self.nodes = nodes
         self.faces = faces
         self.edges = edges
