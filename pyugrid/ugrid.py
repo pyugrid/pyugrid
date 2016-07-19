@@ -523,7 +523,7 @@ class UGrid(object):
                                   "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
             if self._tree is None:
                 self.build_celltree()
-            indices = self._tree.multi_locate(points)
+            indices = self._tree.locate(points)
         elif method == 'simple':
             indices = np.zeros((points.shape[0]), dtype=IND_DT)
             for n, point in enumerate(points):
