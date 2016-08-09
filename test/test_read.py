@@ -12,7 +12,6 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import pytest
 
-
 import numpy as np
 import netCDF4
 
@@ -191,6 +190,18 @@ def test_read_from_nc_dataset():
     assert grid.mesh_name == 'Mesh2'
     assert grid.nodes.shape == (11, 2)
     assert grid.faces.shape == (13, 3)
+
+
+def test_read_flexible_mesh_nodes():
+    """
+    Test if we get back nodes from a flexible mesh
+
+    """
+    with chdir(files):
+        with netCDF4.Dataset('quad_and_triangle.nc') as nc:
+            grid = UGrid.from_nc_dataset(nc)
+    assert grid.mesh_name == 'Mesh2'
+    assert hasattr(grid.faces, 'mask'), "we should get back a masked array"
 
 if __name__ == "__main__":
     test_simple_read()

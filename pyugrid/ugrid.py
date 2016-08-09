@@ -30,6 +30,7 @@ from .uvar import UVar
 __all__ = ['UGrid',
            'UVar']
 
+
 # datatype used for indexes -- might want to change for 64 bit some day.
 IND_DT = np.int32
 NODE_DT = np.float64  # datatype used for node coordinates.
@@ -226,7 +227,7 @@ class UGrid(object):
         if nodes_coords is None:
             self.nodes = np.zeros((0, 2), dtype=NODE_DT)
         else:
-            self._nodes = np.asarray(nodes_coords, dtype=NODE_DT)
+            self._nodes = np.asanyarray(nodes_coords, dtype=NODE_DT)
 
     @nodes.deleter
     def nodes(self):
@@ -245,7 +246,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if faces_indexes is not None:
-            self._faces = np.asarray(faces_indexes, dtype=IND_DT)
+            self._faces = np.asanyarray(faces_indexes, dtype=IND_DT)
         else:
             self._faces = None
             # Other things are no longer valid.
@@ -272,7 +273,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if edges_indexes is not None:
-            self._edges = np.asarray(edges_indexes, dtype=IND_DT)
+            self._edges = np.asanyarray(edges_indexes, dtype=IND_DT)
         else:
             self._edges = None
             self._face_edge_connectivity = None
@@ -292,7 +293,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if boundaries_indexes is not None:
-            self._boundaries = np.asarray(boundaries_indexes, dtype=IND_DT)
+            self._boundaries = np.asanyarray(boundaries_indexes, dtype=IND_DT)
         else:
             self._boundaries = None
 
@@ -309,7 +310,7 @@ class UGrid(object):
     def face_face_connectivity(self, face_face_connectivity):
         # Add more checking?
         if face_face_connectivity is not None:
-            face_face_connectivity = np.asarray(face_face_connectivity,
+            face_face_connectivity = np.asanyarray(face_face_connectivity,
                                                 dtype=IND_DT)
             if face_face_connectivity.shape != (len(self.faces),
                                                 self.num_vertices):
@@ -330,7 +331,7 @@ class UGrid(object):
     def face_edge_connectivity(self, face_edge_connectivity):
         # Add more checking?
         if face_edge_connectivity is not None:
-            face_edge_connectivity = np.asarray(face_edge_connectivity,
+            face_edge_connectivity = np.asanyarray(face_edge_connectivity,
                                                 dtype=IND_DT)
             if face_edge_connectivity.shape != (len(self.faces),
                                                 self.num_vertices):
@@ -493,7 +494,7 @@ class UGrid(object):
         :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
                      for more than one point.
 
-        :param method='celltree': method to use. Options are 'celltree', 'simple'. 
+        :param method='celltree': method to use. Options are 'celltree', 'simple'.
                                   for 'celltree' the celltree2d pacakge must be installed:
                                   https://github.com/NOAA-ORR-ERD/cell_tree2d/
                                   'simple' is very, very slow for large grids.
@@ -502,7 +503,7 @@ class UGrid(object):
         This version utilizes the CellTree data structure.
 
         """
-        points = np.asarray(points, dtype=np.float64)
+        points = np.asanyarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
         points.shape = (-1, 2)
         if not hasattr(self, '_ind_memo_dict'):
@@ -626,7 +627,7 @@ class UGrid(object):
 
         used linear interpolation from the nodes.
         """
-        points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
+        points = np.asanyarray(points, dtype=np.float64).reshape(-1, 2)
         location = self.infer_location(variable)
         # FixMe: should it get location from variable object?
         if location is None:
