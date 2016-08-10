@@ -19,6 +19,7 @@ def test_read_flexible_mesh_mask(quad_and_triangle):
     grid = pyugrid.ugrid.UGrid.from_nc_dataset(quad_and_triangle)
     assert grid.mesh_name == 'Mesh2'
     assert hasattr(grid.faces, 'mask'), "expected masked faces"
+    assert not hasattr(grid.edges, 'mask'), "expected unmasked edges"
 
 
 def test_read_flexible_mesh_nodes_per_face(quad_and_triangle):

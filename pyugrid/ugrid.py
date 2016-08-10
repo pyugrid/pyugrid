@@ -12,7 +12,7 @@ It can read from and write to netcdf files in the UGRID format.
 It may be able to reference a netcdf file at some point, rather than storing
 directly in memory.
 
-NOTE: only support for triangular mesh grids at the moment.
+NOTE: only tested for triangular and quad mesh grids at the moment.
 
 """
 
@@ -38,7 +38,7 @@ NODE_DT = np.float64  # datatype used for node coordinates.
 
 class UGrid(object):
     """
-    A basic class to hold an unstructured grid (triangular mesh).
+    A basic class to hold an unstructured grid as defined in the UGrid convention.
 
     The internal structure mirrors the netcdf data standard.
     """
@@ -205,7 +205,7 @@ class UGrid(object):
     @property
     def num_vertices(self):
         """
-        Number of vertices in a face.
+        Maximum number of vertices in a face.
 
         """
         if self._faces is None:
@@ -658,7 +658,7 @@ class UGrid(object):
 
     def build_face_face_connectivity(self):
         """
-        Builds the face_face_connectivity array: giving the neighbors of each triangle.
+        Builds the face_face_connectivity array: giving the neighbors of each cell.
 
         Note: arbitrary order and CW vs CCW may not be consistent.
         """
@@ -668,10 +668,10 @@ class UGrid(object):
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
         face_face += -1  # Fill with -1.
 
-        # Loop through all the triangles to find the matching edges:
+        # Loop through all the faces to find the matching edges:
         edges = {}  # dict to store the edges.
         for i, face in enumerate(self.faces):
-            # Loop through edges of the triangle:
+            # Loop through edges of the cell:
             for j in range(num_vertices):
                 if j < self.num_vertices - 1:
                     edge = (face[j], face[j + 1])
@@ -696,7 +696,7 @@ class UGrid(object):
 
     def build_edges(self):
         """
-        Builds the edges array: all the edges defined by the triangles
+        Builds the edges array: all the edges defined by the faces
 
         This will replace the existing edge array, if there is one.
 
@@ -824,15 +824,16 @@ class UGrid(object):
 
         Follows the convention established by the netcdf UGRID working group:
 
-        http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model
+        http://cfconventions.org
 
         """
         mesh_name = self.mesh_name
 
-        # FIXME: Why not use netCDF4.Dataset instead of renaming?
-        from netCDF4 import Dataset as ncDataset
+        # dependency only when needed
+        import netCDF4
+
         # Create a new netcdf file.
-        with ncDataset(filepath, mode="w", clobber=True) as nclocal:
+        with netCDF4.Dataset(filepath, mode="w", clobber=True) as nclocal:
 
             nclocal.createDimension(mesh_name + '_num_node', len(self.nodes))
             if self._edges is not None:
