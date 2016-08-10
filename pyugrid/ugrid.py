@@ -106,6 +106,12 @@ class UGrid(object):
 
         Often this is too much data to pass in as literals -- so usually
         specialized constructors will be used instead (load from file, etc).
+
+        The index variables (faces, edges) can be masked arrays. The
+        mask is used for so called flexible meshes. Flexible meshes
+        contain cells with varying number of nodes per face and thus a
+        varying number of edges per face. See the flexible mesh
+        section in the convention for further details.
         """
 
         if nodes is None:
