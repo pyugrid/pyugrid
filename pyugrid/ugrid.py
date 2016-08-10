@@ -824,7 +824,7 @@ class UGrid(object):
 
         Follows the convention established by the netcdf UGRID working group:
 
-        http://cfconventions.org
+        http://ugrid-conventions.github.io/ugrid-conventions
 
         """
         mesh_name = self.mesh_name
