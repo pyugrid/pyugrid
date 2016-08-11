@@ -86,7 +86,7 @@ def test_nc_variable():
         # make a UVar from it
         uvar = UVar("a_var", 'node', data=var)
 
-        assert uvar._data is var # preserved the netcdf variable
+        assert uvar._data is var  # preserved the netcdf variable
         print(uvar.attributes)
         assert uvar.attributes == {'attr_1': 'some value',
                                    'attr_2': 'another value'}

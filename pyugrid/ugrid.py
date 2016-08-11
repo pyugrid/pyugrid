@@ -316,7 +316,7 @@ class UGrid(object):
         # Add more checking?
         if face_face_connectivity is not None:
             face_face_connectivity = np.asanyarray(face_face_connectivity,
-                                                dtype=IND_DT)
+                                                   dtype=IND_DT)
             if face_face_connectivity.shape != (len(self.faces),
                                                 self.num_vertices):
                 msg = ("face_face_connectivity must be size "
@@ -337,7 +337,7 @@ class UGrid(object):
         # Add more checking?
         if face_edge_connectivity is not None:
             face_edge_connectivity = np.asanyarray(face_edge_connectivity,
-                                                dtype=IND_DT)
+                                                   dtype=IND_DT)
             if face_edge_connectivity.shape != (len(self.faces),
                                                 self.num_vertices):
                 msg = ("face_face_connectivity must be size "
