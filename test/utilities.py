@@ -33,7 +33,7 @@ def two_triangles():
              (2, 0),
              (1, 2)]
 
-    return ugrid.UGrid(nodes, faces, edges)
+    return ugrid.UGrid(nodes=nodes, faces=faces, edges=edges)
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def twenty_one_triangles():
                   (9, 6),
                   (6, 3), ]
 
-    grid = ugrid.UGrid(nodes, faces, boundaries=boundaries)
+    grid = ugrid.UGrid(nodes=nodes, faces=faces, boundaries=boundaries)
     grid.build_edges()
     return grid
 

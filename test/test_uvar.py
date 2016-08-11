@@ -76,7 +76,7 @@ def test_nc_variable():
     with chdir(test_files):
         fname = 'junk.nc'
         ds = netCDF4.Dataset(fname, mode='w')
-        dim = ds.createDimension('dim', (10))
+        ds.createDimension('dim', (10))
         var = ds.createVariable('a_var', float, ('dim'))
         var[:] = np.arange(10)
         # give it some attributes

@@ -53,13 +53,15 @@ def test_load_grid_from_nc():
     """Test reading a fairly full example file."""
     with chdir(files):
         grid = UGrid.from_ncfile('ElevenPoints_UGRIDv0.9.nc')
-
     assert grid.mesh_name == 'Mesh2'
     assert grid.nodes.shape == (11, 2)
     assert grid.faces.shape == (13, 3)
     assert grid.face_face_connectivity.shape == (13, 3)
     assert grid.boundaries.shape == (9, 2)
-    assert grid.edges is None
+    # no edges in the file
+    assert grid._edges is None
+    # but edges can be generated from the faces
+    assert grid.edges is not None
 
 
 def test_read_nodes():
@@ -78,7 +80,10 @@ def test_read_none_edges():
 
     with chdir(files):
         grid = UGrid.from_ncfile('ElevenPoints_UGRIDv0.9.nc')
-    assert grid.edges is None
+    # no edges in the file
+    assert grid._edges is None
+    # but edges can be generated from the faces
+    assert grid.edges is not None
 
 
 def test_read_faces():
