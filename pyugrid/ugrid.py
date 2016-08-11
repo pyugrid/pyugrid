@@ -379,18 +379,30 @@ class UGrid(object):
         """
         # Size check:
         if uvar.location == 'node':
+            if self.nodes is None:
+                raise ValueError("adding data to nodes "
+                                 "but nodes are None")
             if len(uvar.data) != len(self.nodes):
                 raise ValueError("length of data array must match "
                                  "the number of nodes")
         elif uvar.location == 'edge':
+            if self.edges is None:
+                raise ValueError("adding data to edges "
+                                 "but edges are None")
             if len(uvar.data) != len(self.edges):
                 raise ValueError("length of data array must match "
                                  "the number of edges")
         elif uvar.location == 'face':
+            if self.faces is None:
+                raise ValueError("adding data to faces "
+                                 "but faces are None")
             if len(uvar.data) != len(self.faces):
                 raise ValueError("length of data array must match "
                                  "the number of faces")
         elif uvar.location == 'boundary':
+            if self.boundaries is None:
+                raise ValueError("adding data to boundaries "
+                                 "but boundaries are None")
             if len(uvar.data) != len(self.boundaries):
                 raise ValueError("length of data array must match "
                                  "the number of boundaries")
@@ -493,7 +505,7 @@ class UGrid(object):
         :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
                      for more than one point.
 
-        :param method='celltree': method to use. Options are 'celltree', 'simple'. 
+        :param method='celltree': method to use. Options are 'celltree', 'simple'.
                                   for 'celltree' the celltree2d pacakge must be installed:
                                   https://github.com/NOAA-ORR-ERD/cell_tree2d/
                                   'simple' is very, very slow for large grids.
@@ -690,7 +702,7 @@ class UGrid(object):
 
     def build_edges(self):
         """
-        Builds the edges array: all the edges defined by the triangles
+        Builds the edges array: all the edges defined by the faces
 
         This will replace the existing edge array, if there is one.
 
@@ -698,6 +710,10 @@ class UGrid(object):
         """
 
         num_vertices = self.num_vertices
+        if self.faces is None:
+            # No faces means no edges
+            self._edges = None
+            return
         num_faces = self.faces.shape[0]
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
         face_face += -1  # Fill with -1.
