@@ -213,11 +213,11 @@ class UGrid(object):
 
     @property
     def node_lon(self):
-        return self._nodes[:,0]
+        return self._nodes[:, 0]
 
     @property
     def node_lat(self):
-        return self._nodes[:,1]
+        return self._nodes[:, 1]
 
     @nodes.setter
     def nodes(self, nodes_coords):
@@ -502,8 +502,8 @@ class UGrid(object):
         :param points:  The points that you want to locate -- (lon, lat). If the shape of point
                         is 1D, function will return a scalar index. If it is 2D, it will return
                         a 1D array of indices
-        :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
-                     for more than one point.
+        :type point: array-like containing one or more points: shape (2,) for one point,
+                        shape (N, 2) for more than one point.
 
         :param method='celltree': method to use. Options are 'celltree', 'simple'.
                                   for 'celltree' the celltree2d pacakge must be installed:
@@ -529,9 +529,10 @@ class UGrid(object):
 
         if method == 'celltree':
             try:
-                import cell_tree2d
+                import cell_tree2d  # noqa: ignore=F401
             except ImportError:
-                raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
+                raise ImportError("the cell_tree2d package must be installed to "
+                                  "use the celltree search:\n"
                                   "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
             if self._tree is None:
                 self.build_celltree()
@@ -575,8 +576,8 @@ class UGrid(object):
         not located on the grid, the alphas are set to 0
         :param points: Nx2 numpy array of lat/lon coordinates
 
-        :param indices: If the face indices of the points is already known, it can be passed in to save
-        repeating the effort.
+        :param indices: If the face indices of the points is already
+        known, it can be passed in to save repeating the effort.
 
         :return: Nx3 numpy array of interpolation factors
 
@@ -651,7 +652,7 @@ class UGrid(object):
 
         _hash = self._hash_of_pts(points)
 
-        inds = self.locate_faces(points,'celltree', _copy, _memo, _hash)
+        inds = self.locate_faces(points, 'celltree', _copy, _memo, _hash)
         if location == 'faces':
             return variable[inds]
 #             raise NotImplementedError("Currently does not support interpolation of a "

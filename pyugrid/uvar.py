@@ -152,8 +152,9 @@ class UMVar(object):
                          'node', 'edge', or 'face' the data is assigned to
 
         :param data: the data
-        :type data: list-like of data sources that satisfy the conditions of util.asarraylike. All data sources
-        must have the same shape.
+        :type data: list-like of data sources that satisfy the
+        conditions of util.asarraylike. All data sources must have the
+        same shape.
         Examples: netCDF Dataset, numpy array
         """
         self.name = name
