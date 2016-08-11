@@ -68,7 +68,7 @@ def test_nc_variable():
 
     # make a variable
     ds = netCDF4.Dataset('junk.nc', mode='w')
-    dim = ds.createDimension('dim', (10))
+    ds.createDimension('dim', (10))
     var = ds.createVariable('a_var', float, ('dim'))
     var[:] = np.arange(10)
     # give it some attributes
@@ -78,7 +78,7 @@ def test_nc_variable():
     # make a UVar from it
     uvar = UVar("a_var", 'node', data=var)
 
-    assert uvar._data is var # preserved the netcdf variable
+    assert uvar._data is var  # preserved the netcdf variable
     print(uvar.attributes)
     assert uvar.attributes == {'attr_1': 'some value',
                                'attr_2': 'another value'}

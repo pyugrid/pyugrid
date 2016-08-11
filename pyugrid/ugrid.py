@@ -213,11 +213,11 @@ class UGrid(object):
 
     @property
     def node_lon(self):
-        return self._nodes[:,0]
+        return self._nodes[:, 0]
 
     @property
     def node_lat(self):
-        return self._nodes[:,1]
+        return self._nodes[:, 1]
 
     @nodes.setter
     def nodes(self, nodes_coords):
@@ -379,18 +379,30 @@ class UGrid(object):
         """
         # Size check:
         if uvar.location == 'node':
+            if self.nodes is None:
+                raise ValueError("adding data to nodes "
+                                 "but nodes are None")
             if len(uvar.data) != len(self.nodes):
                 raise ValueError("length of data array must match "
                                  "the number of nodes")
         elif uvar.location == 'edge':
+            if self.edges is None:
+                raise ValueError("adding data to edges "
+                                 "but edges are None")
             if len(uvar.data) != len(self.edges):
                 raise ValueError("length of data array must match "
                                  "the number of edges")
         elif uvar.location == 'face':
+            if self.faces is None:
+                raise ValueError("adding data to faces "
+                                 "but faces are None")
             if len(uvar.data) != len(self.faces):
                 raise ValueError("length of data array must match "
                                  "the number of faces")
         elif uvar.location == 'boundary':
+            if self.boundaries is None:
+                raise ValueError("adding data to boundaries "
+                                 "but boundaries are None")
             if len(uvar.data) != len(self.boundaries):
                 raise ValueError("length of data array must match "
                                  "the number of boundaries")
@@ -490,10 +502,10 @@ class UGrid(object):
         :param points:  The points that you want to locate -- (lon, lat). If the shape of point
                         is 1D, function will return a scalar index. If it is 2D, it will return
                         a 1D array of indices
-        :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
-                     for more than one point.
+        :type point: array-like containing one or more points: shape (2,) for one point,
+                        shape (N, 2) for more than one point.
 
-        :param method='celltree': method to use. Options are 'celltree', 'simple'. 
+        :param method='celltree': method to use. Options are 'celltree', 'simple'.
                                   for 'celltree' the celltree2d pacakge must be installed:
                                   https://github.com/NOAA-ORR-ERD/cell_tree2d/
                                   'simple' is very, very slow for large grids.
@@ -517,9 +529,10 @@ class UGrid(object):
 
         if method == 'celltree':
             try:
-                import cell_tree2d
+                import cell_tree2d  # noqa: ignore=F401
             except ImportError:
-                raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
+                raise ImportError("the cell_tree2d package must be installed to "
+                                  "use the celltree search:\n"
                                   "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
             if self._tree is None:
                 self.build_celltree()
@@ -563,8 +576,8 @@ class UGrid(object):
         not located on the grid, the alphas are set to 0
         :param points: Nx2 numpy array of lat/lon coordinates
 
-        :param indices: If the face indices of the points is already known, it can be passed in to save
-        repeating the effort.
+        :param indices: If the face indices of the points is already
+        known, it can be passed in to save repeating the effort.
 
         :return: Nx3 numpy array of interpolation factors
 
@@ -639,7 +652,7 @@ class UGrid(object):
 
         _hash = self._hash_of_pts(points)
 
-        inds = self.locate_faces(points,'celltree', _copy, _memo, _hash)
+        inds = self.locate_faces(points, 'celltree', _copy, _memo, _hash)
         if location == 'faces':
             return variable[inds]
 #             raise NotImplementedError("Currently does not support interpolation of a "
@@ -690,7 +703,7 @@ class UGrid(object):
 
     def build_edges(self):
         """
-        Builds the edges array: all the edges defined by the triangles
+        Builds the edges array: all the edges defined by the faces
 
         This will replace the existing edge array, if there is one.
 
@@ -698,6 +711,10 @@ class UGrid(object):
         """
 
         num_vertices = self.num_vertices
+        if self.faces is None:
+            # No faces means no edges
+            self._edges = None
+            return
         num_faces = self.faces.shape[0]
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
         face_face += -1  # Fill with -1.
@@ -849,14 +866,14 @@ class UGrid(object):
             mesh.topology_dimension = 2
             mesh.node_coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)  # noqa
 
-            if self.edges is not None:
+            if self._edges is not None:
                 # Attribute required if variables will be defined on edges.
                 mesh.edge_node_connectivity = mesh_name + "_edge_nodes"
                 if self.edge_coordinates is not None:
                     # Optional attribute (requires edge_node_connectivity).
                     coord = "{0}_edge_lon {0}_edge_lat".format
                     mesh.edge_coordinates = coord(mesh_name)
-            if self.faces is not None:
+            if self._faces is not None:
                 mesh.face_node_connectivity = mesh_name + "_face_nodes"
                 if self.face_coordinates is not None:
                     # Optional attribute.
@@ -868,12 +885,12 @@ class UGrid(object):
             if self.face_face_connectivity is not None:
                 # Optional attribute.
                 mesh.face_face_connectivity = mesh_name + "_face_links"
-            if self.boundaries is not None:
+            if self._boundaries is not None:
                 mesh.boundary_node_connectivity = mesh_name + "_boundary_nodes"
 
             # FIXME: This could be re-factored to be more generic, rather than
             # separate for each type of data see the coordinates example below.
-            if self.faces is not None:
+            if self._faces is not None:
                 nc_create_var = nclocal.createVariable
                 face_nodes = nc_create_var(mesh_name + "_face_nodes", IND_DT,
                                            (mesh_name + '_num_face',
@@ -885,7 +902,7 @@ class UGrid(object):
                                         "its three corner nodes.")
                 face_nodes.start_index = 0
 
-            if self.edges is not None:
+            if self._edges is not None:
                 nc_create_var = nclocal.createVariable
                 edge_nodes = nc_create_var(mesh_name + "_edge_nodes", IND_DT,
                                            (mesh_name + '_num_edge', 'two'),)
@@ -896,7 +913,7 @@ class UGrid(object):
                                         "nodes that it connects.")
                 edge_nodes.start_index = 0
 
-            if self.boundaries is not None:
+            if self._boundaries is not None:
                 nc_create_var = nclocal.createVariable
                 boundary_nodes = nc_create_var(mesh_name + "_boundary_nodes",
                                                IND_DT,
