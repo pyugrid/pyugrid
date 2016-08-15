@@ -12,7 +12,7 @@ It can read from and write to netcdf files in the UGRID format.
 It may be able to reference a netcdf file at some point, rather than storing
 directly in memory.
 
-NOTE: only support for triangular mesh grids at the moment.
+NOTE: only tested for triangular and quad mesh grids at the moment.
 
 """
 
@@ -30,6 +30,7 @@ from .uvar import UVar
 __all__ = ['UGrid',
            'UVar']
 
+
 # datatype used for indexes -- might want to change for 64 bit some day.
 IND_DT = np.int32
 NODE_DT = np.float64  # datatype used for node coordinates.
@@ -37,7 +38,7 @@ NODE_DT = np.float64  # datatype used for node coordinates.
 
 class UGrid(object):
     """
-    A basic class to hold an unstructured grid (triangular mesh).
+    A basic class to hold an unstructured grid as defined in the UGrid convention.
 
     The internal structure mirrors the netcdf data standard.
     """
@@ -105,6 +106,11 @@ class UGrid(object):
 
         Often this is too much data to pass in as literals -- so usually
         specialized constructors will be used instead (load from file, etc).
+
+        The index variables faces can be a masked array. The mask is
+        used for so called flexible meshes. Flexible meshes contain
+        cells with varying number of nodes per face.  See the flexible
+        mesh section in the convention for further details.
         """
 
         if nodes is None:
@@ -199,7 +205,7 @@ class UGrid(object):
     @property
     def num_vertices(self):
         """
-        Number of vertices in a face.
+        Maximum number of vertices in a face.
 
         """
         if self._faces is None:
@@ -226,7 +232,7 @@ class UGrid(object):
         if nodes_coords is None:
             self.nodes = np.zeros((0, 2), dtype=NODE_DT)
         else:
-            self._nodes = np.asarray(nodes_coords, dtype=NODE_DT)
+            self._nodes = np.asanyarray(nodes_coords, dtype=NODE_DT)
 
     @nodes.deleter
     def nodes(self):
@@ -245,7 +251,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if faces_indexes is not None:
-            self._faces = np.asarray(faces_indexes, dtype=IND_DT)
+            self._faces = np.asanyarray(faces_indexes, dtype=IND_DT)
         else:
             self._faces = None
             # Other things are no longer valid.
@@ -272,7 +278,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if edges_indexes is not None:
-            self._edges = np.asarray(edges_indexes, dtype=IND_DT)
+            self._edges = np.asanyarray(edges_indexes, dtype=IND_DT)
         else:
             self._edges = None
             self._face_edge_connectivity = None
@@ -292,7 +298,7 @@ class UGrid(object):
         # Room here to do consistency checking, etc.
         # For now -- simply make sure it's a numpy array.
         if boundaries_indexes is not None:
-            self._boundaries = np.asarray(boundaries_indexes, dtype=IND_DT)
+            self._boundaries = np.asanyarray(boundaries_indexes, dtype=IND_DT)
         else:
             self._boundaries = None
 
@@ -309,8 +315,8 @@ class UGrid(object):
     def face_face_connectivity(self, face_face_connectivity):
         # Add more checking?
         if face_face_connectivity is not None:
-            face_face_connectivity = np.asarray(face_face_connectivity,
-                                                dtype=IND_DT)
+            face_face_connectivity = np.asanyarray(face_face_connectivity,
+                                                   dtype=IND_DT)
             if face_face_connectivity.shape != (len(self.faces),
                                                 self.num_vertices):
                 msg = ("face_face_connectivity must be size "
@@ -330,8 +336,8 @@ class UGrid(object):
     def face_edge_connectivity(self, face_edge_connectivity):
         # Add more checking?
         if face_edge_connectivity is not None:
-            face_edge_connectivity = np.asarray(face_edge_connectivity,
-                                                dtype=IND_DT)
+            face_edge_connectivity = np.asanyarray(face_edge_connectivity,
+                                                   dtype=IND_DT)
             if face_edge_connectivity.shape != (len(self.faces),
                                                 self.num_vertices):
                 msg = ("face_face_connectivity must be size "
@@ -514,7 +520,7 @@ class UGrid(object):
         This version utilizes the CellTree data structure.
 
         """
-        points = np.asarray(points, dtype=np.float64)
+        points = np.asanyarray(points, dtype=np.float64)
         just_one = (points.ndim == 1)
         points.shape = (-1, 2)
         if not hasattr(self, '_ind_memo_dict'):
@@ -639,7 +645,7 @@ class UGrid(object):
 
         used linear interpolation from the nodes.
         """
-        points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
+        points = np.asanyarray(points, dtype=np.float64).reshape(-1, 2)
         location = self.infer_location(variable)
         # FixMe: should it get location from variable object?
         if location is None:
@@ -665,7 +671,7 @@ class UGrid(object):
 
     def build_face_face_connectivity(self):
         """
-        Builds the face_face_connectivity array: giving the neighbors of each triangle.
+        Builds the face_face_connectivity array: giving the neighbors of each cell.
 
         Note: arbitrary order and CW vs CCW may not be consistent.
         """
@@ -675,10 +681,10 @@ class UGrid(object):
         face_face = np.zeros((num_faces, num_vertices), dtype=IND_DT)
         face_face += -1  # Fill with -1.
 
-        # Loop through all the triangles to find the matching edges:
+        # Loop through all the faces to find the matching edges:
         edges = {}  # dict to store the edges.
         for i, face in enumerate(self.faces):
-            # Loop through edges of the triangle:
+            # Loop through edges of the cell:
             for j in range(num_vertices):
                 if j < self.num_vertices - 1:
                     edge = (face[j], face[j + 1])
@@ -835,15 +841,16 @@ class UGrid(object):
 
         Follows the convention established by the netcdf UGRID working group:
 
-        http://publicwiki.deltares.nl/display/NETCDF/Deltares+CF+proposal+for+Unstructured+Grid+data+model
+        http://ugrid-conventions.github.io/ugrid-conventions
 
         """
         mesh_name = self.mesh_name
 
-        # FIXME: Why not use netCDF4.Dataset instead of renaming?
-        from netCDF4 import Dataset as ncDataset
+        # dependency only when needed
+        import netCDF4
+
         # Create a new netcdf file.
-        with ncDataset(filepath, mode="w", clobber=True) as nclocal:
+        with netCDF4.Dataset(filepath, mode="w", clobber=True) as nclocal:
 
             nclocal.createDimension(mesh_name + '_num_node', len(self.nodes))
             if self._edges is not None:
