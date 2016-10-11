@@ -6,7 +6,7 @@
 Welcome to pyugrid's documentation!
 ===================================
 
-Currently, this only contains reference docs -- auto-generated form the source docstrings.
+Currently, this only contains reference docs -- auto-generated from the source docstrings.
 
 One of these days, we'll add more/better docs -- contributions welcome!
 
