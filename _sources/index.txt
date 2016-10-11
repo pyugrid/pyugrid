@@ -6,11 +6,11 @@
 Welcome to pyugrid's documentation!
 ===================================
 
-Currently, this only contains reference docs -- auto-generated form teh source docstrings.
+Currently, this only contains reference docs -- auto-generated form the source docstrings.
 
 One of these days, we'll add more/better docs -- contributions welcome!
 
-For some examples of use, see jupyter notebooks found in ``notebook_examples`` in the source.
+For some examples of use, see Jupyter notebooks found in ``notebook_examples`` in the source.
 
 
 Contents:

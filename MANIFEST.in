@@ -1,4 +1,0 @@
-include *.rst
-include *.txt
-recursive-include pyugrid *.py
-recursive-include test *.py *.nc
