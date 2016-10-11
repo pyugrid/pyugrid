@@ -401,15 +401,16 @@ class UGrid(object):
 
     def find_uvars(self, standard_name, location=None):
         """
-        Find all :py:class:`UVar`s that match the specified standard name
+        Find all :class:`.UVar` objects  that match the specified standard name
 
         :param str standard_name: the standard name attribute.
                                   Based on the UGRID conventions.
 
         :keyword location: optional attribute location to narrow the returned
-        :py:class : `UVar`s (one of 'node', 'edge', 'face', or 'boundary').
+                           :py:class:`UVar` objects
+                           (one of 'node', 'edge', 'face', or 'boundary').
 
-        :return: set of matching :py:class:`UVar`s
+        :return: set of matching :py:class:`UVar` objects
 
         """
         found = set()
@@ -490,10 +491,10 @@ class UGrid(object):
         :param points:  The points that you want to locate -- (lon, lat). If the shape of point
                         is 1D, function will return a scalar index. If it is 2D, it will return
                         a 1D array of indices
-        :type point: array-like containing one or more points: shape (2,) for one point, shape (N, 2)
-                     for more than one point.
+        :type point: array-like containing one or more points: shape (2,) for one point,
+                     shape (N, 2) for more than one point.
 
-        :param method='celltree': method to use. Options are 'celltree', 'simple'. 
+        :param method='celltree': method to use. Options are 'celltree', 'simple'.
                                   for 'celltree' the celltree2d pacakge must be installed:
                                   https://github.com/NOAA-ORR-ERD/cell_tree2d/
                                   'simple' is very, very slow for large grids.
@@ -519,7 +520,8 @@ class UGrid(object):
             try:
                 import cell_tree2d
             except ImportError:
-                raise ImportError("the cell_tree2d package must be installed to use the celltree search:\n"
+                raise ImportError("the cell_tree2d package must be installed to use the"
+                                  "celltree search:\n"
                                   "https://github.com/NOAA-ORR-ERD/cell_tree2d/")
             if self._tree is None:
                 self.build_celltree()
@@ -563,8 +565,8 @@ class UGrid(object):
         not located on the grid, the alphas are set to 0
         :param points: Nx2 numpy array of lat/lon coordinates
 
-        :param indices: If the face indices of the points is already known, it can be passed in to save
-        repeating the effort.
+        :param indices: If the face indices of the points is already known, it can be passed
+                        in to save repeating the effort.
 
         :return: Nx3 numpy array of interpolation factors
 
@@ -639,7 +641,7 @@ class UGrid(object):
 
         _hash = self._hash_of_pts(points)
 
-        inds = self.locate_faces(points,'celltree', _copy, _memo, _hash)
+        inds = self.locate_faces(points, 'celltree', _copy, _memo, _hash)
         if location == 'faces':
             return variable[inds]
 #             raise NotImplementedError("Currently does not support interpolation of a "

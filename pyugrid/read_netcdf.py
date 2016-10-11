@@ -6,11 +6,11 @@ code to read the netcdf unstructured grid standard:
 https://github.com/ugrid-conventions/ugrid-conventions/
 
 This code is called by the UGrid class to load into a UGRID object.
-
-    NOTE: passing the UGrid object in to avoid circular references,
-    while keeping the netcdf reading code in its own file.
-
 """
+
+# NOTE: passing the UGrid object in to avoid circular references,
+# while keeping the netcdf reading code in its own file.
+
 
 from __future__ import (absolute_import, division, print_function)
 
@@ -215,7 +215,7 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
                 try:
                     # FIXME: This won't work for more than one flag value.
                     flag_value = var.flag_values
-                    array[array == flag_value-start_index] = flag_value
+                    array[array == flag_value - start_index] = flag_value
                 except AttributeError:
                     pass
             setattr(grid, defs['grid_attr'], array)
