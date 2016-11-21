@@ -14,10 +14,14 @@ This code is called by the UGrid class to load into a UGRID object.
 
 from __future__ import (absolute_import, division, print_function)
 
+import logging
+
 import numpy as np
 import netCDF4
 
 from .uvar import UVar
+
+logger = logging.getLogger(__name__)
 
 
 def find_mesh_names(nc):
@@ -47,13 +51,17 @@ def is_valid_mesh(nc, varname):
     try:
         mesh_var = nc.variables[varname]
     except KeyError:
+        logger.info('Key error %s', varname)
         return False
     try:
-        if (mesh_var.cf_role.strip() == 'mesh_topology' and
-           int(mesh_var.topology_dimension) == 2):
+        if (
+                mesh_var.cf_role.strip() == 'mesh_topology' and
+                int(mesh_var.topology_dimension) in {1, 2}
+        ):
             return True
     except AttributeError:
-            # not a valid mesh variable
+        logger.info('Attribute error %s', mesh_var)
+        # not a valid mesh variable
         return False
 
 # Defining properties of various connectivity arrays
@@ -184,13 +192,15 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
                     msg = ("{} variable's units value ({}) doesn't look "
                            "like latitude or longitude").format
                     raise ValueError(msg(var, units))
-            if standard_name == 'latitude':
+            if standard_name in {'latitude', 'projection_y_coordinate'}:
                 nodes[:, 1] = var[:]
-            elif standard_name == 'longitude':
+            elif standard_name in {'longitude', 'projection_x_coordinate'}:
                 nodes[:, 0] = var[:]
             else:
-                raise ValueError('Node coordinates standard_name is neither '
-                                 '"longitude" nor "latitude" ')
+                raise ValueError('Node coordinates standard_name is neither'
+                                 ' "longitude" nor "latitude" nor '
+                                 '"projection_x_coordinate" nor '
+                                 ' "projection_y_coordinate"')
         setattr(grid, defs['grid_attr'], nodes)
 
     # Load assorted connectivity arrays.
