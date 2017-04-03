@@ -1,11 +1,11 @@
 # Pyugrid conda recipe
 package:
     name: pyugrid
-    version: "0.2.2"
+    version: "0.2.3"
 
 source:
     git_url: https://github.com/pyugrid/pyugrid.git
-    git_tag: v0.2.2
+    git_tag: v0.2.3
 
 build:
     number: 0
