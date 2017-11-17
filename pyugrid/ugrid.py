@@ -881,7 +881,7 @@ class UGrid(object):
                 face_nodes.cf_role = "face_node_connectivity"
                 face_nodes.long_name = ("Maps every triangular face to "
                                         "its three corner nodes.")
-                face_nodes.start_index = 0
+                face_nodes.start_index = IND_DT(0)
 
             if self.edges is not None:
                 nc_create_var = nclocal.createVariable
@@ -892,7 +892,7 @@ class UGrid(object):
                 edge_nodes.cf_role = "edge_node_connectivity"
                 edge_nodes.long_name = ("Maps every edge to the two "
                                         "nodes that it connects.")
-                edge_nodes.start_index = 0
+                edge_nodes.start_index = IND_DT(0)
 
             if self.boundaries is not None:
                 nc_create_var = nclocal.createVariable
@@ -905,7 +905,7 @@ class UGrid(object):
                 boundary_nodes.cf_role = "boundary_node_connectivity"
                 boundary_nodes.long_name = ("Maps every boundary segment to "
                                             "the two nodes that it connects.")
-                boundary_nodes.start_index = 0
+                boundary_nodes.start_index = IND_DT(0)
 
             # Optional "coordinate variables."
             for location in ['face', 'edge', 'boundary']:
