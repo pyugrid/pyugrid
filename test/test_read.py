@@ -61,6 +61,7 @@ def test_load_grid_from_nc():
     # no edges in the file
     assert grid._edges is None
     # but edges can be generated from the faces
+    grid.build_edges()
     assert grid.edges is not None
 
 
@@ -83,6 +84,7 @@ def test_read_none_edges():
     # no edges in the file
     assert grid._edges is None
     # but edges can be generated from the faces
+    grid.build_edges()
     assert grid.edges is not None
 
 

@@ -701,8 +701,6 @@ class UGrid(object):
         self._face_face_connectivity = face_face
 
     def get_lines(self):
-        if self.edges is None:
-            self.build_edges()
         return self.nodes[self.edges]
 
     def build_edges(self):
