@@ -172,7 +172,6 @@ def test_two_triangles_without_edges():
     ug.build_edges()
     assert ug.edges is not None
 
-
     depths = find_depths(ug)
     assert depths.data.shape == (4,)
     assert depths.data[0] == 1
