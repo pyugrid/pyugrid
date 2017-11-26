@@ -31,6 +31,7 @@ class LonLatArray(np.ndarray):
     def lat(self):
         return self[:, 1]
 
+
 if __name__ == "__main__":
 
     # Create one, just like a regular array:

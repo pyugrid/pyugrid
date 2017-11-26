@@ -224,7 +224,7 @@ class Dataset:
                     tmpdata = tmpdata[nodes, :, :]
                     tmpdata = tmpdata[:, levels, :]
                     data.append(tmpdata)
-            except:
+            except FileNotFoundError:
                 continue
         # import pdb; pdb.set_trace()
         eta = np.column_stack(eta[:]).T
