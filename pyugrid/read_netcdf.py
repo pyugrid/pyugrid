@@ -253,7 +253,8 @@ def load_grid_from_nc_dataset(nc, grid, mesh_name=None, load_data=True):
                           if n not in ('location', 'coordinates', 'mesh')}
 
             # Trick with the name: FIXME: Is this a good idea?
-            name = name.lstrip(mesh_name).lstrip('_')
+            if name.startswith(mesh_name+"_"):
+              name = name[len(mesh_name):]
             uvar = UVar(name, data=var[:],
                         location=location, attributes=attributes)
             grid.add_data(uvar)
