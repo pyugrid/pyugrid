@@ -224,7 +224,10 @@ class Dataset:
                     tmpdata = tmpdata[nodes, :, :]
                     tmpdata = tmpdata[:, levels, :]
                     data.append(tmpdata)
-            except:
+            # open raises IOError in python2,
+            # in python3 open throws FileNotFoundError
+            # IOError in python3 is OSError the base of FileNotFoundError
+            except IOError:
                 continue
         # import pdb; pdb.set_trace()
         eta = np.column_stack(eta[:]).T

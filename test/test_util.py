@@ -23,7 +23,6 @@ class DummyArrayLike(object):
 
     # pretty kludgy way to do this..
     def __new__(cls):
-        print ("in new"), cls
         obj = object.__new__(cls)
         for attr in cls.must_have:
             setattr(obj, attr, None)

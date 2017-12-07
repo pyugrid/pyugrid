@@ -1,6 +1,18 @@
 # mac stuff
 .DS_Store
 
+# pytest
+pytestdebug.log
+
+# test files
+# these are not cleaned up because it makes it easier to debug
+test/files/2_triangles.nc
+test/files/2_triangles_depth.nc
+test/files/2_triangles_without_edges.nc
+test/files/2_triangles_without_faces.nc
+test/files/temp.nc
+test/files/junk.nc
+        
 *.py[cod]
 
 # C extensions
@@ -8,6 +20,7 @@
 
 # Packages
 *.egg
+.eggs
 *.egg-info
 dist
 build
