@@ -20,6 +20,7 @@ test/files/junk.nc
 
 # Packages
 *.egg
+.eggs
 *.egg-info
 dist
 build

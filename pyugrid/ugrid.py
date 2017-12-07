@@ -269,8 +269,6 @@ class UGrid(object):
 
     @property
     def edges(self):
-        if self._edges is None:
-            self.build_edges()
         return self._edges
 
     @edges.setter
@@ -368,7 +366,7 @@ class UGrid(object):
         size = data.shape[-1]
         if size == self.nodes.shape[0]:
             return 'nodes'
-        if size == self.nodes.faces[0]:
+        if size == self.faces.shape[0]:
             return 'faces'
         return None
 
@@ -703,8 +701,6 @@ class UGrid(object):
         self._face_face_connectivity = face_face
 
     def get_lines(self):
-        if self.edges is None:
-            self.build_edges()
         return self.nodes[self.edges]
 
     def build_edges(self):
@@ -852,22 +848,22 @@ class UGrid(object):
         # Create a new netcdf file.
         with netCDF4.Dataset(filepath, mode="w", clobber=True) as nclocal:
 
-            nclocal.createDimension(mesh_name + '_num_node', len(self.nodes))
+            nclocal.createDimension(mesh_name + "_num_node", len(self.nodes))
             if self._edges is not None:
                 nclocal.createDimension(
-                    mesh_name + '_num_edge', len(self.edges))
+                    mesh_name + "_num_edge", len(self._edges))
             if self._boundaries is not None:
-                nclocal.createDimension(mesh_name + '_num_boundary',
-                                        len(self.boundaries))
+                nclocal.createDimension(mesh_name + "_num_boundary",
+                                        len(self._boundaries))
             if self._faces is not None:
                 nclocal.createDimension(
-                    mesh_name + '_num_face', len(self.faces))
-                nclocal.createDimension(mesh_name + '_num_vertices',
-                                        self.faces.shape[1])
-            nclocal.createDimension('two', 2)
+                    mesh_name + "_num_face", len(self._faces))
+                nclocal.createDimension(mesh_name + "_num_vertices",
+                                        self._faces.shape[1])
+            nclocal.createDimension("two", 2)
 
             # mesh topology
-            mesh = nclocal.createVariable(mesh_name, IND_DT, (), )
+            mesh = nclocal.createVariable(mesh_name, IND_DT, (),)
             mesh.cf_role = "mesh_topology"
             mesh.long_name = "Topology data of 2D unstructured mesh"
             mesh.topology_dimension = 2
@@ -957,7 +953,7 @@ class UGrid(object):
             node_lon = nclocal.createVariable(mesh_name + '_node_lon',
                                               self._nodes.dtype,
                                               (mesh_name + '_num_node',),
-                                              chunksizes=(len(self.nodes), ),
+                                              chunksizes=(len(self.nodes),),
                                               # zlib=False,
                                               # complevel=0,
                                               )
@@ -969,7 +965,7 @@ class UGrid(object):
             node_lat = nclocal.createVariable(mesh_name + '_node_lat',
                                               self._nodes.dtype,
                                               (mesh_name + '_num_node',),
-                                              chunksizes=(len(self.nodes), ),
+                                              chunksizes=(len(self.nodes),),
                                               # zlib=False,
                                               # complevel=0,
                                               )
@@ -983,26 +979,26 @@ class UGrid(object):
                 if dataset.location == 'node':
                     shape = (mesh_name + '_num_node',)
                     coordinates = "{0}_node_lon {0}_node_lat".format(mesh_name)
-                    chunksizes = (len(self.nodes), )
+                    chunksizes = (len(self.nodes),)
                 elif dataset.location == 'face':
                     shape = (mesh_name + '_num_face',)
                     coord = "{0}_face_lon {0}_face_lat".format
                     coordinates = (coord(mesh_name) if self.face_coordinates
                                    is not None else None)
-                    chunksizes = (len(self.faces), )
+                    chunksizes = (len(self.faces),)
                 elif dataset.location == 'edge':
                     shape = (mesh_name + '_num_edge',)
                     coord = "{0}_edge_lon {0}_edge_lat".format
                     coordinates = (coord(mesh_name) if self.edge_coordinates
                                    is not None else None)
-                    chunksizes = (len(self.edges), )
+                    chunksizes = (len(self.edges),)
                 elif dataset.location == 'boundary':
                     shape = (mesh_name + '_num_boundary',)
                     coord = "{0}_boundary_lon {0}_boundary_lat".format
                     bcoord = self.boundary_coordinates
                     coordinates = (coord(mesh_name) if bcoord
                                    is not None else None)
-                    chunksizes = (len(self.boundaries), )
+                    chunksizes = (len(self.boundaries),)
                 data_var = nclocal.createVariable(dataset.name,
                                                   dataset.data.dtype,
                                                   shape,

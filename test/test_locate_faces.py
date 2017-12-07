@@ -7,7 +7,7 @@ from utilities import twenty_one_triangles
 try:
     import cell_tree2d  # noqa: ignore=F401
     methods = ['simple', 'celltree']
-except:
+except ImportError:
     # no cell tree -- only test simple
     methods = ['simple']
 

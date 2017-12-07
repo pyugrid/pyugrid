@@ -169,6 +169,7 @@ def test_two_triangles_without_edges():
 
     # the edges rebuild from faces
     assert ug._edges is None
+    ug.build_edges()
     assert ug.edges is not None
 
     depths = find_depths(ug)
