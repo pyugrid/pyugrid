@@ -148,6 +148,7 @@ def test_two_triangles_without_faces():
 
 def test_two_triangles_without_edges():
     grid = two_triangles_with_depths()
+    # This will set the _edges to None, but it will be rebuild
     grid.edges = None
 
     fname = '2_triangles_without_edges.nc'
@@ -166,7 +167,10 @@ def test_two_triangles_without_edges():
 
     assert ug.faces.shape == grid.faces.shape
 
-    assert ug.edges is None
+    # the edges rebuild from faces
+    assert ug._edges is None
+    ug.build_edges()
+    assert ug.edges is not None
 
     depths = find_depths(ug)
     assert depths.data.shape == (4,)

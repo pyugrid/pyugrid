@@ -59,7 +59,9 @@ def _signed_area_tri(points):
     return(((x1-x3)*(y2-y3)-(x2-x3)*(y1-y3))/2)
 
 
-must_have = ['dtype', 'shape', 'ndim','__len__', '__getitem__', '__getattribute__']
+must_have = ['dtype', 'shape', 'ndim', '__len__', '__getitem__', '__getattribute__']
+
+
 def isarraylike(obj):
     """
     tests if obj acts enough like an array to be used in pyugrid.
@@ -75,6 +77,7 @@ def isarraylike(obj):
 
     return True
 
+
 def asarraylike(obj):
     """
     If it satisfies the requirements of pyugrid the object is returned as is. If not, then numpy's
@@ -85,5 +88,3 @@ def asarraylike(obj):
     """
 
     return obj if isarraylike(obj) else np.array(obj)
-
-

@@ -5,9 +5,9 @@ from utilities import twenty_one_triangles
 
 # used to parametrize tests for both methods
 try:
-    import cell_tree2d #noqa
+    import cell_tree2d  # noqa: ignore=F401
     methods = ['simple', 'celltree']
-except:
+except ImportError:
     # no cell tree -- only test simple
     methods = ['simple']
 
@@ -34,6 +34,3 @@ def test_oob(method):
     face = 0
     face = ugrid.locate_faces(np.array(((0, 0),)), method)
     assert np.array_equal(face, np.array((-1, )))
-
-
-
