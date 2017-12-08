@@ -198,11 +198,12 @@ def test_write_with_velocities():
     assert nc_has_variable(ds, 'mesh2')
     assert nc_has_variable(ds, 'u')
     assert nc_has_variable(ds, 'v')
-    assert nc_var_has_attr_vals(ds, 'u', {
-        'coordinates': 'mesh2_face_lon mesh2_face_lat',
-        'location': 'face',
-        'mesh': 'mesh2',
-        })
+    assert nc_var_has_attr_vals(ds, 'u',
+                                {'coordinates': 'mesh2_face_lon mesh2_face_lat',
+                                 'location': 'face',
+                                 'mesh': 'mesh2',
+                                 }
+                                )
     ds.close()
 
 
@@ -275,12 +276,13 @@ def test_write_with_bound_data():
     assert nc_has_variable(ds, 'bnd_cond')
     assert nc_var_has_attr_vals(ds, 'mesh', {
         'boundary_node_connectivity': 'mesh_boundary_nodes'})
-    assert nc_var_has_attr_vals(ds, 'bnd_cond', {
-        'location': 'boundary',
-        'flag_values': '0 1',
-        'flag_meanings': 'no_flow_boundary  open_boundary',
-        'mesh': 'mesh',
-        })
+    assert nc_var_has_attr_vals(ds,
+                                'bnd_cond',
+                                {'location': 'boundary',
+                                 'flag_values': '0 1',
+                                 'flag_meanings': 'no_flow_boundary  open_boundary',
+                                 'mesh': 'mesh',
+                                 })
     # There should be no coordinates attribute or variable for the
     # boundaries as there is no boundaries_coordinates defined.
     assert not nc_has_variable(ds, 'mesh_boundary_lon')
@@ -360,8 +362,7 @@ def test_write_everything():
         assert nc_var_has_attr_vals(ds, 'v', {
             'coordinates': 'mesh_face_lon mesh_face_lat',
             'location': 'face',
-            'mesh': 'mesh',
-            })
+            'mesh': 'mesh'})
         assert nc_has_variable(ds, 'flux')
         assert nc_var_has_attr_vals(ds, 'flux', {
             'coordinates': 'mesh_edge_lon mesh_edge_lat',
@@ -371,14 +372,12 @@ def test_write_everything():
         assert nc_has_variable(ds, 'mesh')
         assert nc_has_variable(ds, 'bnd_cond')
         assert nc_var_has_attr_vals(ds, 'mesh', {
-            'boundary_node_connectivity': 'mesh_boundary_nodes',
-            })
+            'boundary_node_connectivity': 'mesh_boundary_nodes'})
         assert nc_var_has_attr_vals(ds, 'bnd_cond', {
             'location': 'boundary',
             'flag_values': '0 1',
             'flag_meanings': 'no_flow_boundary  open_boundary',
-            'mesh': 'mesh',
-            })
+            'mesh': 'mesh'})
         ds.close()
 
         # And make sure pyugrid can reload it!

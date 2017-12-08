@@ -4,8 +4,8 @@ sudo: false
 
 python:
     - 2.7
-    - 3.4
     - 3.5
+    - 3.6
 
 env:
   - TEST_TARGET=default
@@ -17,7 +17,8 @@ before_install:
     - export PATH="$HOME/miniconda/bin:$PATH"
     - travis_retry conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION nomkl --file requirements.txt
     - source activate TEST
-    - travis_retry pip install -r requirements-dev.txt
+    - travis_retry conda install requirments-dev.txt
+#    - travis_retry pip install -r requirements-dev.txt
 
 install:
     - python setup.py sdist && version=$(python setup.py --version) && pushd dist  && pip install pyugrid-${version}.tar.gz && popd

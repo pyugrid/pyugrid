@@ -98,7 +98,7 @@ class Dataset:
         self.theta_b = io.fread(fid, 1, 'f')
         self.theta = io.fread(fid, 1, 'f')
         self.zlevels = io.fread(fid, self.kz, 'f')
-        self.slevels = io.fread(fid, self.nlevels-self.kz, 'f')
+        self.slevels = io.fread(fid, self.nlevels - self.kz, 'f')
 
     def read_hgrid(self, fid):
         """Read horizontal grid info from SELFE binary output file."""
@@ -109,16 +109,16 @@ class Dataset:
 
         # Read grid and bathymetry.
         pos = fid.tell()
-        hgridtmp = io.fread(fid, 4*self.np, 'f')
+        hgridtmp = io.fread(fid, 4 * self.np, 'f')
         self.x, self.y, self.dp, tmp1 = hgridtmp.reshape(self.np, 4).T
 
         # Read bottom index.
         fid.seek(pos)
-        hgridtmp = io.fread(fid, 4*self.np, 'i')
+        hgridtmp = io.fread(fid, 4 * self.np, 'i')
         tmp1, tmp2, tmp3, self.bot_idx = hgridtmp.reshape(self.np, 4).T
 
         # Read element connectivity list.
-        self.elem = io.fread(fid, 4*self.ne, 'i')
+        self.elem = io.fread(fid, 4 * self.ne, 'i')
         self.elem = self.elem.reshape(self.ne, 4)[:, 1:4]
 
         # Create kdtree.
@@ -135,11 +135,11 @@ class Dataset:
             # @todo check what needs to be done with bIdx (==0?)for dry nodes.
             bIdx = self.bot_idx
             bIdx[bIdx < 1] = 1
-            self.grid_size = sum(self.nlevels - bIdx+1)
+            self.grid_size = sum(self.nlevels - bIdx + 1)
         elif self.flag_dm == 2:
             self.grid_size = self.np
         # Compute step size.
-        self.step_size = 2*4 + self.np*4 + self.grid_size*4*self.flag_sv
+        self.step_size = 2 * 4 + self.np * 4 + self.grid_size * 4 * self.flag_sv
 
     def read_time_series(self, fname, nodes=None, levels=None,
                          xy=np.array([]), nfiles=3, sfile=1, datadir=None):
@@ -188,7 +188,7 @@ class Dataset:
             arco = np.array([])
             for xy00 in xy:
                 parent, tmparco, node3 = self.find_parent_element(xy00[0], xy00[1])  # noqa
-                nodes = np.append(nodes, node3-1)
+                nodes = np.append(nodes, node3 - 1)
                 arco = np.append(arco, tmparco)
 
         # Set default for nodes to be all nodes.
@@ -217,7 +217,7 @@ class Dataset:
                     t = np.append(t, io.fread(fid, 1, 'f'))
                     t_iter = np.append(t_iter, io.fread(fid, 1, 'i'))
                     eta.append(io.fread(fid, self.np, 'f'))
-                    tmpdata = io.fread(fid, self.flag_sv*self.grid_size, 'f')
+                    tmpdata = io.fread(fid, self.flag_sv * self.grid_size, 'f')
                     tmpdata = tmpdata.reshape(self.np, nlevs, self.flag_sv)
                 # Only keep requested slice of tmpdata.
                 # i.e. tmpdata[nodes, levels, var]
@@ -240,15 +240,15 @@ class Dataset:
             # Not sure about this. Need to look at it on more detail put in to
             # remove shape error.
             # try:
-            tmpdata = np.zeros((data.shape[0], data.shape[1]//3, data.shape[2], data.shape[3]))/0.  # noqa
+            tmpdata = np.zeros((data.shape[0], data.shape[1] // 3, data.shape[2], data.shape[3])) / 0.  # noqa
             # except:
             #     tmpdata = np.zeros((data.shape[0], data.shape[1]//3, data.shape[2]))/0.  # noqa
-            tmpeta = np.zeros((eta.shape[0], eta.shape[1]//3)) / 0.
-            tmpdp = np.zeros(dp.shape[0]//3) / 0.
+            tmpeta = np.zeros((eta.shape[0], eta.shape[1] // 3)) / 0.
+            tmpdp = np.zeros(dp.shape[0] // 3) / 0.
             for i in range(xy.shape[0]):
-                n1 = i*3
-                n2 = n1+1
-                n3 = n2+1
+                n1 = i * 3
+                n2 = n1 + 1
+                n3 = n2 + 1
                 tmpdata[:, i, :, :] = (data[:, n1, :, :] * arco[n1] +
                                        data[:, n2, :, :] * arco[n2] +
                                        data[:, n3, :, :] * arco[n3])
@@ -282,36 +282,37 @@ class Dataset:
 
         def signa(x1, x2, x3, y1, y2, y3):
             "Return signed area of triangle."
-            return(((x1-x3)*(y2-y3)-(x2-x3)*(y1-y3))/2)
+            return(((x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3)) / 2)
 
         parent = -1
         nm = self.elem.view()
-        out = np.zeros(3)/0.
+        out = np.zeros(3) / 0.
         x = self.x.view()
         y = self.y.view()
         for i in np.arange(self.ne):
             aa = 0
             ar = 0  # Area.
             for j in np.arange(3):
-                j1 = j+1
-                j2 = j+2
+                j1 = j + 1
+                j2 = j + 2
                 if (j1 > 2):
-                    j1 = j1-3
+                    j1 = j1 - 3
                 if (j2 > 2):
-                    j2 = j2-3
-                n0 = nm[i, j]-1  # Zero based index rather than 1 based index.
-                n1 = nm[i, j1]-1
-                n2 = nm[i, j2]-1
+                    j2 = j2 - 3
+                # Zero based index rather than 1 based index.
+                n0 = nm[i, j] - 1
+                n1 = nm[i, j1] - 1
+                n2 = nm[i, j2] - 1
                 # Temporary storage.
                 out[j] = signa(x[n1], x[n2], x00, y[n1], y[n2], y00)
-                aa = aa+abs(out[j])
+                aa = aa + abs(out[j])
                 if (j == 0):
                     ar = signa(x[n1], x[n2], x[n0], y[n1], y[n2], y[n0])
 
             if (ar <= 0):
                 sys.exit('Negative area:' + str(ar))
 
-            ae = abs(aa-ar)/ar
+            ae = abs(aa - ar) / ar
             if (ae <= 1.e-5):
                 parent = i
                 node3 = nm[i, 0:3]
@@ -320,14 +321,14 @@ class Dataset:
                 arco[2] = max(0., min(1., arco[2]))
                 if (arco[0] + arco[1] > 1):
                     arco[2] = 0
-                    arco[1] = 1-arco[0]
+                    arco[1] = 1 - arco[0]
                 else:
-                    arco[2] = 1-arco[0]-arco[1]
+                    arco[2] = 1 - arco[0] - arco[1]
                 break
         if (parent == -1):
             sys.exit('Cannot find a parent:' + str(x00) + ',' + str(y00))
         else:
-            print('Parent Element :', parent+1, ' ,Nodes: ', node3)
+            print('Parent Element :', parent + 1, ' ,Nodes: ', node3)
             return parent, arco, node3
 
     def compute_relative_rec(self, node, level):
@@ -341,7 +342,7 @@ class Dataset:
         for i in range(self.np):
             for k in range(max(1, self.bot_idx[i]), self.nlevels):
                 for m in range(self.flag_sv):
-                    count = count+1
+                    count = count + 1
                     step_size[i, k, m] = count
 
     def read_time_series_xy(self, variable, x, y,

@@ -1,4 +1,6 @@
 flake8
 pytest
 pytest-cov
-pytest-logging
+cell_tree2d>=0.3.* # optional, but needed to run all the tests
+# pytest-logging
+

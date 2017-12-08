@@ -1,5 +1,5 @@
-numpy
+numpy>=1.11
 scipy
-netcdf4
+netcdf4>=1.2
 # optional
 # matplotlib
