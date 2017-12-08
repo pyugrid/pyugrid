@@ -1,4 +1,5 @@
 numpy
 scipy
 netcdf4
-matplotlib
+# optional
+# matplotlib

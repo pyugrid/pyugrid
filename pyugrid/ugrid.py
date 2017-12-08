@@ -417,15 +417,16 @@ class UGrid(object):
 
     def find_uvars(self, standard_name, location=None):
         """
-        Find all :py:class:`UVar`s that match the specified standard name
+        Find all :class:`.UVar` objects  that match the specified standard name
 
         :param str standard_name: the standard name attribute.
                                   Based on the UGRID conventions.
 
         :keyword location: optional attribute location to narrow the returned
-        :py:class : `UVar`s (one of 'node', 'edge', 'face', or 'boundary').
+                           :py:class:`UVar` objects
+                           (one of 'node', 'edge', 'face', or 'boundary').
 
-        :return: set of matching :py:class:`UVar`s
+        :return: set of matching :py:class:`UVar` objects
 
         """
         found = set()
@@ -507,15 +508,13 @@ class UGrid(object):
                         is 1D, function will return a scalar index. If it is 2D, it will return
                         a 1D array of indices
         :type point: array-like containing one or more points: shape (2,) for one point,
-                        shape (N, 2) for more than one point.
+                     shape (N, 2) for more than one point.
 
         :param method='celltree': method to use. Options are 'celltree', 'simple'.
                                   for 'celltree' the celltree2d pacakge must be installed:
                                   https://github.com/NOAA-ORR-ERD/cell_tree2d/
                                   'simple' is very, very slow for large grids.
-        :type simple: str
-
-        This version utilizes the CellTree data structure.
+        :type method: str
 
         """
         points = np.asanyarray(points, dtype=np.float64)
@@ -580,8 +579,8 @@ class UGrid(object):
         not located on the grid, the alphas are set to 0
         :param points: Nx2 numpy array of lat/lon coordinates
 
-        :param indices: If the face indices of the points is already
-        known, it can be passed in to save repeating the effort.
+        :param indices: If the face indices of the points is already known, it can be passed
+                        in to save repeating the effort.
 
         :return: Nx3 numpy array of interpolation factors
 

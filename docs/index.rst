@@ -6,11 +6,17 @@
 Welcome to pyugrid's documentation!
 ===================================
 
+Currently, this only contains reference docs -- auto-generated from the source docstrings.
+
+One of these days, we'll add more/better docs -- contributions welcome!
+
+For some examples of use, see Jupyter notebooks found in ``notebook_examples`` in the source.
+
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
-
 
 
 Indices and tables
@@ -20,36 +26,22 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-==========
 
-.. automodule:: pyugrid.ugrid
+Reference
+=========
+
+.. automodule:: pyugrid
     :members:
     :undoc-members:
 
-.. automodule:: pyugrid.data_set
-    :members:
-    :undoc-members:
-
-==========
+----------
 
 .. automodule:: pyugrid.read_netcdf
     :members:
     :undoc-members:
 
-==========
+----------
 
-.. automodule:: pyugrid.ucube
-    :members:
-    :undoc-members:
-
-==========
-
-.. automodule:: pyugrid.util
-    :members:
-    :undoc-members:
-
-==========
-
-.. automodule:: pyugrid.test_examples
+.. automodule:: pyugrid.grid_io
     :members:
     :undoc-members:

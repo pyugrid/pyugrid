@@ -3,8 +3,10 @@
 """
 Utilities to help with grid io
 
-NOTE: this isn't used yet, but should be useful for loading non
-UGRID-compliant files.
+only contains load_from_varnames(), which helps you load non-UGRID-compliant
+netcdf files.
+
+Ideally, we'll add loading from shape files or what have you in the future
 
 """
 
