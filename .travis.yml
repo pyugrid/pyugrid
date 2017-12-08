@@ -17,7 +17,7 @@ before_install:
     - export PATH="$HOME/miniconda/bin:$PATH"
     - travis_retry conda create --yes -n TEST python=$TRAVIS_PYTHON_VERSION nomkl --file requirements.txt
     - source activate TEST
-    - travis_retry conda install requirements-dev.txt
+    - travis_retry conda install --file requirements-dev.txt
 #    - travis_retry pip install -r requirements-dev.txt
 
 install:
