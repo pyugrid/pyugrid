@@ -22,6 +22,6 @@ from .uvar import UVar
 from .uvar import UMVar
 from . import grid_io
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 __all__ = ['UGrid', 'UVar', 'UMVar', 'grid_io']
